@@ -1,0 +1,62 @@
+/*
+ * Tokens de diseño de Olla. Es el único lugar donde se definen colores, tipografía,
+ * radios, sombras y movimiento; los componentes solo usan estas utilidades.
+ * Se desactiva la paleta por defecto de Tailwind para que no se cuelen colores sueltos.
+ */
+@theme {
+  --color-*: initial;
+  --color-paper: #f5efe3;
+  --color-surface: #fffbf4;
+  --color-sunken: #ede5d6;
+  --color-ink: #221b14;
+  --color-muted: #6e6152;
+  --color-hairline: #e2d7c4;
+  --color-hairline-strong: #cbbda5;
+  --color-achiote: #b23e17;
+  --color-achiote-strong: #963212;
+  --color-achiote-soft: #f3dccf;
+  --color-cilantro: #3d6a34;
+  --color-cilantro-soft: #dde8d4;
+  --color-maiz: #f2c14e;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+
+  --text-display: 2.75rem;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.015em;
+
+  --radius-*: initial;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-raised: 0 1px 0 var(--color-hairline), 0 8px 24px -12px rgb(34 27 20 / 0.18);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --animate-rise: rise var(--dur-base) var(--ease-out) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+@theme inline {
+  --font-display: var(--font-bricolage), ui-serif, Georgia, serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+}
