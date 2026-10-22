@@ -32,7 +32,10 @@ interface PantryManagerProps {
   prices: IngredientPrice[];
 }
 
-export function PantryManager({ items, ingredients, prices }: PantryManagerProps) {
+export function PantryManager({ items, ingredients: listed, prices }: PantryManagerProps) {
+  // Productos recién creados, mientras el servidor trae la lista con ellos.
+  const [created, setCreated] = useState<Ingredient[]>([]);
+  const ingredients = [...listed, ...created.filter((item) => !listed.some((other) => other.id === item.id))];
   const [optimisticItems, applyOptimistic] = useOptimistic(items, applyChange);
   const piecesHint = (entry: PantryEntry) => {
     const price = prices.find((item) => item.ingredientId === entry.ingredientId);
@@ -115,6 +118,7 @@ export function PantryManager({ items, ingredients, prices }: PantryManagerProps
         pending={adding}
         error={addError}
         onAdd={add}
+        onIngredientCreated={(ingredient) => setCreated((current) => [...current, ingredient])}
       />
 
       {groups.length === 0 ? (

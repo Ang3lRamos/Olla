@@ -19,6 +19,8 @@ export interface Ingredient {
   baseUnit: BaseUnit;
   /** Peso aproximado de una unidad; permite pasar de "2 cebollas" a gramos y viceversa. */
   gramsPerUnit: number | null;
+  /** Lo creó el hogar (se puede editar y borrar); los del catálogo de base no. */
+  own?: boolean;
 }
 
 export interface RecipeIngredient {

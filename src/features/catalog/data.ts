@@ -15,6 +15,7 @@ const ingredientRowSchema = z
     category: z.enum(INGREDIENT_CATEGORIES),
     base_unit: z.enum(["g", "ml", "unit"]),
     grams_per_unit: z.number().nullable(),
+    household_id: z.string().nullable(),
   })
   .transform((row): Ingredient => ({
     id: row.id,
@@ -22,6 +23,7 @@ const ingredientRowSchema = z
     category: row.category,
     baseUnit: row.base_unit,
     gramsPerUnit: row.grams_per_unit,
+    own: row.household_id !== null,
   }));
 
 const priceRowSchema = z
@@ -56,7 +58,10 @@ export interface CatalogData {
 export const getCatalog = cache(async (): Promise<CatalogData> => {
   const supabase = await createSupabaseServerClient();
   const [ingredientsResult, pricesResult] = await Promise.all([
-    supabase.from("ingredients").select("id, name, category, base_unit, grams_per_unit").order("name"),
+    supabase
+      .from("ingredients")
+      .select("id, name, category, base_unit, grams_per_unit, household_id")
+      .order("name"),
     supabase
       .from("ingredient_prices")
       .select(

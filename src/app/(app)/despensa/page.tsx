@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { OwnProducts } from "@/features/catalog/components/own-products";
 import { getCatalog } from "@/features/catalog/data";
 import { requireHousehold } from "@/features/household/data";
 import { PantryManager } from "@/features/pantry/components/pantry-manager";
@@ -13,7 +14,12 @@ async function Pantry() {
   const [items, { ingredients, prices }] = await Promise.all([listPantry(), getCatalog()]);
   // Solo las presentaciones con porciones sirven aquí: para mostrar "≈ 12 tajadas".
   const withPieces = [...prices.values()].filter((price) => price.pieces);
-  return <PantryManager items={items} ingredients={ingredients} prices={withPieces} />;
+  return (
+    <>
+      <PantryManager items={items} ingredients={ingredients} prices={withPieces} />
+      <OwnProducts products={ingredients.filter((ingredient) => ingredient.own)} />
+    </>
+  );
 }
 
 export default function PantryPage() {
