@@ -32,6 +32,12 @@ function rateLimited(response: Response, body: string): Attempt<never> {
   return waitMs > MAX_RATE_LIMIT_WAIT_MS ? error : { ...error, retry: "backoff", waitMs };
 }
 
+interface RequestOptions {
+  useResponseFormat: boolean;
+  /** reasoning_effort y max_tokens, si están configurados. */
+  useTuning: boolean;
+}
+
 type Attempt<T> =
   | AiResult<T>
   /** La clave o el acceso están mal: con otro modelo del mismo proveedor fallaría igual. */
@@ -39,7 +45,7 @@ type Attempt<T> =
   | {
       ok: false;
       error: AiError;
-      retry: "backoff" | "without-response-format" | "with-correction";
+      retry: "backoff" | "without-response-format" | "without-tuning" | "with-correction";
       reply?: string;
       /** Espera que pidió el proveedor (Retry-After); reemplaza la espera creciente. */
       waitMs?: number;
@@ -57,7 +63,7 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
     request: JsonRequest<T>,
     model: string,
     messages: ChatMessage[],
-    useResponseFormat: boolean,
+    { useResponseFormat, useTuning }: RequestOptions,
   ): Promise<Attempt<T>> {
     let response: Response;
     try {
@@ -72,6 +78,8 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
           messages,
           temperature: request.temperature ?? 0.4,
           ...(useResponseFormat && { response_format: { type: "json_object" } }),
+          ...(useTuning && config.reasoningEffort && { reasoning_effort: config.reasoningEffort }),
+          ...(useTuning && config.maxTokens && { max_tokens: config.maxTokens }),
         }),
         signal: AbortSignal.timeout(config.timeoutMs),
       });
@@ -83,6 +91,10 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      // Un modelo que no acepta los ajustes opcionales se intenta sin ellos.
+      if (response.status === 400 && useTuning && /reasoning_effort|max_tokens/i.test(body)) {
+        return { ...fail("unavailable", body), retry: "without-tuning" };
+      }
       if (response.status === 400 && useResponseFormat && /response_format/i.test(body)) {
         return { ...fail("unavailable", body), retry: "without-response-format" };
       }
@@ -128,17 +140,19 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
     hasFallback: boolean,
   ): Promise<AiResult<T> & { fatal?: true }> {
     let messages = request.messages;
-    let useResponseFormat = true;
+    const options: RequestOptions = { useResponseFormat: true, useTuning: true };
     let lastError: AiError = { kind: "unavailable", detail: "Sin intentos" };
 
     for (let tries = 0; tries <= config.maxRetries; tries++) {
-      const result = await attempt(request, model, messages, useResponseFormat);
+      const result = await attempt(request, model, messages, options);
       if (result.ok || "fatal" in result) return result;
       lastError = result.error;
       if (!("retry" in result) || tries === config.maxRetries) break;
 
       if (result.retry === "without-response-format") {
-        useResponseFormat = false;
+        options.useResponseFormat = false;
+      } else if (result.retry === "without-tuning") {
+        options.useTuning = false;
       } else if (result.retry === "with-correction" && result.reply) {
         // Los modelos gratuitos suelen corregirse si se les dice qué estuvo mal.
         messages = [

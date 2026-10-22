@@ -7,6 +7,10 @@ export interface AiConfig {
   models: string[];
   timeoutMs: number;
   maxRetries: number;
+  /** "low" hace que los modelos que razonan (p. ej. gpt-oss) respondan más rápido y gasten menos. */
+  reasoningEffort: "low" | "medium" | "high" | null;
+  /** Tope de la respuesta; algunos proveedores rechazan sin él si su cupo por minuto es bajo. */
+  maxTokens: number | null;
 }
 
 /** Valor especial de AI_BASE_URL para usar el asistente simulado (desarrollo y demos). */
@@ -18,6 +22,8 @@ const configSchema = z.object({
   AI_MODEL: z.string().trim().default(""),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(30_000),
   AI_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+  AI_REASONING_EFFORT: z.enum(["low", "medium", "high"]).optional(),
+  AI_MAX_TOKENS: z.coerce.number().int().min(100).max(32_000).optional(),
 });
 
 /**
@@ -31,10 +37,20 @@ export function readAiConfig(env: Record<string, string | undefined> = process.e
     AI_MODEL: env.AI_MODEL || undefined,
     AI_TIMEOUT_MS: env.AI_TIMEOUT_MS || undefined,
     AI_MAX_RETRIES: env.AI_MAX_RETRIES || undefined,
+    AI_REASONING_EFFORT: env.AI_REASONING_EFFORT || undefined,
+    AI_MAX_TOKENS: env.AI_MAX_TOKENS || undefined,
   });
   if (!parsed.success) return null;
 
-  const { AI_BASE_URL, AI_API_KEY, AI_MODEL, AI_TIMEOUT_MS, AI_MAX_RETRIES } = parsed.data;
+  const {
+    AI_BASE_URL,
+    AI_API_KEY,
+    AI_MODEL,
+    AI_TIMEOUT_MS,
+    AI_MAX_RETRIES,
+    AI_REASONING_EFFORT,
+    AI_MAX_TOKENS,
+  } = parsed.data;
   const models = AI_MODEL.split(",")
     .map((model) => model.trim())
     .filter(Boolean);
@@ -45,5 +61,7 @@ export function readAiConfig(env: Record<string, string | undefined> = process.e
     models,
     timeoutMs: AI_TIMEOUT_MS,
     maxRetries: AI_MAX_RETRIES,
+    reasoningEffort: AI_REASONING_EFFORT ?? null,
+    maxTokens: AI_MAX_TOKENS ?? null,
   };
 }

@@ -9,6 +9,8 @@ const config: AiConfig = {
   models: ["modelo-gratis"],
   timeoutMs: 1000,
   maxRetries: 2,
+  reasoningEffort: null,
+  maxTokens: null,
 };
 const schema = z.object({ recipeId: z.string() });
 const request = { schema, messages: [{ role: "user" as const, content: "Propón algo" }] };
@@ -69,6 +71,22 @@ describe("createHttpAiClient", () => {
     const { client, body } = setup(rejected, completion('{"recipeId": "abc"}'));
     expect(await client.completeJson(request)).toMatchObject({ ok: true });
     expect(body(1).response_format).toBeUndefined();
+  });
+
+  it("manda reasoning_effort y max_tokens si están configurados, y los quita si el modelo no los acepta", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    fetch
+      .mockResolvedValueOnce(status(400, '{"error":{"message":"reasoning_effort is not supported"}}'))
+      .mockResolvedValueOnce(completion('{"recipeId": "abc"}'));
+    const client = createHttpAiClient(
+      { ...config, reasoningEffort: "low", maxTokens: 1000 },
+      { fetch, sleep: async () => undefined },
+    );
+    expect(await client.completeJson(request)).toMatchObject({ ok: true });
+    const sent = (call: number) => JSON.parse(String(fetch.mock.calls[call]![1]!.body));
+    expect(sent(0)).toMatchObject({ reasoning_effort: "low", max_tokens: 1000 });
+    expect(sent(1).reasoning_effort).toBeUndefined();
+    expect(sent(1).max_tokens).toBeUndefined();
   });
 
   describe("con modelos de respaldo", () => {

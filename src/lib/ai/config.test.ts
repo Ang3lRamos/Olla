@@ -9,6 +9,8 @@ describe("readAiConfig", () => {
       models: ["gpt-libre"],
       timeoutMs: 30000,
       maxRetries: 2,
+      reasoningEffort: null,
+      maxTokens: null,
     });
   });
 
