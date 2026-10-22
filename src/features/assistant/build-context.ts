@@ -12,6 +12,10 @@ import type { AssistantMode } from "./schemas";
 
 type LoadedWeek = Awaited<ReturnType<typeof loadWeek>>;
 
+/** Topes para que ninguna consulta crezca sin control: el costo de cada una queda acotado. */
+export const MAX_NOTES = 30;
+export const MAX_PANTRY_ITEMS = 100;
+
 interface BuildContextInput {
   week: LoadedWeek;
   mode: AssistantMode;
@@ -66,14 +70,18 @@ export async function buildAssistantContext({
       inWeek: new Set(plan.slots.map((slot) => slot.recipeId)),
       pantryNames: new Set(pantryNames),
     }),
-    pantry: pantry.map((item) => {
+    pantry: pantry.slice(0, MAX_PANTRY_ITEMS).map((item) => {
       const ingredient = getIngredient(catalog, item.ingredientId);
       return `${ingredient.name}: ${formatQuantity(toIngredientBase(item.quantity, ingredient))}`;
     }),
-    notes: notes.map((note) => ({
-      day: dayIndex(week.weekStart, note.date),
-      meal: note.meal,
-      body: note.body,
-    })),
+    // Las más recientes primero: son las que más dicen de esta semana.
+    notes: [...notes]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, MAX_NOTES)
+      .map((note) => ({
+        day: dayIndex(week.weekStart, note.date),
+        meal: note.meal,
+        body: note.body,
+      })),
   };
 }
