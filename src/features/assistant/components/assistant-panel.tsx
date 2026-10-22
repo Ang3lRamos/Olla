@@ -86,8 +86,14 @@ export function AssistantPanel({
     return (
       <div className="flex flex-col gap-5">
         <p className="text-xs text-muted" aria-live="polite">
-          Plan Pro · te quedan <span className="font-medium text-ink tabular-nums">{remaining}</span> de{" "}
-          {quota.dailyLimit} consultas hoy. Se renuevan a medianoche.
+          {remaining === null ? (
+            "Plan Pro · consultas sin límite."
+          ) : (
+            <>
+              Plan Pro · te quedan <span className="font-medium text-ink tabular-nums">{remaining}</span> de{" "}
+              {quota.dailyLimit} consultas hoy. Se renuevan a medianoche.
+            </>
+          )}
         </p>
         {remaining === 0 ? (
           <AssistantError kind="limit_reached" />

@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"household_entitlements": {
                   Row: {
-                    "ai_daily_limit": number,"household_id": string,"plan": string,"updated_at": string
+                    "ai_daily_limit": number | null,"household_id": string,"plan": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_daily_limit"?: number,"household_id": string,"plan"?: string,"updated_at"?: string
+                    "ai_daily_limit"?: number | null,"household_id": string,"plan"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "ai_daily_limit"?: number,"household_id"?: string,"plan"?: string,"updated_at"?: string
+                    "ai_daily_limit"?: number | null,"household_id"?: string,"plan"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

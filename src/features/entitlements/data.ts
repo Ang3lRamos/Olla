@@ -6,7 +6,7 @@ import { FREE_QUOTA, type AiQuota } from "./quota";
 export type { AiQuota } from "./quota";
 
 const quotaRowSchema = z
-  .object({ plan: z.enum(["free", "pro"]), daily_limit: z.number(), used: z.number() })
+  .object({ plan: z.enum(["free", "pro"]), daily_limit: z.number().nullable(), used: z.number() })
   .transform((row): AiQuota => ({ plan: row.plan, dailyLimit: row.daily_limit, used: row.used }));
 
 export async function getAiQuota(householdId: string): Promise<AiQuota> {

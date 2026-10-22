@@ -320,3 +320,32 @@ describe("plan y cupo del asistente", () => {
     expect(quota.rows[0]).toMatchObject({ plan: "pro", daily_limit: 2, used: 2 });
   });
 });
+
+describe("consultas sin límite", () => {
+  it("con límite nulo nunca bloquea, pero cuenta el uso", async () => {
+    await db.query(
+      "update public.household_entitlements set plan = 'pro', ai_daily_limit = null where household_id = $1",
+      [anaHousehold],
+    );
+    for (let call = 0; call < 5; call++) {
+      const row = await asUser(db, ANA, (tx) =>
+        tx.query<{ allowed: boolean }>("select * from public.consume_ai_request($1)", [anaHousehold]),
+      );
+      expect(row.rows[0]).toMatchObject({ allowed: true, daily_limit: null });
+    }
+    const quota = await asUser(db, ANA, (tx) =>
+      tx.query("select * from public.get_ai_quota($1)", [anaHousehold]),
+    );
+    expect(quota.rows[0]).toMatchObject({ plan: "pro", daily_limit: null });
+  });
+
+  it("un hogar sin plan sigue siendo gratis con 0", async () => {
+    const betoHousehold = (
+      await db.query<{ id: string }>("select id from public.households where name = 'Casa de Beto'")
+    ).rows[0]!.id;
+    const quota = await asUser(db, BETO, (tx) =>
+      tx.query("select * from public.get_ai_quota($1)", [betoHousehold]),
+    );
+    expect(quota.rows[0]).toMatchObject({ plan: "free", daily_limit: 0, used: 0 });
+  });
+});

@@ -1,6 +1,7 @@
 /**
  * Cambia el plan de un hogar mientras no existan pagos (luego lo hará el webhook de pagos).
  *   npm run plan:set -- correo@ejemplo.com pro 20
+ *   npm run plan:set -- correo@ejemplo.com pro ilimitado
  *   npm run plan:set -- correo@ejemplo.com free
  */
 import postgres from "postgres";
@@ -17,11 +18,12 @@ function requireEnv(name: string): string {
 
 const [email, plan, limitArg] = process.argv.slice(2);
 if (!email || (plan !== "pro" && plan !== "free")) {
-  console.error("Uso: npm run plan:set -- <correo> <pro|free> [consultas por día]");
+  console.error("Uso: npm run plan:set -- <correo> <pro|free> [consultas por día | ilimitado]");
   process.exit(1);
 }
-const dailyLimit = plan === "free" ? 0 : Number(limitArg ?? DEFAULT_PRO_DAILY_LIMIT);
-if (!Number.isInteger(dailyLimit) || dailyLimit < 0 || dailyLimit > 500) {
+const unlimited = plan === "pro" && limitArg === "ilimitado";
+const dailyLimit = plan === "free" ? 0 : unlimited ? null : Number(limitArg ?? DEFAULT_PRO_DAILY_LIMIT);
+if (dailyLimit !== null && (!Number.isInteger(dailyLimit) || dailyLimit < 0 || dailyLimit > 500)) {
   console.error("El límite diario debe ser un entero entre 0 y 500.");
   process.exit(1);
 }
@@ -51,4 +53,6 @@ if (rows.length === 0) {
   console.error(`No hay un hogar para ${email}.`);
   process.exit(1);
 }
-console.log(`${email}: plan ${plan}${plan === "pro" ? `, ${dailyLimit} consultas al día` : ""}.`);
+const detail =
+  plan === "free" ? "" : unlimited ? ", consultas sin límite" : `, ${dailyLimit} consultas al día`;
+console.log(`${email}: plan ${plan}${detail}.`);
