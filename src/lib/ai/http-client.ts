@@ -9,6 +9,8 @@ interface HttpClientDeps {
 }
 
 const BASE_BACKOFF_MS = 500;
+/** Más que esto no se espera un cupo del proveedor: es mejor pedirle a la persona que vuelva en un rato. */
+const MAX_RATE_LIMIT_WAIT_MS = 15_000;
 const MAX_ERROR_DETAIL = 300;
 
 const completionSchema = z.object({
@@ -21,6 +23,15 @@ const fail = (kind: AiError["kind"], detail: string): { ok: false; error: AiErro
   error: { kind, detail: detail.slice(0, MAX_ERROR_DETAIL) },
 });
 
+/** Si el proveedor dice cuándo vuelve a haber cupo y es pronto, se espera eso; si no, no se insiste. */
+function rateLimited(response: Response, body: string): Attempt<never> {
+  const error = fail("rate_limited", `HTTP 429: ${body}`);
+  const retryAfterSeconds = Number(response.headers.get("retry-after"));
+  if (!Number.isFinite(retryAfterSeconds) || retryAfterSeconds <= 0) return { ...error, retry: "backoff" };
+  const waitMs = retryAfterSeconds * 1000;
+  return waitMs > MAX_RATE_LIMIT_WAIT_MS ? error : { ...error, retry: "backoff", waitMs };
+}
+
 type Attempt<T> =
   | AiResult<T>
   | {
@@ -28,6 +39,8 @@ type Attempt<T> =
       error: AiError;
       retry: "backoff" | "without-response-format" | "with-correction";
       reply?: string;
+      /** Espera que pidió el proveedor (Retry-After); reemplaza la espera creciente. */
+      waitMs?: number;
     };
 
 /**
@@ -70,7 +83,8 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
       if (response.status === 400 && useResponseFormat && /response_format/i.test(body)) {
         return { ...fail("unavailable", body), retry: "without-response-format" };
       }
-      const retriable = response.status === 429 || response.status >= 500;
+      if (response.status === 429) return rateLimited(response, body);
+      const retriable = response.status >= 500;
       const error = fail("unavailable", `HTTP ${response.status}: ${body}`);
       return retriable ? { ...error, retry: "backoff" } : error;
     }
@@ -121,7 +135,7 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
             },
           ];
         } else {
-          await sleep(BASE_BACKOFF_MS * 2 ** tries);
+          await sleep(result.waitMs ?? BASE_BACKOFF_MS * 2 ** tries);
         }
       }
       return { ok: false, error: lastError };

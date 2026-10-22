@@ -50,6 +50,20 @@ describe("createHttpAiClient", () => {
     expect(sleep.mock.calls).toEqual([[500], [1000]]);
   });
 
+  it("sin cupo espera lo que pide Retry-After si es poco", async () => {
+    const limited = new Response("rate limit", { status: 429, headers: { "retry-after": "7" } });
+    const { client, sleep } = setup(limited, completion('{"recipeId": "abc"}'));
+    expect(await client.completeJson(request)).toMatchObject({ ok: true });
+    expect(sleep.mock.calls).toEqual([[7000]]);
+  });
+
+  it("sin cupo por mucho rato no insiste y lo informa", async () => {
+    const limited = new Response("rate limit", { status: 429, headers: { "retry-after": "45" } });
+    const { client, fetch } = setup(limited, completion('{"recipeId": "abc"}'));
+    expect(await client.completeJson(request)).toMatchObject({ ok: false, error: { kind: "rate_limited" } });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("se rinde tras el límite de reintentos", async () => {
     const { client, fetch } = setup(status(500), status(502), status(503), completion("{}"));
     expect(await client.completeJson(request)).toMatchObject({ ok: false, error: { kind: "unavailable" } });

@@ -15,6 +15,7 @@ Reglas:
 - Para desayuno prefiere recetas de categoría "breakfast"; para almuerzo, "main" o "soup"; para comida, "light", "soup" o "main".
 - Varía: evita repetir la misma receta más de dos veces en la semana.
 - Si hay presupuesto, intenta que el mercado no lo supere.
+- "summary" y "reason" los lee la persona: escríbelos en español natural, nombrando las recetas por su nombre. Nunca menciones ids, categorías internas (breakfast, main…) ni nombres de campos.
 - Días: 0 = lunes … 6 = domingo. Comidas: "breakfast" (desayuno), "lunch" (almuerzo), "dinner" (comida).
 
 Responde SOLO con un objeto JSON, sin texto antes ni después, con esta forma:

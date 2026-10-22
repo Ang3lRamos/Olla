@@ -8,10 +8,11 @@ export interface ChatMessage {
 /**
  * - not_configured: faltan las variables AI_* en el entorno.
  * - timeout: el proveedor no respondió a tiempo, ni siquiera tras reintentar.
- * - unavailable: error de red o del proveedor (5xx, 429, rechazos).
+ * - unavailable: error de red o del proveedor (5xx, rechazos).
+ * - rate_limited: el proveedor no tiene cupo ahora (429); vuelve a haberlo en un rato.
  * - invalid_response: respondió, pero no con el JSON que pedimos.
  */
-export type AiErrorKind = "not_configured" | "timeout" | "unavailable" | "invalid_response";
+export type AiErrorKind = "not_configured" | "timeout" | "unavailable" | "rate_limited" | "invalid_response";
 
 export interface AiError {
   kind: AiErrorKind;

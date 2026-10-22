@@ -24,6 +24,10 @@ export const ASSISTANT_ERROR_MESSAGES: Record<AiErrorKind | PlanErrorKind, { tit
       title: "No pudimos hablar con el asistente",
       body: "Puede ser la conexión o el proveedor. Intenta de nuevo en un momento; tu semana no cambió.",
     },
+    rate_limited: {
+      title: "El asistente está muy solicitado",
+      body: "Hay muchas consultas en este momento. Intenta de nuevo en un minuto; tu semana no cambió.",
+    },
     invalid_response: {
       title: "La respuesta no se pudo usar",
       body: "El asistente respondió algo que no cumplía el formato. Suele funcionar al segundo intento.",
