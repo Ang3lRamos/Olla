@@ -53,4 +53,14 @@ npm run lint        # ESLint
 npm run check       # typecheck + lint + test
 npm run build       # build de producción
 npm run format      # Prettier
+
+# Base de datos (Supabase Cloud; el proyecto se enlaza una vez con `npx supabase link`)
+npm run db:seed-sql # regenera supabase/seed.sql desde src/seed
+npm run db:push     # aplica migraciones pendientes y la semilla
+npm run db:types    # regenera src/lib/supabase/database.types.ts
 ```
+
+## Base de datos
+- Cada cambio de esquema es una migración nueva en `supabase/migrations/`; nunca se edita una ya aplicada.
+- Toda tabla nueva lleva RLS y una prueba en `supabase/tests/` (corre sobre PGlite, sin red).
+- Con Cache Components, todo lo que lea la sesión va dentro de `<Suspense>` con un esqueleto como fallback.

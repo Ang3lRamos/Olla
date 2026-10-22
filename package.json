@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "db:seed-sql": "tsx scripts/build-seed.ts"
+    "db:seed-sql": "tsx scripts/build-seed.ts",
+    "db:types": "supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
+    "db:push": "supabase db push --include-seed"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -21,6 +23,7 @@
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

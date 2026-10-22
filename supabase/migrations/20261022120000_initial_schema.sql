@@ -6,7 +6,7 @@ create table public.households (
   name text not null check (char_length(name) between 1 and 80),
   default_people smallint not null default 4 check (default_people between 1 and 20),
   weekly_budget_cop integer check (weekly_budget_cop >= 0),
-  -- { "exclude": string[], "dislikes": string[] }: lo usa el asistente para proponer menús.
+  -- { "exclude": string[] }: lo que el hogar no quiere en el menú; lo usa el asistente.
   preferences jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
