@@ -7,8 +7,8 @@ interface CheckboxProps extends Omit<ComponentProps<"input">, "type"> {
 
 export function Checkbox({ label, className, ...props }: CheckboxProps) {
   return (
-    <label className={cn("group flex cursor-pointer items-center gap-3", className)}>
-      <span className="relative grid size-5 shrink-0 place-items-center">
+    <label className={cn("group flex cursor-pointer items-start gap-3", className)}>
+      <span className="relative mt-0.5 grid size-5 shrink-0 place-items-center">
         <input
           type="checkbox"
           className={cn(

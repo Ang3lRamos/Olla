@@ -23,6 +23,7 @@
   --color-maiz: var(--maiz);
   --color-danger: var(--danger);
   --color-scrim: var(--scrim);
+  --color-chart: var(--chart);
   --color-transparent: transparent;
 
   --shadow-*: initial;
@@ -96,6 +97,8 @@
   --maiz: #f5c344;
   --danger: #b42318;
   --scrim: rgb(24 24 27 / 0.45);
+  /* Serie de datos (validada con la skill dataviz contra la superficie de cada tema). */
+  --chart: #2a78d6;
   --marker-size: 0.42em;
   --raised: 0 1px 2px rgb(24 24 27 / 0.06), 0 12px 32px -16px rgb(24 24 27 / 0.18);
 }
@@ -117,6 +120,7 @@
   --maiz: #d9a82e;
   --danger: #f97066;
   --scrim: rgb(0 0 0 / 0.6);
+  --chart: #3987e5;
   /* Sobre fondo oscuro el resaltado completo apaga el texto claro; queda como subrayado. */
   --marker-size: 0.14em;
   --raised: 0 0 0 1px var(--hairline);

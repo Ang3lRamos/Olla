@@ -3,7 +3,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { buildCatalog, type IngredientCatalog } from "@/domain/catalog";
 import { INGREDIENT_CATEGORIES } from "@/domain/categories";
-import { buildPriceList, type PriceList } from "@/domain/costs";
+import { buildPriceList, type PriceEntry, type PriceList } from "@/domain/costs";
 import type { Ingredient } from "@/domain/types";
 import { UNITS } from "@/domain/units";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -43,6 +43,8 @@ export interface CatalogData {
   ingredients: Ingredient[];
   catalog: IngredientCatalog;
   prices: PriceList;
+  /** Precios crudos: de referencia (householdId nulo) y propios del hogar. */
+  priceEntries: PriceEntry[];
 }
 
 /** Ingredientes y precios vigentes que ve el hogar: los globales más los propios. */
@@ -57,9 +59,11 @@ export const getCatalog = cache(async (): Promise<CatalogData> => {
   if (pricesResult.error) throw new Error(`No se pudieron leer los precios: ${pricesResult.error.message}`);
 
   const ingredients = z.array(ingredientRowSchema).parse(ingredientsResult.data);
+  const priceEntries = z.array(priceRowSchema).parse(pricesResult.data);
   return {
     ingredients,
     catalog: buildCatalog(ingredients),
-    prices: buildPriceList(z.array(priceRowSchema).parse(pricesResult.data)),
+    prices: buildPriceList(priceEntries),
+    priceEntries,
   };
 });

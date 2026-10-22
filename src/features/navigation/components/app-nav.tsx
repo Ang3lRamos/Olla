@@ -1,6 +1,15 @@
 "use client";
 
-import { BookOpen, CalendarDays, NotebookPen, Package, Settings, type LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  NotebookPen,
+  Package,
+  PiggyBank,
+  Settings,
+  ShoppingBasket,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/ui/cn";
@@ -9,16 +18,18 @@ interface Section {
   href: string;
   label: string;
   Icon: LucideIcon;
-  /** En celular, Ajustes vive en el menú de la cuenta para no saturar la barra inferior. */
+  /** En celular vive en el menú de la cuenta para no saturar la barra inferior. */
   desktopOnly?: boolean;
 }
 
 /** Crece con cada funcionalidad: solo se listan secciones que ya existen. */
 const SECTIONS: Section[] = [
   { href: "/semana", label: "Semana", Icon: CalendarDays },
+  { href: "/mercado", label: "Mercado", Icon: ShoppingBasket },
   { href: "/recetas", label: "Recetas", Icon: BookOpen },
   { href: "/despensa", label: "Despensa", Icon: Package },
   { href: "/notas", label: "Notas", Icon: NotebookPen },
+  { href: "/presupuesto", label: "Presupuesto", Icon: PiggyBank, desktopOnly: true },
   { href: "/ajustes", label: "Ajustes", Icon: Settings, desktopOnly: true },
 ];
 const MOBILE_SECTIONS = SECTIONS.filter((section) => !section.desktopOnly);

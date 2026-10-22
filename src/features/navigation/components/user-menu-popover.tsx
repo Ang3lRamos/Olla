@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, PiggyBank, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/features/auth/actions";
@@ -66,6 +66,14 @@ export function UserMenuPopover({ email }: { email: string }) {
         <p className="mb-2 text-xs text-muted">Tema</p>
         <ThemeToggle className="w-full" />
         <div className="my-3 border-t border-hairline" />
+        <Link
+          href="/presupuesto"
+          onClick={() => setOpen(false)}
+          className={buttonClasses({ variant: "ghost", size: "sm", className: "w-full justify-start px-2" })}
+        >
+          <PiggyBank className="size-4" aria-hidden />
+          Presupuesto y precios
+        </Link>
         <Link
           href="/ajustes"
           onClick={() => setOpen(false)}
