@@ -101,6 +101,14 @@ function AuthFormAttempt({
           }
         />
 
+        {mode === "sign-in" && (
+          <Link
+            href="/recuperar"
+            className="-mt-2 w-fit self-end text-sm text-muted underline decoration-hairline-strong underline-offset-4 transition-colors duration-(--dur-fast) hover:text-ink"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        )}
         <Button type="submit" loading={pending} className="mt-2 w-full">
           {config.submit}
         </Button>

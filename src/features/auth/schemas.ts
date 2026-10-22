@@ -16,3 +16,13 @@ export function safeRedirectPath(value: FormDataEntryValue | null): string {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
   return value;
 }
+
+export const newPasswordSchema = z
+  .object({
+    password: credentialsSchema.shape.password,
+    confirm: z.string(),
+  })
+  .refine((input) => input.password === input.confirm, {
+    message: "Las dos contraseñas no coinciden.",
+    path: ["confirm"],
+  });

@@ -1,8 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { INVALID_LINK_ERROR, parseConfirmationRequest } from "@/features/auth/confirmation";
+import {
+  INVALID_LINK_ERROR,
+  NEW_PASSWORD_PATH,
+  parseConfirmationRequest,
+} from "@/features/auth/confirmation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-/** Destino del enlace del correo de confirmación: abre la sesión y sigue al onboarding. */
+/**
+ * Destino de los enlaces del correo: abre la sesión y sigue al onboarding, o a elegir una nueva
+ * contraseña si el enlace era para eso.
+ */
 export async function GET(request: NextRequest) {
   const confirmation = parseConfirmationRequest(request.nextUrl.searchParams);
   const redirectTo = (pathname: string) => {
@@ -18,7 +25,8 @@ export async function GET(request: NextRequest) {
       confirmation.kind === "code"
         ? await supabase.auth.exchangeCodeForSession(confirmation.code)
         : await supabase.auth.verifyOtp({ token_hash: confirmation.tokenHash, type: confirmation.type });
-    if (!error) return NextResponse.redirect(redirectTo("/empezar"));
+    if (!error)
+      return NextResponse.redirect(redirectTo(confirmation.recovery ? NEW_PASSWORD_PATH : "/empezar"));
   }
 
   const signIn = redirectTo("/ingresar");

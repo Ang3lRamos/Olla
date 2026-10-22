@@ -8,7 +8,8 @@ const MESSAGES: Record<string, string> = {
   weak_password: "Esa contraseña es muy fácil de adivinar. Prueba con una más larga.",
   over_request_rate_limit: "Hiciste muchos intentos seguidos. Espera un minuto y vuelve a probar.",
   over_email_send_rate_limit:
-    "Por ahora no podemos enviar más correos de confirmación. Espera unos minutos y vuelve a intentarlo.",
+    "Por ahora no podemos enviar más correos. Espera unos minutos y vuelve a intentarlo.",
+  same_password: "La nueva contraseña debe ser distinta a la que tenías.",
   signup_disabled: "El registro está desactivado por ahora.",
 };
 
