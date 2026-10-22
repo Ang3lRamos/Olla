@@ -203,26 +203,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"shopping_list_items": {
+                },"shopping_extras": {
                   Row: {
-                    "checked": boolean,"id": string,"ingredient_id": string,"quantity": number,"unit": string,"week_plan_id": string
+                    "category": string,"checked": boolean,"created_at": string,"id": string,"name": string,"week_plan_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "checked"?: boolean,"id"?: string,"ingredient_id": string,"quantity": number,"unit": string,"week_plan_id": string
+                    "category": string,"checked"?: boolean,"created_at"?: string,"id"?: string,"name": string,"week_plan_id": string
                   }
                   Update: {
-                    "checked"?: boolean,"id"?: string,"ingredient_id"?: string,"quantity"?: number,"unit"?: string,"week_plan_id"?: string
+                    "category"?: string,"checked"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"week_plan_id"?: string
                   }
                   Relationships: [
                     {
-      foreignKeyName: "shopping_list_items_ingredient_id_fkey"
+      foreignKeyName: "shopping_extras_week_plan_id_fkey"
+      columns: ["week_plan_id"]
+isOneToOne: false
+      referencedRelation: "week_plans"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"shopping_purchases": {
+                  Row: {
+                    "ingredient_id": string,"purchased_at": string,"quantity": number,"unit": string,"week_plan_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ingredient_id": string,"purchased_at"?: string,"quantity": number,"unit": string,"week_plan_id": string
+                  }
+                  Update: {
+                    "ingredient_id"?: string,"purchased_at"?: string,"quantity"?: number,"unit"?: string,"week_plan_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shopping_purchases_ingredient_id_fkey"
       columns: ["ingredient_id"]
 isOneToOne: false
       referencedRelation: "ingredients"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "shopping_list_items_week_plan_id_fkey"
+      foreignKeyName: "shopping_purchases_week_plan_id_fkey"
       columns: ["week_plan_id"]
 isOneToOne: false
       referencedRelation: "week_plans"

@@ -184,18 +184,27 @@ describe("save_household_recipe", () => {
       { position: 1, note: "para sofreír" },
     ]);
 
-    await asUser(db, ANA, (tx) => save(tx, recipeId, anaHousehold, [{ ingredient_id: oil, quantity: 2, unit: "tbsp" }]));
-    expect(await count(db, "select 1 from public.recipe_ingredients where recipe_id = $1", [recipeId])).toBe(1);
+    await asUser(db, ANA, (tx) =>
+      save(tx, recipeId, anaHousehold, [{ ingredient_id: oil, quantity: 2, unit: "tbsp" }]),
+    );
+    expect(await count(db, "select 1 from public.recipe_ingredients where recipe_id = $1", [recipeId])).toBe(
+      1,
+    );
   });
 
   it("no deja guardar en otro hogar ni editar recetas globales", async () => {
     const rice = await ingredientId("Arroz");
-    const ajiaco = (await db.query<{ id: string }>("select id from public.recipes where name = 'Ajiaco'")).rows[0]!.id;
+    const ajiaco = (await db.query<{ id: string }>("select id from public.recipes where name = 'Ajiaco'"))
+      .rows[0]!.id;
     await expect(
-      asUser(db, BETO, (tx) => save(tx, null, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }])),
+      asUser(db, BETO, (tx) =>
+        save(tx, null, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }]),
+      ),
     ).rejects.toThrow(/row-level security/);
     await expect(
-      asUser(db, ANA, (tx) => save(tx, ajiaco, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }])),
+      asUser(db, ANA, (tx) =>
+        save(tx, ajiaco, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }]),
+      ),
     ).rejects.toThrow("Receta no encontrada en este hogar");
   });
 
@@ -205,5 +214,53 @@ describe("save_household_recipe", () => {
       "al menos un ingrediente",
     );
     expect(await count(db, "select 1 from public.recipes")).toBe(before);
+  });
+});
+
+describe("mercado", () => {
+  const anaWeek = () =>
+    db
+      .query<{ id: string }>("select id from public.week_plans where household_id = $1 limit 1", [
+        anaHousehold,
+      ])
+      .then((result) => result.rows[0]!.id);
+
+  it("registra compras y extras solo en semanas del propio hogar", async () => {
+    const weekId = await anaWeek();
+    await asUser(db, ANA, async (tx) => {
+      await tx.query(
+        `insert into public.shopping_purchases (week_plan_id, ingredient_id, unit, quantity)
+         select $1, id, 'g', 500 from public.ingredients where name = 'Arroz'`,
+        [weekId],
+      );
+      await tx.query(
+        "insert into public.shopping_extras (week_plan_id, name, category) values ($1, 'Detergente', 'cleaning')",
+        [weekId],
+      );
+    });
+    expect(await asUser(db, ANA, (tx) => count(tx, "select 1 from public.shopping_purchases"))).toBe(1);
+    expect(await asUser(db, BETO, (tx) => count(tx, "select 1 from public.shopping_purchases"))).toBe(0);
+    expect(await asUser(db, BETO, (tx) => count(tx, "select 1 from public.shopping_extras"))).toBe(0);
+    await expect(
+      asUser(db, BETO, (tx) =>
+        tx.query(
+          "insert into public.shopping_extras (week_plan_id, name, category) values ($1, 'Intruso', 'cleaning')",
+          [weekId],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it("una compra por ingrediente y unidad en cada semana", async () => {
+    const weekId = await anaWeek();
+    await expect(
+      asUser(db, ANA, (tx) =>
+        tx.query(
+          `insert into public.shopping_purchases (week_plan_id, ingredient_id, unit, quantity)
+           select $1, id, 'g', 200 from public.ingredients where name = 'Arroz'`,
+          [weekId],
+        ),
+      ),
+    ).rejects.toThrow(/duplicate key/);
   });
 });
