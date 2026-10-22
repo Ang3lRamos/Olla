@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exactBaseQuantity, isSeasoning, toKitchenQuantity } from "./detail-level";
-import { chicken, egg, oil, onion, rice } from "./test-fixtures";
+import { chicken, egg, oil, onion, rice, tomato } from "./test-fixtures";
 import type { Ingredient } from "./types";
 
 const garlic: Ingredient = {
@@ -39,6 +39,10 @@ describe("toKitchenQuantity", () => {
     expect(toKitchenQuantity({ amount: 40, unit: "ml" }, oil)).toEqual({ amount: 2.5, unit: "tbsp" });
   });
 
+  it("lo que la receta cuenta por unidades sigue en unidades", () => {
+    expect(toKitchenQuantity({ amount: 2.66, unit: "unit" }, onion)).toEqual({ amount: 2.5, unit: "unit" });
+  });
+
   it("redondea unidades a media y nunca deja cero", () => {
     expect(toKitchenQuantity({ amount: 2.3, unit: "unit" }, egg)).toEqual({ amount: 2.5, unit: "unit" });
     expect(toKitchenQuantity({ amount: 0.1, unit: "unit" }, onion)).toEqual({ amount: 0.5, unit: "unit" });
@@ -48,6 +52,7 @@ describe("toKitchenQuantity", () => {
 describe("exactBaseQuantity", () => {
   it("da los gramos de una medida de cocina, y nada si ya está en gramos o en unidades", () => {
     expect(exactBaseQuantity({ amount: 1.5, unit: "lb" }, rice)).toEqual({ amount: 750, unit: "g" });
+    expect(exactBaseQuantity({ amount: 2.667, unit: "unit" }, tomato)).toEqual({ amount: 320, unit: "g" });
     expect(exactBaseQuantity({ amount: 200, unit: "g" }, rice)).toBeNull();
     expect(exactBaseQuantity({ amount: 2, unit: "unit" }, egg)).toBeNull();
   });

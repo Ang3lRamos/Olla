@@ -60,6 +60,7 @@ function TopLinks({ isActive }: { isActive: IsActive }) {
           key={href}
           href={href}
           aria-current={isActive(href) ? "page" : undefined}
+          data-tour={`nav${href.replace("/", "-")}`}
           className={cn(
             "relative rounded-md px-3 py-1.5 text-sm transition-colors duration-(--dur-fast) ease-out",
             isActive(href) ? "font-medium text-ink" : "text-muted hover:text-ink",
@@ -96,6 +97,7 @@ function TabBar({ isActive }: { isActive: IsActive }) {
             <Link
               href={href}
               aria-current={isActive(href) ? "page" : undefined}
+              data-tour={`nav${href.replace("/", "-")}`}
               className={cn(
                 "flex flex-col items-center gap-0.5 py-2 text-[11px] transition-colors duration-(--dur-fast) ease-out",
                 isActive(href) ? "font-medium text-ink" : "text-muted active:text-ink",

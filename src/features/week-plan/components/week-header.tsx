@@ -40,7 +40,11 @@ export function WeekHeader({
           unit={["persona", "personas"]}
           onValueChange={onPeopleChange}
         />
-        <Button variant={assistantLocked ? "secondary" : "primary"} onClick={onOpenAssistant}>
+        <Button
+          variant={assistantLocked ? "secondary" : "primary"}
+          onClick={onOpenAssistant}
+          data-tour="assistant"
+        >
           <MessageSquareText className="size-4" aria-hidden />
           Pedir al asistente
           {assistantLocked && (

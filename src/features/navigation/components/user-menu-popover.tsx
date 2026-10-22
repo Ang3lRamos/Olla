@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, LogOut, PiggyBank, Settings } from "lucide-react";
+import { BadgeCheck, LogOut, PiggyBank, Route, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/features/auth/actions";
@@ -89,6 +89,14 @@ export function UserMenuPopover({ email }: { email: string }) {
         >
           <Settings className="size-4" aria-hidden />
           Ajustes del hogar
+        </Link>
+        <Link
+          href="/semana?recorrido=1"
+          onClick={() => setOpen(false)}
+          className={buttonClasses({ variant: "ghost", size: "sm", className: "w-full justify-start px-2" })}
+        >
+          <Route className="size-4" aria-hidden />
+          Cómo usar Olla
         </Link>
         <form action={signOut}>
           <Button type="submit" variant="ghost" size="sm" className="w-full justify-start px-2">

@@ -17,7 +17,10 @@ export function WeekGrid({ days, dayCosts, onOpenCell, onOpenDayNotes }: WeekGri
   const maxDayCost = Math.max(...dayCosts, 1);
 
   return (
-    <div className="hidden grid-cols-[5.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(3,auto)_auto] gap-x-1.5 md:grid">
+    <div
+      data-tour="week-days"
+      className="hidden grid-cols-[5.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(3,auto)_auto] gap-x-1.5 md:grid"
+    >
       <div className="row-span-5 grid grid-rows-subgrid gap-y-2">
         <div />
         {MEALS.map((meal) => (

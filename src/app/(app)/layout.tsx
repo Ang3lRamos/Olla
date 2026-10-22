@@ -6,6 +6,7 @@ import {
   MobileTabBar,
   MobileTabBarFallback,
 } from "@/features/navigation/components/app-nav";
+import { HelpButton, HelpButtonFallback } from "@/features/help/components/help-button";
 import { UserMenu } from "@/features/navigation/components/user-menu";
 import { Logo } from "@/ui/brand/logo";
 import { Skeleton } from "@/ui/skeleton";
@@ -27,7 +28,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={<AppNavFallback />}>
             <AppNav />
           </Suspense>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <Suspense fallback={<HelpButtonFallback />}>
+              <HelpButton />
+            </Suspense>
             <Suspense fallback={<Skeleton className="h-8 w-8 rounded-full" />}>
               <UserMenu />
             </Suspense>

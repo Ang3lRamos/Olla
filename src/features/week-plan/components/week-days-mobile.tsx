@@ -52,7 +52,7 @@ export function WeekDaysMobile({
         : "animate-rise";
 
   return (
-    <div className="flex flex-col gap-4 md:hidden">
+    <div data-tour="week-days" className="flex flex-col gap-4 md:hidden">
       <nav aria-label="Días de la semana" className="relative grid grid-cols-7">
         <span
           aria-hidden

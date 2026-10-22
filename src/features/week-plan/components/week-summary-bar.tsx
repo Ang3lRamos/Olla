@@ -29,7 +29,7 @@ export function WeekSummaryBar({ weekStart, summary, weeklyBudgetCop }: WeekSumm
   const used = weeklyBudgetCop ? Math.min(market / weeklyBudgetCop, 1) : 0;
 
   return (
-    <dl className="grid grid-cols-2 border-y border-hairline md:grid-cols-4">
+    <dl data-tour="week-summary" className="grid grid-cols-2 border-y border-hairline md:grid-cols-4">
       <Stat
         label="Comidas planeadas"
         value={`${summary.plannedMeals} de ${summary.totalMeals}`}

@@ -27,6 +27,8 @@ const ML_PER_TABLESPOON = 15;
  * de media en media. Es para leer, no para calcular.
  */
 export function toKitchenQuantity(quantity: Quantity, ingredient: Ingredient): Quantity {
+  // Si la receta lo cuenta por unidades (3 papas, 2 tallos), se sigue contando así.
+  if (quantity.unit === "unit") return { amount: roundTo(quantity.amount, 0.5), unit: "unit" };
   const base = toIngredientBase(quantity, ingredient);
   switch (base.unit) {
     case "g":
@@ -45,5 +47,6 @@ export function toKitchenQuantity(quantity: Quantity, ingredient: Ingredient): Q
 /** Equivalente exacto en gramos o mililitros, para el modo detallado ("1 ½ libras (750 g)"). */
 export function exactBaseQuantity(quantity: Quantity, ingredient: Ingredient): BaseQuantity | null {
   const base = toIngredientBase(quantity, ingredient);
-  return base.unit === "unit" || base.unit === quantity.unit ? null : base;
+  if (base.unit === "unit" || base.unit === quantity.unit) return null;
+  return { amount: Math.round(base.amount), unit: base.unit };
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAiQuota } from "@/features/entitlements/data";
+import { GuidedTour } from "@/features/help/components/guided-tour";
 import { listNotesBetween } from "@/features/notes/data";
 import { summarizeRecipe } from "@/features/recipes/data";
 import { WeekPlanner } from "@/features/week-plan/components/week-planner";
@@ -38,8 +39,11 @@ async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">
 
 export default function WeekPage({ searchParams }: PageProps<"/semana">) {
   return (
-    <Suspense fallback={<WeekPlannerSkeleton />}>
-      <Week searchParams={searchParams} />
-    </Suspense>
+    <>
+      <Suspense fallback={<WeekPlannerSkeleton />}>
+        <Week searchParams={searchParams} />
+      </Suspense>
+      <GuidedTour />
+    </>
   );
 }
