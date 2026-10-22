@@ -1,9 +1,10 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/features/auth/actions";
-import { Button } from "@/ui/button";
+import { Button, buttonClasses } from "@/ui/button";
 import { cn } from "@/ui/cn";
 import { ThemeToggle } from "@/ui/theme/theme-toggle";
 
@@ -65,6 +66,14 @@ export function UserMenuPopover({ email }: { email: string }) {
         <p className="mb-2 text-xs text-muted">Tema</p>
         <ThemeToggle className="w-full" />
         <div className="my-3 border-t border-hairline" />
+        <Link
+          href="/ajustes"
+          onClick={() => setOpen(false)}
+          className={buttonClasses({ variant: "ghost", size: "sm", className: "w-full justify-start px-2" })}
+        >
+          <Settings className="size-4" aria-hidden />
+          Ajustes del hogar
+        </Link>
         <form action={signOut}>
           <Button type="submit" variant="ghost" size="sm" className="w-full justify-start px-2">
             <LogOut className="size-4" aria-hidden />

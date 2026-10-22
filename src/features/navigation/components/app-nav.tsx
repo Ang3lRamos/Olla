@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Package, Settings, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarDays, NotebookPen, Package, Settings, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/ui/cn";
@@ -9,14 +9,19 @@ interface Section {
   href: string;
   label: string;
   Icon: LucideIcon;
+  /** En celular, Ajustes vive en el menú de la cuenta para no saturar la barra inferior. */
+  desktopOnly?: boolean;
 }
 
 /** Crece con cada funcionalidad: solo se listan secciones que ya existen. */
 const SECTIONS: Section[] = [
+  { href: "/semana", label: "Semana", Icon: CalendarDays },
   { href: "/recetas", label: "Recetas", Icon: BookOpen },
   { href: "/despensa", label: "Despensa", Icon: Package },
-  { href: "/ajustes", label: "Ajustes", Icon: Settings },
+  { href: "/notas", label: "Notas", Icon: NotebookPen },
+  { href: "/ajustes", label: "Ajustes", Icon: Settings, desktopOnly: true },
 ];
+const MOBILE_SECTIONS = SECTIONS.filter((section) => !section.desktopOnly);
 
 type IsActive = (href: string) => boolean;
 
@@ -71,8 +76,11 @@ function TabBar({ isActive }: { isActive: IsActive }) {
       aria-label="Secciones"
       className="fixed inset-x-0 bottom-0 z-10 border-t border-hairline bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
     >
-      <ul className="grid grid-cols-3">
-        {SECTIONS.map(({ href, label, Icon }) => (
+      <ul
+        className="grid"
+        style={{ gridTemplateColumns: `repeat(${MOBILE_SECTIONS.length}, minmax(0, 1fr))` }}
+      >
+        {MOBILE_SECTIONS.map(({ href, label, Icon }) => (
           <li key={href}>
             <Link
               href={href}
