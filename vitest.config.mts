@@ -8,5 +8,8 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts", "supabase/**/*.test.ts"],
     environment: "node",
+    // Levantar Postgres en memoria (PGlite) con todas las migraciones tarda más cuando las
+    // pruebas corren en paralelo.
+    hookTimeout: 60_000,
   },
 });

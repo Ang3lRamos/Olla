@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"household_entitlements": {
                   Row: {
-                    "ai_daily_limit": number | null,"household_id": string,"plan": string,"updated_at": string
+                    "ai_daily_limit": number | null,"expires_at": string | null,"household_id": string,"plan": string,"trial_used": boolean,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_daily_limit"?: number | null,"household_id": string,"plan"?: string,"updated_at"?: string
+                    "ai_daily_limit"?: number | null,"expires_at"?: string | null,"household_id": string,"plan"?: string,"trial_used"?: boolean,"updated_at"?: string
                   }
                   Update: {
-                    "ai_daily_limit"?: number | null,"household_id"?: string,"plan"?: string,"updated_at"?: string
+                    "ai_daily_limit"?: number | null,"expires_at"?: string | null,"household_id"?: string,"plan"?: string,"trial_used"?: boolean,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -197,6 +197,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payments": {
+                  Row: {
+                    "amount_in_cents": number,"applied_at": string | null,"created_at": string,"household_id": string,"payment_method_type": string | null,"period": string,"plan": string,"reference": string,"status": string,"updated_at": string,"wompi_transaction_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_in_cents": number,"applied_at"?: string | null,"created_at"?: string,"household_id": string,"payment_method_type"?: string | null,"period": string,"plan": string,"reference": string,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
+                  }
+                  Update: {
+                    "amount_in_cents"?: number,"applied_at"?: string | null,"created_at"?: string,"household_id"?: string,"payment_method_type"?: string | null,"period"?: string,"plan"?: string,"reference"?: string,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_household_id_fkey"
+      columns: ["household_id"]
+isOneToOne: false
+      referencedRelation: "households"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_plan_period_fkey"
+      columns: ["plan","period"]
+isOneToOne: false
+      referencedRelation: "plan_prices"
+      referencedColumns: ["plan","period"]
+    }
+                  ]
+                },"plan_prices": {
+                  Row: {
+                    "ai_daily_limit": number,"amount_in_cents": number,"days": number,"period": string,"plan": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai_daily_limit": number,"amount_in_cents": number,"days": number,"period": string,"plan": string
+                  }
+                  Update: {
+                    "ai_daily_limit"?: number,"amount_in_cents"?: number,"days"?: number,"period"?: string,"plan"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"recipe_ingredients": {
                   Row: {
                     "id": string,"ingredient_id": string,"note": string | null,"position": number,"quantity": number,"recipe_id": string,"unit": string
@@ -318,6 +358,11 @@ isOneToOne: false
             "ai_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"apply_payment":
+{ Args: { "method_type": string,"paid_amount_in_cents": number,"paid_currency": string,"target_reference": string,"transaction_id": string,"transaction_status": string }; Returns: {
+              "expires_at": string,"plan": string,"status": string
+            }[]
+                           },
 "can_access_week_plan":
 { Args: { "target_week_plan_id": string }; Returns: boolean
                            },
@@ -329,9 +374,19 @@ isOneToOne: false
 "create_household":
 { Args: { "budget_cop"?: number,"household_name": string,"household_preferences"?: Json,"people": number }; Returns: string
                            },
+"create_payment":
+{ Args: { "target_household_id": string,"target_period": string,"target_plan": string }; Returns: {
+              "amount_in_cents": number,"reference": string
+            }[]
+                           },
+"effective_plan":
+{ Args: { "target_household_id": string }; Returns: {
+              "daily_limit": number,"expires_at": string,"plan": string,"trial_used": boolean
+            }[]
+                           },
 "get_ai_quota":
 { Args: { "target_household_id": string }; Returns: {
-              "daily_limit": number,"plan": string,"used": number
+              "daily_limit": number,"expires_at": string,"plan": string,"trial_used": boolean,"used": number
             }[]
                            },
 "is_household_member":
@@ -342,6 +397,9 @@ isOneToOne: false
                            },
 "save_household_recipe":
 { Args: { "ingredients": Json,"minutes": number,"recipe_category": string,"recipe_name": string,"recipe_steps": (string)[],"servings": number,"target_household_id": string,"target_recipe_id": string }; Returns: string
+                           },
+"start_trial":
+{ Args: { "target_household_id": string }; Returns: boolean
                            }
           }
           Enums: {
