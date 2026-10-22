@@ -11,7 +11,7 @@ interface WeekHeaderProps {
   people: number;
   onPeopleChange: (people: number) => void;
   onOpenAssistant: () => void;
-  /** El asistente es del plan Pro; para el resto el botón lo indica. */
+  /** El asistente es de los planes pagos; para el resto el botón lo indica. */
   assistantLocked: boolean;
 }
 
@@ -49,7 +49,7 @@ export function WeekHeader({
           Pedir al asistente
           {assistantLocked && (
             <span className="rounded-full border border-hairline-strong px-1.5 text-[11px] font-semibold">
-              Pro
+              Planes
             </span>
           )}
         </Button>
