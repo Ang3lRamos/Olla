@@ -349,3 +349,24 @@ describe("consultas sin límite", () => {
     expect(quota.rows[0]).toMatchObject({ plan: "free", daily_limit: 0, used: 0 });
   });
 });
+
+describe("borrar un usuario", () => {
+  it("borra su hogar y todo lo suyo cuando era el último miembro", async () => {
+    const carla = await createUser(db, "00000000-0000-0000-0000-00000000000c");
+    const household = await asUser(db, carla, (tx) => createHousehold(tx, "Casa de Carla"));
+    await asUser(db, carla, (tx) =>
+      tx.query(
+        `insert into public.pantry_items (household_id, ingredient_id, quantity, unit)
+         select $1, id, 1, 'kg' from public.ingredients where name = 'Arroz'`,
+        [household],
+      ),
+    );
+    await db.query("delete from auth.users where id = $1", [carla]);
+    expect(await count(db, "select 1 from public.households where id = $1", [household])).toBe(0);
+    expect(await count(db, "select 1 from public.pantry_items where household_id = $1", [household])).toBe(0);
+  });
+
+  it("no borra hogares que aún tienen miembros", async () => {
+    expect(await count(db, "select 1 from public.households where id = $1", [anaHousehold])).toBe(1);
+  });
+});
