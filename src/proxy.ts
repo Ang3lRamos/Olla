@@ -3,7 +3,8 @@ import { CONFIRMATION_PATH } from "@/features/auth/confirmation";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
 const AUTH_PAGES = ["/ingresar", "/registro"];
-const PUBLIC_PAGES = [...AUTH_PAGES, CONFIRMATION_PATH];
+// Los avisos de pago llegan de Wompi, sin sesión; la ruta verifica su firma.
+const PUBLIC_PAGES = [...AUTH_PAGES, CONFIRMATION_PATH, "/api/wompi/eventos"];
 
 function redirectKeepingCookies(request: NextRequest, response: NextResponse, pathname: string) {
   const url = request.nextUrl.clone();

@@ -1,8 +1,9 @@
 "use client";
 
 import { RotateCw } from "lucide-react";
+import Link from "next/link";
 import type { AiErrorKind } from "@/lib/ai/types";
-import { Button } from "@/ui/button";
+import { Button, buttonClasses } from "@/ui/button";
 import type { PlanErrorKind } from "../actions";
 import { ASSISTANT_ERROR_MESSAGES } from "./assistant-messages";
 
@@ -28,6 +29,11 @@ export function AssistantError({ kind, onRetry, onBack }: AssistantErrorProps) {
         <p className="text-sm text-muted">{message.body}</p>
       </div>
       <div className="flex gap-2">
+        {(kind === "not_entitled" || kind === "limit_reached") && (
+          <Link href="/planes" className={buttonClasses({})}>
+            {kind === "not_entitled" ? "Ver planes" : "Mejorar mi plan"}
+          </Link>
+        )}
         {onRetry && !NOT_RETRIABLE.has(kind) && (
           <Button onClick={onRetry}>
             <RotateCw className="size-4" aria-hidden />

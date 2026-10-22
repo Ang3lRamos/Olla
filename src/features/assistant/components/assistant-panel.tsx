@@ -73,7 +73,7 @@ export function AssistantPanel({
     }));
     clearTimeout(slowTimer);
     if (id !== requestId.current) return;
-    if (result.quota) setQuota(result.quota);
+    if (result.quota) setQuota((current) => ({ ...current, ...result.quota }));
     if (result.ok) setSelected(new Set(result.changes.map((_, index) => index)));
     setState({ kind: "done", result });
   };

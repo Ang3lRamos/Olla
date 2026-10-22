@@ -5,8 +5,8 @@ import type { PlanErrorKind } from "../actions";
 export const ASSISTANT_ERROR_MESSAGES: Record<AiErrorKind | PlanErrorKind, { title: string; body: string }> =
   {
     not_entitled: {
-      title: "El asistente es parte del plan Pro",
-      body: "Con Pro, Olla te propone el menú y lo ajusta con tus palabras. Mientras tanto puedes planear la semana a mano.",
+      title: "El asistente es parte de los planes Básico y Pro",
+      body: "Olla te propone el menú y lo ajusta con tus palabras. Pruébalo 7 días gratis o elige un plan; mientras tanto puedes planear la semana a mano.",
     },
     limit_reached: {
       title: "Llegaste al límite de hoy",

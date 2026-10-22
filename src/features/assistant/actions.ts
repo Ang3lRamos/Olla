@@ -1,6 +1,6 @@
 "use server";
 
-import { consumeAiRequest, refundAiRequest, type AiQuota } from "@/features/entitlements/data";
+import { consumeAiRequest, refundAiRequest, type QuotaUsage } from "@/features/entitlements/data";
 import { requireHousehold } from "@/features/household/data";
 import { loadWeek } from "@/features/week-plan/load-week";
 import { weekStartSchema } from "@/features/week-plan/schemas";
@@ -14,7 +14,7 @@ export type PlanErrorKind = "not_entitled" | "limit_reached";
 
 export type AskAssistantResult = (
   AssistantOutcome | { ok: false; error: { kind: PlanErrorKind; detail: string } }
-) & { simulated: boolean; quota: AiQuota | null };
+) & { simulated: boolean; quota: QuotaUsage | null };
 
 /**
  * Pide una propuesta al asistente. No guarda nada: la persona revisa y decide.
@@ -35,7 +35,7 @@ export async function askAssistant(request: AssistantRequest): Promise<AskAssist
 
   const { allowed, quota } = await consumeAiRequest(household.id);
   if (!allowed) {
-    const kind: PlanErrorKind = quota.plan === "pro" ? "limit_reached" : "not_entitled";
+    const kind: PlanErrorKind = quota.plan === "free" ? "not_entitled" : "limit_reached";
     return { ok: false, error: { kind, detail: kind }, simulated: false, quota };
   }
 

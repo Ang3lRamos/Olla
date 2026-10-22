@@ -1,13 +1,32 @@
 import "server-only";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { FREE_QUOTA, type AiQuota } from "./quota";
+import { FREE_QUOTA, PLANS, type AiQuota } from "./quota";
 
 export type { AiQuota } from "./quota";
 
+const consumeRowSchema = z
+  .object({ allowed: z.boolean(), plan: z.enum(PLANS), daily_limit: z.number().nullable(), used: z.number() })
+  .transform((row) => ({
+    allowed: row.allowed,
+    quota: { plan: row.plan, dailyLimit: row.daily_limit, used: row.used },
+  }));
+
 const quotaRowSchema = z
-  .object({ plan: z.enum(["free", "pro"]), daily_limit: z.number().nullable(), used: z.number() })
-  .transform((row): AiQuota => ({ plan: row.plan, dailyLimit: row.daily_limit, used: row.used }));
+  .object({
+    plan: z.enum(PLANS),
+    daily_limit: z.number().nullable(),
+    used: z.number(),
+    expires_at: z.string().nullable(),
+    trial_used: z.boolean(),
+  })
+  .transform((row): AiQuota => ({
+    plan: row.plan,
+    dailyLimit: row.daily_limit,
+    used: row.used,
+    expiresAt: row.expires_at,
+    trialUsed: row.trial_used,
+  }));
 
 export async function getAiQuota(householdId: string): Promise<AiQuota> {
   const supabase = await createSupabaseServerClient();
@@ -17,13 +36,18 @@ export async function getAiQuota(householdId: string): Promise<AiQuota> {
   return row ? quotaRowSchema.parse(row) : FREE_QUOTA;
 }
 
+/** Lo que cambia al consumir: el vencimiento y la prueba no, así que no vienen. */
+export type QuotaUsage = Pick<AiQuota, "plan" | "dailyLimit" | "used">;
+
 /** Descuenta una consulta en la base (atómico); el cliente no puede saltarse el tope. */
-export async function consumeAiRequest(householdId: string): Promise<{ allowed: boolean; quota: AiQuota }> {
+export async function consumeAiRequest(
+  householdId: string,
+): Promise<{ allowed: boolean; quota: QuotaUsage }> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("consume_ai_request", { target_household_id: householdId });
   if (error) throw new Error(`No se pudo validar el cupo: ${error.message}`);
-  const row = z.object({ allowed: z.boolean() }).and(quotaRowSchema).parse(data?.[0]);
-  return { allowed: row.allowed, quota: { plan: row.plan, dailyLimit: row.dailyLimit, used: row.used } };
+  const { allowed, quota } = consumeRowSchema.parse(data?.[0]);
+  return { allowed, quota };
 }
 
 export async function refundAiRequest(householdId: string): Promise<void> {

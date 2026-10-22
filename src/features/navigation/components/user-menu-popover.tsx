@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, PiggyBank, Settings } from "lucide-react";
+import { BadgeCheck, LogOut, PiggyBank, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/features/auth/actions";
@@ -73,6 +73,14 @@ export function UserMenuPopover({ email }: { email: string }) {
         >
           <PiggyBank className="size-4" aria-hidden />
           Presupuesto y precios
+        </Link>
+        <Link
+          href="/planes"
+          onClick={() => setOpen(false)}
+          className={buttonClasses({ variant: "ghost", size: "sm", className: "w-full justify-start px-2" })}
+        >
+          <BadgeCheck className="size-4" aria-hidden />
+          Plan y pagos
         </Link>
         <Link
           href="/ajustes"
