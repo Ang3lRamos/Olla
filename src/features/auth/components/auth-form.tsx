@@ -18,6 +18,7 @@ const MODES = {
     autoComplete: "current-password",
     switchText: "¿Aún no tienes cuenta?",
     switchLink: { href: "/registro", label: "Crea una" },
+    note: null,
   },
   "sign-up": {
     action: signUp,
@@ -26,6 +27,7 @@ const MODES = {
     autoComplete: "new-password",
     switchText: "¿Ya tienes cuenta?",
     switchLink: { href: "/ingresar", label: "Ingresa" },
+    note: "Gratis y sin tarjeta: recetas, semana, mercado y presupuesto. El asistente es parte del plan Pro.",
   },
 } as const;
 
@@ -105,8 +107,9 @@ function AuthFormAttempt({
         <span className="sr-only" aria-live="polite">
           {pending ? config.pending : ""}
         </span>
+        {config.note && <p className="text-xs text-muted">{config.note}</p>}
 
-        <p className="text-center text-sm text-muted">
+        <p className="mt-4 border-t border-hairline pt-6 text-sm text-muted">
           {config.switchText}{" "}
           <Link
             href={config.switchLink.href}
