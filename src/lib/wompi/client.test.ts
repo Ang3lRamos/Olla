@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildCheckoutUrl } from "./checkout";
-import { getTransaction } from "./client";
+import { findTransactionsByReference, getTransaction } from "./client";
 import { readWompiConfig, type WompiConfig } from "./config";
 import { integritySignature } from "./signatures";
 
@@ -90,5 +90,23 @@ describe("getTransaction", () => {
       .fn<typeof globalThis.fetch>()
       .mockResolvedValue(new Response(JSON.stringify({ data: {} })));
     expect(await getTransaction(config, "x", weird)).toBeNull();
+  });
+});
+
+describe("findTransactionsByReference", () => {
+  it("busca por referencia y descarta lo que no entiende", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            { id: "t-2", status: "APPROVED", reference: "olla-1", amount_in_cents: 1990000, currency: "COP" },
+            { id: "raro" },
+          ],
+        }),
+      ),
+    );
+    const found = await findTransactionsByReference(config, "olla-1", fetch);
+    expect(found.map((transaction) => transaction.id)).toEqual(["t-2"]);
+    expect(fetch.mock.calls[0]![0]).toBe("https://sandbox.wompi.co/v1/transactions?reference=olla-1");
   });
 });

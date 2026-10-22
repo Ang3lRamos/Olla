@@ -41,6 +41,29 @@ export async function getTransaction(
   return transaction?.success ? transaction.data : null;
 }
 
+/**
+ * Transacciones de una referencia: sirve para conciliar un pago cuyo aviso nunca llegó y la
+ * persona no volvió a Olla. La más reciente va primero.
+ */
+export async function findTransactionsByReference(
+  config: WompiConfig,
+  reference: string,
+  doFetch: typeof fetch = fetch,
+): Promise<WompiTransaction[]> {
+  const response = await doFetch(`${config.apiUrl}/transactions?reference=${encodeURIComponent(reference)}`, {
+    headers: { Authorization: `Bearer ${config.privateKey}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) return [];
+  const body = z.object({ data: z.array(z.unknown()) }).safeParse(await response.json().catch(() => null));
+  if (!body.success) return [];
+  return body.data.data.flatMap((item) => {
+    const transaction = transactionSchema.safeParse(item);
+    return transaction.success ? [transaction.data] : [];
+  });
+}
+
 /** Lo que viene dentro de un aviso transaction.updated. */
 export function parseEventTransaction(data: unknown): WompiTransaction | null {
   const parsed = z.object({ transaction: transactionSchema }).safeParse(data);

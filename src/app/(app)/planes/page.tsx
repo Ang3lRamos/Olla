@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { PlanPicker } from "@/features/billing/components/plan-picker";
 import { PlanStatus } from "@/features/billing/components/plan-status";
 import { listPlanPrices } from "@/features/billing/data";
+import { reconcilePendingPayments } from "@/features/billing/reconcile";
 import { getAiQuota } from "@/features/entitlements/data";
 import { requireHousehold } from "@/features/household/data";
 import { readWompiConfig } from "@/lib/wompi/config";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Planes" };
 
 async function Plans() {
   const household = await requireHousehold();
+  await reconcilePendingPayments(household.id);
   const [quota, prices] = await Promise.all([getAiQuota(household.id), listPlanPrices()]);
   const config = readWompiConfig();
 
