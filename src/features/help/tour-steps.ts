@@ -36,5 +36,7 @@ export const TOUR_STEPS: TourStep[] = [
 
 /** Si la persona ya vio (o saltó) el recorrido, en este navegador. */
 export const TOUR_SEEN_KEY = "olla-recorrido-visto";
-/** Volver a verlo desde la ayuda: /semana?recorrido=1 */
+/** Volver a verlo desde otra pantalla: /semana?recorrido=1 */
 export const TOUR_QUERY = "recorrido";
+/** Volver a verlo estando ya en la semana, donde no hay navegación que lo dispare. */
+export const TOUR_EVENT = "olla:recorrido";

@@ -1,14 +1,13 @@
 "use client";
 
 import { CircleHelp, Route } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { buttonClasses } from "@/ui/button";
 import { cn } from "@/ui/cn";
 import { Sheet } from "@/ui/sheet";
 import { helpFor } from "../help-content";
-import { TOUR_QUERY } from "../tour-steps";
+import { TourLink } from "./tour-link";
 
 /** "?" de la barra superior: explica la pantalla en la que está la persona. */
 export function HelpButton() {
@@ -38,14 +37,13 @@ export function HelpButton() {
               </li>
             ))}
           </ul>
-          <Link
-            href={`/semana?${TOUR_QUERY}=1`}
-            onClick={() => setOpen(false)}
+          <TourLink
+            onStart={() => setOpen(false)}
             className={buttonClasses({ variant: "secondary", className: "w-fit" })}
           >
             <Route className="size-4" aria-hidden />
             Ver el recorrido de Olla
-          </Link>
+          </TourLink>
         </div>
       </Sheet>
     </>

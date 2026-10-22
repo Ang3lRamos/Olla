@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/ui/button";
-import { TOUR_QUERY, TOUR_SEEN_KEY, TOUR_STEPS } from "../tour-steps";
+import { TOUR_EVENT, TOUR_QUERY, TOUR_SEEN_KEY, TOUR_STEPS } from "../tour-steps";
 
 interface Rect {
   top: number;
@@ -54,17 +54,21 @@ export function GuidedTour() {
       const query = params.toString();
       window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
     }
+    const start = () => {
+      // Se marca visto al aparecer: recargar a mitad del recorrido no debe repetirlo.
+      markSeen();
+      setStep(0);
+    };
+    window.addEventListener(TOUR_EVENT, start);
     // Se espera a que la semana pinte; el recorrido no debe tapar la primera impresión.
-    if (requested || !readSeen()) {
-      const timer = setTimeout(() => setStep(0), 600);
-      return () => clearTimeout(timer);
-    }
+    const timer = requested || !readSeen() ? setTimeout(start, 600) : undefined;
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(TOUR_EVENT, start);
+    };
   }, []);
 
-  const close = useCallback(() => {
-    markSeen();
-    setStep(null);
-  }, []);
+  const close = useCallback(() => setStep(null), []);
 
   const current = step === null ? null : TOUR_STEPS[step];
 
