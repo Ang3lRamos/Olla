@@ -54,7 +54,7 @@ npm run check       # typecheck + lint + test
 npm run build       # build de producción
 npm run format      # Prettier
 
-# Base de datos (Supabase Cloud; el proyecto se enlaza una vez con `npx supabase link`)
+# Base de datos (Supabase Cloud; usa SUPABASE_DB_PASSWORD y SUPABASE_POOLER_HOST de .env.local)
 npm run db:seed-sql # regenera supabase/seed.sql desde src/seed
 npm run db:push     # aplica migraciones pendientes y la semilla
 npm run db:types    # regenera src/lib/supabase/database.types.ts

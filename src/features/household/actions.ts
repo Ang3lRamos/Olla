@@ -54,7 +54,9 @@ export async function createHousehold(
   const { error } = await supabase.rpc("create_household", {
     household_name: name,
     people: defaultPeople,
-    budget_cop: weeklyBudgetCop,
+    // La función acepta null (default en SQL), pero `supabase gen types` no marca opcionales
+    // los argumentos con valor por defecto.
+    budget_cop: weeklyBudgetCop as number,
     household_preferences: { exclude },
   });
   if (error) return { error: SAVE_ERROR, values: raw };

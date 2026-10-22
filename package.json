@@ -13,8 +13,8 @@
     "format": "prettier --write .",
     "check": "npm run typecheck && npm run lint && npm run test",
     "db:seed-sql": "tsx scripts/build-seed.ts",
-    "db:types": "supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
-    "db:push": "supabase db push --include-seed"
+    "db:types": "tsx scripts/supabase-remote.ts types",
+    "db:push": "tsx scripts/supabase-remote.ts push"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -37,6 +37,7 @@
     "playwright": "^1.64.1",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "supabase": "^2.121.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
