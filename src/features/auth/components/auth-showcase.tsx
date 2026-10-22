@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import type { CSSProperties } from "react";
 import { formatCop } from "@/domain/money";
 import { cn } from "@/ui/cn";
+import { FitToHeight } from "./fit-to-height";
 
 /*
  * Muestra de cómo se ve Olla por dentro, para el panel de ingreso y registro. Los platos y
@@ -127,25 +128,24 @@ function MarketTicket({ className }: { className?: string }) {
 
 /**
  * Panel de la derecha en ingreso y registro: enseña el producto en vez de decorarlo. Cabe en
- * la altura de la ventana; en pantallas bajas se queda solo la muestra.
+ * la altura de la ventana: el texto siempre se ve y la muestra se encoge si no hay espacio.
  */
 export function AuthShowcase({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "m-3 flex-col justify-between gap-6 overflow-hidden rounded-md bg-sunken p-8 xl:px-12 [@media(max-height:680px)]:justify-center",
+        "m-3 flex-col gap-6 overflow-hidden rounded-md bg-sunken p-8 xl:px-12 [@media(max-height:720px)]:gap-4 [@media(max-height:720px)]:py-6",
         className,
       )}
     >
-      <p className="letrero text-sm text-muted [@media(max-height:680px)]:hidden">Una semana en Olla</p>
-      <div aria-hidden className="relative mx-auto w-full max-w-[500px] pr-10 pb-28">
-        <WeekCard />
-        <MarketTicket className="absolute right-0 bottom-0 w-[250px] xl:-right-6" />
-      </div>
-      <div
-        className="flex max-w-md animate-rise flex-col gap-1.5 [@media(max-height:680px)]:hidden"
-        style={stagger(4)}
-      >
+      <p className="letrero text-sm text-muted">Una semana en Olla</p>
+      <FitToHeight>
+        <div aria-hidden className="relative mx-auto w-full max-w-[500px] pr-10 pb-28">
+          <WeekCard />
+          <MarketTicket className="absolute right-0 bottom-0 w-[250px] xl:-right-6" />
+        </div>
+      </FitToHeight>
+      <div className="flex max-w-md shrink-0 animate-rise flex-col gap-1.5" style={stagger(4)}>
         <h2 className="font-display text-xl font-semibold">El mercado sale solo del menú</h2>
         <p className="text-sm text-muted">
           Olla suma lo que se repite, resta lo que ya hay en la despensa y te dice cuánto vas a gastar en la
