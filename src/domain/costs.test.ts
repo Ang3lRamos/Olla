@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailyCosts, estimateCost, quantityCost, recipeCost, type PriceList } from "./costs";
+import { buildPriceList, dailyCosts, estimateCost, quantityCost, recipeCost, type PriceList } from "./costs";
 import { formatCop } from "./money";
 import { arrozBlanco, catalog, huevosPericos, onion, rice, tomato } from "./test-fixtures";
 import type { IngredientPrice } from "./types";
@@ -99,5 +99,19 @@ describe("dailyCosts", () => {
 describe("formatCop", () => {
   it("formatea pesos colombianos sin decimales", () => {
     expect(formatCop(12500.4).replace(/\s/g, " ")).toBe("$ 12.500");
+  });
+});
+
+describe("buildPriceList", () => {
+  const per = { amount: 1, unit: "kg" } as const;
+
+  it("prefiere el precio del hogar sobre el de referencia, sin importar el orden", () => {
+    const prices = buildPriceList([
+      { ingredientId: "rice", priceCop: 3500, per, householdId: "casa" },
+      { ingredientId: "rice", priceCop: 6000, per, householdId: null },
+      { ingredientId: "oil", priceCop: 12000, per: { amount: 1, unit: "l" }, householdId: null },
+    ]);
+    expect(prices.get("rice")).toEqual({ ingredientId: "rice", priceCop: 3500, per });
+    expect(prices.get("oil")?.priceCop).toBe(12000);
   });
 });

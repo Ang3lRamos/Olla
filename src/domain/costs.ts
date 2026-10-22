@@ -21,6 +21,23 @@ export interface CostEstimate {
 
 export const DAYS_IN_WEEK = 7;
 
+export interface PriceEntry extends IngredientPrice {
+  /** null = precio de referencia del catálogo global. */
+  householdId: string | null;
+}
+
+/** El precio propio del hogar reemplaza al de referencia del mismo ingrediente. */
+export function buildPriceList(entries: PriceEntry[]): PriceList {
+  const prices = new Map<string, IngredientPrice>();
+  const referenceFirst = [...entries].sort(
+    (a, b) => Number(a.householdId !== null) - Number(b.householdId !== null),
+  );
+  for (const { ingredientId, priceCop, per } of referenceFirst) {
+    prices.set(ingredientId, { ingredientId, priceCop, per });
+  }
+  return prices;
+}
+
 /** Costo de una cantidad, o null si no hay precio o las unidades no son compatibles. */
 export function quantityCost(
   quantity: BaseQuantity,

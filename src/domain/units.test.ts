@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { egg, onion, rice, tomato } from "./test-fixtures";
-import { formatQuantity, toBase, toIngredientBase } from "./units";
+import { egg, oil, onion, rice, tomato } from "./test-fixtures";
+import { compatibleUnits, formatQuantity, toBase, toIngredientBase } from "./units";
 
 describe("toBase", () => {
   it.each([
@@ -79,5 +79,21 @@ describe("formatQuantity", () => {
 
   it("limita los decimales", () => {
     expect(formatQuantity({ amount: 1 / 3, unit: "g" })).toBe("0,33 g");
+  });
+});
+
+describe("compatibleUnits", () => {
+  it("ofrece unidades de masa y, si hay peso por unidad, también unidades", () => {
+    expect(compatibleUnits(rice)).toEqual(["g", "kg", "lb"]);
+    expect(compatibleUnits(tomato)).toEqual(["g", "kg", "lb", "unit"]);
+  });
+
+  it("pone primero la unidad base del ingrediente", () => {
+    expect(compatibleUnits(onion)).toEqual(["unit", "g", "kg", "lb"]);
+    expect(compatibleUnits(egg)).toEqual(["unit"]);
+  });
+
+  it("ofrece unidades de volumen para líquidos", () => {
+    expect(compatibleUnits(oil)).toEqual(["ml", "l", "cup", "tbsp", "tsp"]);
   });
 });

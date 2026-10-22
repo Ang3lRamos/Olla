@@ -259,10 +259,13 @@ isOneToOne: false
 { Args: { "target_week_plan_id": string }; Returns: boolean
                            },
 "create_household":
-{ Args: { "budget_cop": number,"household_name": string,"household_preferences": Json,"people": number }; Returns: string
+{ Args: { "budget_cop"?: number,"household_name": string,"household_preferences"?: Json,"people": number }; Returns: string
                            },
 "is_household_member":
 { Args: { "target_household_id": string }; Returns: boolean
+                           },
+"save_household_recipe":
+{ Args: { "ingredients": Json,"minutes": number,"recipe_category": string,"recipe_name": string,"recipe_steps": (string)[],"servings": number,"target_household_id": string,"target_recipe_id": string }; Returns: string
                            }
           }
           Enums: {

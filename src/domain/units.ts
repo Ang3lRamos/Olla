@@ -64,3 +64,19 @@ export function formatQuantity(quantity: BaseQuantity): string {
   const { singular, plural } = UNIT_LABELS.unit;
   return `${NUMBER_FORMAT.format(amount)} ${amount === 1 ? singular : plural}`;
 }
+
+const MASS_UNITS: Unit[] = ["g", "kg", "lb"];
+const VOLUME_UNITS: Unit[] = ["ml", "l", "cup", "tbsp", "tsp"];
+
+/** Unidades en las que tiene sentido registrar un ingrediente, empezando por la suya. */
+export function compatibleUnits(ingredient: Ingredient): Unit[] {
+  const convertible = ingredient.gramsPerUnit !== null;
+  switch (ingredient.baseUnit) {
+    case "g":
+      return convertible ? [...MASS_UNITS, "unit"] : MASS_UNITS;
+    case "ml":
+      return VOLUME_UNITS;
+    case "unit":
+      return convertible ? ["unit", ...MASS_UNITS] : ["unit"];
+  }
+}

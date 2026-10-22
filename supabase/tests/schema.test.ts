@@ -152,3 +152,58 @@ describe("datos del hogar", () => {
     ).rejects.toThrow(/week_plans_week_start_check/);
   });
 });
+
+describe("save_household_recipe", () => {
+  const save = (tx: Transaction, recipeId: string | null, household: string, ingredients: unknown[]) =>
+    tx
+      .query<{ id: string }>(
+        `select public.save_household_recipe($1, $2, 'Arroz de la casa', 'side', 4::smallint, 20::smallint,
+           array['Lavar', 'Cocinar']::text[], $3::jsonb) as id`,
+        [recipeId, household, JSON.stringify(ingredients)],
+      )
+      .then((result) => result.rows[0]!.id);
+
+  const ingredientId = async (name: string) =>
+    (await db.query<{ id: string }>("select id from public.ingredients where name = $1", [name])).rows[0]!.id;
+
+  it("crea la receta con sus ingredientes en orden y luego los reemplaza al editar", async () => {
+    const rice = await ingredientId("Arroz");
+    const oil = await ingredientId("Aceite vegetal");
+    const recipeId = await asUser(db, ANA, (tx) =>
+      save(tx, null, anaHousehold, [
+        { ingredient_id: rice, quantity: 1, unit: "lb", note: "" },
+        { ingredient_id: oil, quantity: 1, unit: "tbsp", note: "para sofreír" },
+      ]),
+    );
+    const items = await db.query<{ position: number; note: string | null }>(
+      "select position, note from public.recipe_ingredients where recipe_id = $1 order by position",
+      [recipeId],
+    );
+    expect(items.rows).toEqual([
+      { position: 0, note: null },
+      { position: 1, note: "para sofreír" },
+    ]);
+
+    await asUser(db, ANA, (tx) => save(tx, recipeId, anaHousehold, [{ ingredient_id: oil, quantity: 2, unit: "tbsp" }]));
+    expect(await count(db, "select 1 from public.recipe_ingredients where recipe_id = $1", [recipeId])).toBe(1);
+  });
+
+  it("no deja guardar en otro hogar ni editar recetas globales", async () => {
+    const rice = await ingredientId("Arroz");
+    const ajiaco = (await db.query<{ id: string }>("select id from public.recipes where name = 'Ajiaco'")).rows[0]!.id;
+    await expect(
+      asUser(db, BETO, (tx) => save(tx, null, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }])),
+    ).rejects.toThrow(/row-level security/);
+    await expect(
+      asUser(db, ANA, (tx) => save(tx, ajiaco, anaHousehold, [{ ingredient_id: rice, quantity: 1, unit: "lb" }])),
+    ).rejects.toThrow("Receta no encontrada en este hogar");
+  });
+
+  it("exige al menos un ingrediente y no deja la receta a medias", async () => {
+    const before = await count(db, "select 1 from public.recipes");
+    await expect(asUser(db, ANA, (tx) => save(tx, null, anaHousehold, []))).rejects.toThrow(
+      "al menos un ingrediente",
+    );
+    expect(await count(db, "select 1 from public.recipes")).toBe(before);
+  });
+});
