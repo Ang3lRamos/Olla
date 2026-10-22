@@ -26,6 +26,11 @@ export function Sheet({ open, title, description, onClose, children }: SheetProp
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
+    // Al navegar, Next deja la página anterior oculta pero montada: un <dialog> modal abierto
+    // ahí seguiría bloqueando toda la pantalla aunque no se vea. Se cierra al ocultarse.
+    return () => {
+      if (dialog.open) dialog.close();
+    };
   }, [open]);
 
   return (
