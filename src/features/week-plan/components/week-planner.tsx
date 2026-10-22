@@ -83,7 +83,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
         </div>
       )}
 
-      <WeekSummaryBar summary={summary} weeklyBudgetCop={weeklyBudgetCop} />
+      <WeekSummaryBar weekStart={weekStart} summary={summary} weeklyBudgetCop={weeklyBudgetCop} />
 
       <WeekGrid
         days={days}

@@ -74,7 +74,7 @@ export function WeekGrid({ days, dayCosts, onOpenCell, onOpenDayNotes }: WeekGri
             </span>
             <span className="h-1 overflow-hidden rounded-full bg-hairline" aria-hidden>
               <span
-                className="block h-full origin-left rounded-full bg-ink transition-transform duration-(--dur-slow) ease-out"
+                className="block h-full origin-left rounded-full bg-chart transition-transform duration-(--dur-slow) ease-out"
                 style={{ transform: `scaleX(${(dayCosts[day.day] ?? 0) / maxDayCost})` }}
               />
             </span>

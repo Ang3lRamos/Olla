@@ -18,11 +18,12 @@ function Stat({ label, value, detail }: { label: string; value: string; detail?:
 }
 
 interface WeekSummaryBarProps {
+  weekStart: string;
   summary: WeekSummary;
   weeklyBudgetCop: number | null;
 }
 
-export function WeekSummaryBar({ summary, weeklyBudgetCop }: WeekSummaryBarProps) {
+export function WeekSummaryBar({ weekStart, summary, weeklyBudgetCop }: WeekSummaryBarProps) {
   const missing = summary.totalMeals - summary.plannedMeals;
   const market = summary.market.totalCop;
   const used = weeklyBudgetCop ? Math.min(market / weeklyBudgetCop, 1) : 0;
@@ -38,9 +39,14 @@ export function WeekSummaryBar({ summary, weeklyBudgetCop }: WeekSummaryBarProps
         label="Mercado estimado"
         value={formatCop(market)}
         detail={
-          summary.market.unpricedIngredientIds.length > 0
-            ? `Sin precio: ${summary.market.unpricedIngredientIds.length} ingrediente(s)`
-            : "Ya descuenta la despensa"
+          <Link
+            href={`/mercado?semana=${weekStart}`}
+            className="underline decoration-hairline-strong underline-offset-4 hover:text-ink"
+          >
+            {summary.market.unpricedIngredientIds.length > 0
+              ? `Ver lista · ${summary.market.unpricedIngredientIds.length} sin precio`
+              : "Ver lista de mercado"}
+          </Link>
         }
       />
       <Stat

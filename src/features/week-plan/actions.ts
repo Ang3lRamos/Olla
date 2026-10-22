@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireHousehold, type Household } from "@/features/household/data";
+import { requireHousehold } from "@/features/household/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ensureWeekPlan, findWeekPlanId } from "./week-plan-id";
 import {
   assignMealSchema,
   slotKeySchema,
@@ -15,29 +16,6 @@ export type WeekActionResult = { ok: true } | { ok: false; error: string };
 
 const SAVE_ERROR = "No pudimos guardar el cambio en la semana. Revisa tu conexión y vuelve a intentarlo.";
 const INVALID = "Ese cambio no es válido para esta semana.";
-const UNIQUE_VIOLATION = "23505";
-
-type Supabase = Awaited<ReturnType<typeof createSupabaseServerClient>>;
-
-async function findWeekPlanId(supabase: Supabase, weekStart: string) {
-  const { data } = await supabase.from("week_plans").select("id").eq("week_start", weekStart).maybeSingle();
-  return data?.id ?? null;
-}
-
-/** La semana se crea la primera vez que se guarda algo en ella, con las personas del hogar. */
-async function ensureWeekPlan(supabase: Supabase, household: Household, weekStart: string) {
-  const existing = await findWeekPlanId(supabase, weekStart);
-  if (existing) return existing;
-  const { data, error } = await supabase
-    .from("week_plans")
-    .insert({ household_id: household.id, week_start: weekStart, people: household.defaultPeople })
-    .select("id")
-    .single();
-  // Si otra petición la creó al mismo tiempo, se usa esa.
-  if (error?.code === UNIQUE_VIOLATION) return findWeekPlanId(supabase, weekStart);
-  return error ? null : data.id;
-}
-
 export async function assignMeal(input: AssignMealInput): Promise<WeekActionResult> {
   const household = await requireHousehold();
   const parsed = assignMealSchema.safeParse(input);
