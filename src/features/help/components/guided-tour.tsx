@@ -14,6 +14,27 @@ interface Rect {
 const PADDING = 6;
 const CARD_WIDTH = 320;
 const GAP = 12;
+/** Barra superior fija (56 px) más aire: lo resaltado no debe quedar debajo de ella. */
+const TOP_OFFSET = 72;
+const EDGE = 16;
+/** En celular, la barra inferior fija también ocupa espacio. */
+const MOBILE_TAB_BAR = 72;
+const bottomEdge = () => EDGE + (window.matchMedia("(min-width: 768px)").matches ? 0 : MOBILE_TAB_BAR);
+/** Alto aproximado de la tarjeta antes de medirla. */
+const CARD_HEIGHT_GUESS = 220;
+
+/**
+ * Lleva el elemento a la vista. Si es más alto que la pantalla (la semana completa), se muestra
+ * su comienzo; si no, queda centrado.
+ */
+function scrollToTarget(target: HTMLElement) {
+  const box = target.getBoundingClientRect();
+  const tall = box.height > window.innerHeight - TOP_OFFSET - CARD_HEIGHT_GUESS;
+  const top = tall
+    ? window.scrollY + box.top - TOP_OFFSET
+    : window.scrollY + box.top - (window.innerHeight - box.height) / 2;
+  window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+}
 
 const visibleTarget = (name: string) =>
   [...document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`)].find(
@@ -43,6 +64,7 @@ function markSeen() {
 export function GuidedTour() {
   const [step, setStep] = useState<number | null>(null);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [cardHeight, setCardHeight] = useState(CARD_HEIGHT_GUESS);
   const cardRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -75,11 +97,12 @@ export function GuidedTour() {
   useLayoutEffect(() => {
     if (!current) return;
     const target = visibleTarget(current.target);
-    target?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (target) scrollToTarget(target);
     // Sin elemento visible (p. ej. otra pantalla), la tarjeta va al centro sin recorte.
     const measure = () => {
       const box = target?.getBoundingClientRect();
       setRect(box ? { top: box.top, left: box.left, width: box.width, height: box.height } : null);
+      if (cardRef.current) setCardHeight(cardRef.current.offsetHeight);
     };
     const frame = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
@@ -101,7 +124,7 @@ export function GuidedTour() {
 
   if (step === null || !current) return null;
   const last = step === TOUR_STEPS.length - 1;
-  const cardStyle = placeCard(rect);
+  const cardStyle = placeCard(rect, cardHeight);
 
   return (
     <div className="fixed inset-0 z-50" aria-live="polite">
@@ -158,14 +181,21 @@ export function GuidedTour() {
   );
 }
 
-/** Debajo del elemento si cabe; si no, encima. Sin elemento visible, al centro. */
-function placeCard(rect: Rect | null): React.CSSProperties {
-  const width = Math.min(CARD_WIDTH, window.innerWidth - 32);
+/**
+ * Debajo del elemento si cabe, si no encima; si no cabe en ninguno (un elemento más alto que la
+ * pantalla), fija abajo. Siempre dentro de la pantalla. Sin elemento visible, al centro.
+ */
+function placeCard(rect: Rect | null, height: number): React.CSSProperties {
+  const width = Math.min(CARD_WIDTH, window.innerWidth - EDGE * 2);
   if (!rect) return { width, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
-  const left = Math.min(Math.max(rect.left, 16), window.innerWidth - width - 16);
+  const left = Math.min(Math.max(rect.left, EDGE), window.innerWidth - width - EDGE);
   const below = rect.top + rect.height + PADDING + GAP;
-  const fitsBelow = below + 200 < window.innerHeight;
-  return fitsBelow
-    ? { width, left, top: below }
-    : { width, left, bottom: window.innerHeight - rect.top + PADDING + GAP };
+  const above = rect.top - PADDING - GAP - height;
+  const top =
+    below + height <= window.innerHeight - bottomEdge()
+      ? below
+      : above >= TOP_OFFSET
+        ? above
+        : window.innerHeight - height - bottomEdge();
+  return { width, left, top: Math.max(top, TOP_OFFSET) };
 }
