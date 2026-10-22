@@ -6,6 +6,7 @@ import {
   MobileTabBar,
   MobileTabBarFallback,
 } from "@/features/navigation/components/app-nav";
+import { PlanAlertLoader } from "@/features/billing/components/plan-alert-loader";
 import { HelpButton, HelpButtonFallback } from "@/features/help/components/help-button";
 import { UserMenu } from "@/features/navigation/components/user-menu";
 import { Logo } from "@/ui/brand/logo";
@@ -29,6 +30,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
             <AppNav />
           </Suspense>
           <div className="ml-auto flex items-center gap-2">
+            <Suspense fallback={null}>
+              <PlanAlertLoader />
+            </Suspense>
             <Suspense fallback={<HelpButtonFallback />}>
               <HelpButton />
             </Suspense>
