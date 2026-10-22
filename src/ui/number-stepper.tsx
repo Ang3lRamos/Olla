@@ -14,12 +14,27 @@ interface NumberStepperProps {
   /** Texto junto al número, en singular y plural: ["persona", "personas"]. */
   unit: [string, string];
   error?: string;
+  /** Avisa cada cambio, para quien necesita el valor en vivo (p. ej. escalar porciones). */
+  onValueChange?: (value: number) => void;
 }
 
-export function NumberStepper({ name, label, defaultValue, min, max, unit, error }: NumberStepperProps) {
+export function NumberStepper({
+  name,
+  label,
+  defaultValue,
+  min,
+  max,
+  unit,
+  error,
+  onValueChange,
+}: NumberStepperProps) {
   const [value, setValue] = useState(defaultValue);
   const labelId = useId();
-  const change = (delta: number) => setValue((current) => Math.min(max, Math.max(min, current + delta)));
+  const change = (delta: number) => {
+    const next = Math.min(max, Math.max(min, value + delta));
+    setValue(next);
+    onValueChange?.(next);
+  };
 
   return (
     <div className="flex flex-col gap-1.5">
