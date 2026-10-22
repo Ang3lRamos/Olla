@@ -137,6 +137,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
             onAssign={(recipeId, peopleOverride) =>
               week.assign({ day: openCell.day, meal: openCell.meal, recipeId, peopleOverride })
             }
+            onCookedChange={(cooked) => week.setCooked(openCell.day, openCell.meal, cooked)}
             onClear={() => {
               week.clear(openCell.day, openCell.meal);
               setPanel(null);

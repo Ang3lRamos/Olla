@@ -19,6 +19,8 @@ export interface CellView {
   date: IsoDate;
   servings: number;
   isOverride: boolean;
+  /** Ya se cocinó: sus ingredientes salieron de la despensa. */
+  cooked: boolean;
   notes: NoteView[];
   recipe: {
     id: string;
@@ -74,6 +76,7 @@ export function buildWeekView(input: BuildWeekViewInput): DayView[] {
         date,
         servings,
         isOverride: slot?.peopleOverride != null && slot.peopleOverride !== people,
+        cooked: slot?.cooked ?? false,
         notes: notes.filter((note) => note.date === date && note.meal === meal),
         recipe: recipe
           ? {

@@ -21,6 +21,7 @@ const weekPlanRowSchema = z.object({
       meal: z.enum(MEALS),
       recipe_id: z.string(),
       people_override: z.number().nullable(),
+      cooked_at: z.string().nullable(),
     }),
   ),
 });
@@ -29,7 +30,7 @@ export async function getWeekPlan(weekStart: IsoDate, defaultPeople: number): Pr
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("week_plans")
-    .select("id, people, meal_slots(day, meal, recipe_id, people_override)")
+    .select("id, people, meal_slots(day, meal, recipe_id, people_override, cooked_at)")
     .eq("week_start", weekStart)
     .maybeSingle();
   if (error) throw new Error(`No se pudo leer la semana: ${error.message}`);
@@ -45,6 +46,7 @@ export async function getWeekPlan(weekStart: IsoDate, defaultPeople: number): Pr
       meal: slot.meal,
       recipeId: slot.recipe_id,
       peopleOverride: slot.people_override,
+      cooked: slot.cooked_at !== null,
     })),
   };
 }

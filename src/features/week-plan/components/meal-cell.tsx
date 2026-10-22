@@ -1,4 +1,4 @@
-import { Clock, Package, Plus, StickyNote, Users } from "lucide-react";
+import { Clock, CookingPot, Package, Plus, StickyNote, Users } from "lucide-react";
 import { formatCop } from "@/domain/money";
 import { RECIPE_CATEGORY_LABELS } from "@/domain/recipe-categories";
 import { MEAL_LABELS } from "@/domain/week";
@@ -68,7 +68,13 @@ export function MealCell({ cell, dayLabel, onOpen, className }: MealCellProps) {
               <span className="sr-only"> personas</span>
             </span>
           )}
-          {cell.recipe.usesPantry && (
+          {cell.cooked && (
+            <span className="text-cilantro">
+              <CookingPot className="size-3.5" aria-hidden />
+              <span className="sr-only">Cocinada</span>
+            </span>
+          )}
+          {cell.recipe.usesPantry && !cell.cooked && (
             <span className="text-cilantro">
               <Package className="size-3.5" aria-hidden />
               <span className="sr-only">Usa algo de la despensa</span>

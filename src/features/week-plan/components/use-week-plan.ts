@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import type { Meal } from "@/domain/week";
 import type { PlannedSlot } from "@/domain/week-plan";
 import { applyMealChanges, assignMeal, clearMeal, setWeekPeople, type WeekActionResult } from "../actions";
+import { cookMeal, uncookMeal } from "../cooking-actions";
 
 interface WeekState {
   slots: PlannedSlot[];
@@ -14,6 +15,7 @@ type WeekChange =
   | { type: "assign"; slot: PlannedSlot }
   | { type: "clear"; day: number; meal: Meal }
   | { type: "people"; people: number }
+  | { type: "cooked"; day: number; meal: Meal; cooked: boolean }
   | { type: "batch"; changes: MealChange[] };
 
 export interface MealChange {
@@ -26,13 +28,24 @@ const sameSlot = (slot: PlannedSlot, day: number, meal: Meal) => slot.day === da
 
 function applyChange(state: WeekState, change: WeekChange): WeekState {
   switch (change.type) {
-    case "assign":
+    case "assign": {
+      const previous = state.slots.find((slot) => sameSlot(slot, change.slot.day, change.slot.meal));
+      // Cambiar de receta deja la comida sin cocinar, igual que en el servidor.
+      const cooked = previous?.recipeId === change.slot.recipeId && previous.cooked;
       return {
         ...state,
         slots: [
           ...state.slots.filter((slot) => !sameSlot(slot, change.slot.day, change.slot.meal)),
-          change.slot,
+          { ...change.slot, cooked },
         ],
+      };
+    }
+    case "cooked":
+      return {
+        ...state,
+        slots: state.slots.map((slot) =>
+          sameSlot(slot, change.day, change.meal) ? { ...slot, cooked: change.cooked } : slot,
+        ),
       };
     case "clear":
       return { ...state, slots: state.slots.filter((slot) => !sameSlot(slot, change.day, change.meal)) };
@@ -84,6 +97,10 @@ export function useWeekPlan(weekStart: string, saved: WeekState) {
       run({ type: "clear", day, meal }, () => clearMeal({ weekStart, day, meal })),
     applyChanges: (changes: MealChange[]) =>
       run({ type: "batch", changes }, () => applyMealChanges({ weekStart, changes })),
+    setCooked: (day: number, meal: Meal, cooked: boolean) =>
+      run({ type: "cooked", day, meal, cooked }, () =>
+        (cooked ? cookMeal : uncookMeal)({ weekStart, day, meal }),
+      ),
     setPeople: (people: number) =>
       run({ type: "people", people }, () => setWeekPeople({ weekStart, people })),
   };

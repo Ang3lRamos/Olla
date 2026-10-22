@@ -16,6 +16,9 @@ import {
 
 export type WeekActionResult = { ok: true } | { ok: false; error: string };
 
+/** Otra receta en la casilla ya no es lo que se cocinó: vuelve a contar para el mercado. */
+const NOT_COOKED = { cooked_at: null, cooked_deductions: [] };
+
 const SAVE_ERROR = "No pudimos guardar el cambio en la semana. Revisa tu conexión y vuelve a intentarlo.";
 const INVALID = "Ese cambio no es válido para esta semana.";
 
@@ -28,6 +31,13 @@ export async function assignMeal(input: AssignMealInput): Promise<WeekActionResu
   const weekPlanId = await ensureWeekPlan(supabase, household, parsed.data.weekStart);
   if (!weekPlanId) return { ok: false, error: SAVE_ERROR };
 
+  const { data: current } = await supabase
+    .from("meal_slots")
+    .select("recipe_id")
+    .eq("week_plan_id", weekPlanId)
+    .eq("day", parsed.data.day)
+    .eq("meal", parsed.data.meal)
+    .maybeSingle();
   const { error } = await supabase.from("meal_slots").upsert(
     {
       week_plan_id: weekPlanId,
@@ -35,6 +45,7 @@ export async function assignMeal(input: AssignMealInput): Promise<WeekActionResu
       meal: parsed.data.meal,
       recipe_id: parsed.data.recipeId,
       people_override: parsed.data.peopleOverride,
+      ...(current?.recipe_id !== parsed.data.recipeId && NOT_COOKED),
     },
     { onConflict: "week_plan_id,day,meal" },
   );
@@ -77,17 +88,30 @@ export async function applyMealChanges(input: MealChangesInput): Promise<WeekAct
 
   const { data: current, error: readError } = await supabase
     .from("meal_slots")
-    .select("day, meal, people_override")
+    .select("day, meal, recipe_id, people_override, cooked_at, cooked_deductions")
     .eq("week_plan_id", weekPlanId);
   if (readError) return { ok: false, error: SAVE_ERROR };
-  const overrideOf = (day: number, meal: string) =>
-    current.find((slot) => slot.day === day && slot.meal === meal)?.people_override ?? null;
+  const currentOf = (day: number, meal: string) =>
+    current.find((slot) => slot.day === day && slot.meal === meal);
 
-  const assignments = parsed.data.changes.flatMap(({ day, meal, recipeId }) =>
-    recipeId
-      ? [{ week_plan_id: weekPlanId, day, meal, recipe_id: recipeId, people_override: overrideOf(day, meal) }]
-      : [],
-  );
+  // El upsert por lotes necesita las mismas columnas en todas las filas: se conserva el estado
+  // de cocinado solo si la receta no cambia.
+  const assignments = parsed.data.changes.flatMap(({ day, meal, recipeId }) => {
+    if (!recipeId) return [];
+    const slot = currentOf(day, meal);
+    const keepCooked = slot?.recipe_id === recipeId;
+    return [
+      {
+        week_plan_id: weekPlanId,
+        day,
+        meal,
+        recipe_id: recipeId,
+        people_override: slot?.people_override ?? null,
+        cooked_at: keepCooked ? slot.cooked_at : null,
+        cooked_deductions: keepCooked ? slot.cooked_deductions : [],
+      },
+    ];
+  });
   if (assignments.length) {
     const { error } = await supabase
       .from("meal_slots")

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, CookingPot, ExternalLink, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCop } from "@/domain/money";
@@ -21,6 +21,7 @@ interface SlotSheetContentProps {
   usage: ReadonlyMap<string, number>;
   onAssign: (recipeId: string, peopleOverride: number | null) => void;
   onClear: () => void;
+  onCookedChange: (cooked: boolean) => void;
 }
 
 /** Contenido del panel de una comida: elegir receta, ajustar personas y anotar. */
@@ -31,6 +32,7 @@ export function SlotSheetContent({
   usage,
   onAssign,
   onClear,
+  onCookedChange,
 }: SlotSheetContentProps) {
   const [picking, setPicking] = useState(cell.recipe === null);
   const keepOverride = cell.isOverride ? cell.servings : null;
@@ -89,9 +91,11 @@ export function SlotSheetContent({
         </div>
       </section>
 
+      <CookedSection cooked={cell.cooked} onChange={onCookedChange} />
+
       <NumberStepper
         name="mealPeople"
-        label={`Personas en este ${MEAL_LABELS[cell.meal].toLowerCase()}`}
+        label={`Personas en ${cell.meal === "dinner" ? "esta" : "este"} ${MEAL_LABELS[cell.meal].toLowerCase()}`}
         defaultValue={cell.servings}
         min={1}
         max={MAX_PEOPLE}
@@ -108,6 +112,36 @@ export function SlotSheetContent({
           placeholder="Ej.: sobró arroz, a los niños no les gustó…"
         />
       </section>
+    </div>
+  );
+}
+
+/** "Ya la cocinamos" descuenta los ingredientes de la despensa; se puede deshacer exacto. */
+function CookedSection({ cooked, onChange }: { cooked: boolean; onChange: (cooked: boolean) => void }) {
+  if (!cooked) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <Button className="w-full sm:w-fit" onClick={() => onChange(true)}>
+          <CookingPot className="size-4" aria-hidden />
+          Ya la cocinamos
+        </Button>
+        <p className="text-xs text-muted">Descuenta de la despensa lo que usó esta receta.</p>
+      </div>
+    );
+  }
+  return (
+    <div
+      role="status"
+      className="flex animate-rise items-center justify-between gap-3 rounded-md border border-cilantro/40 px-3 py-2.5"
+    >
+      <p className="flex items-center gap-2 text-sm">
+        <CookingPot className="size-4 text-cilantro" aria-hidden />
+        Cocinada · se descontó de la despensa
+      </p>
+      <Button variant="ghost" size="sm" className="shrink-0 px-2 text-muted" onClick={() => onChange(false)}>
+        <RotateCcw className="size-3.5" aria-hidden />
+        Deshacer
+      </Button>
     </div>
   );
 }
