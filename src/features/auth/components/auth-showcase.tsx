@@ -14,7 +14,7 @@ const SAMPLE_DAYS = [
     meals: [
       { meal: "Desayuno", name: "Changua", cost: 8286 },
       { meal: "Almuerzo", name: "Ajiaco", cost: 20716 },
-      { meal: "Comida", name: "Arepa rellena de pollo", cost: 12203 },
+      { meal: "Comida", name: "Arepa con queso", cost: 8960 },
     ],
   },
   {
@@ -53,10 +53,10 @@ const stagger = (step: number): CSSProperties => ({ animationDelay: `${step * 80
 function WeekCard() {
   return (
     <div
-      className="animate-rise rounded-md border border-hairline bg-surface p-5 shadow-raised"
+      className="animate-rise rounded-md border border-hairline bg-surface p-4 shadow-raised"
       style={stagger(1)}
     >
-      <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-4">
+      <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-3">
         <div>
           <p className="text-xs text-muted">Semana del 3 al 9 de noviembre</p>
           <p className="font-display text-lg font-semibold">Lo que vamos a comer</p>
@@ -66,23 +66,18 @@ function WeekCard() {
           <p className="font-display text-lg font-semibold tabular-nums">{formatCop(WEEK_TOTAL_COP)}</p>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-2.5">
+      <div className="mt-3 grid grid-cols-3 gap-2">
         {SAMPLE_DAYS.map((day) => (
-          <div key={day.label} className="flex flex-col gap-2">
+          <div key={day.label} className="flex min-w-0 flex-col gap-1.5">
             <p className="flex items-baseline gap-1.5 border-b-2 border-ink pb-1">
               <span className="letrero text-base">{day.label}</span>
               <span className={cn("text-xs text-muted", day.today && "marcador text-ink")}>{day.date}</span>
             </p>
             {day.meals.map((item) => (
-              <div
-                key={item.meal}
-                className="flex min-h-[4.5rem] flex-col rounded-sm border border-hairline p-2"
-              >
+              <div key={item.meal} className="flex flex-col rounded-sm border border-hairline px-2 py-1.5">
                 <span className="text-[11px] text-muted">{item.meal}</span>
-                <span className="text-[13px] leading-snug font-medium">{item.name}</span>
-                <span className="mt-auto pt-1 text-[11px] text-muted tabular-nums">
-                  {formatCop(item.cost)}
-                </span>
+                <span className="truncate text-[13px] font-medium">{item.name}</span>
+                <span className="text-[11px] text-muted tabular-nums">{formatCop(item.cost)}</span>
               </div>
             ))}
           </div>
@@ -106,7 +101,7 @@ function MarketTicket({ className }: { className?: string }) {
           {bought} de {SAMPLE_MARKET.length} comprados
         </p>
       </div>
-      <ul className="mt-3 flex flex-col gap-2 text-[13px]">
+      <ul className="mt-2.5 flex flex-col gap-1.5 text-[13px]">
         {SAMPLE_MARKET.map((item) => (
           <li key={item.name} className="flex items-center gap-2">
             <span
@@ -123,23 +118,34 @@ function MarketTicket({ className }: { className?: string }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 border-t border-dashed border-hairline-strong pt-2 text-[11px] text-muted">
+      <p className="mt-2.5 border-t border-dashed border-hairline-strong pt-2 text-[11px] text-muted">
         Ya tienes en casa: arroz, huevos y cebolla.
       </p>
     </div>
   );
 }
 
-/** Panel de la derecha en ingreso y registro: enseña el producto en vez de decorarlo. */
+/**
+ * Panel de la derecha en ingreso y registro: enseña el producto en vez de decorarlo. Cabe en
+ * la altura de la ventana; en pantallas bajas se queda solo la muestra.
+ */
 export function AuthShowcase({ className }: { className?: string }) {
   return (
-    <aside className={cn("m-3 flex-col justify-between gap-10 rounded-md bg-sunken p-10 xl:p-14", className)}>
-      <p className="letrero text-sm text-muted">Una semana en Olla</p>
-      <div aria-hidden className="relative mx-auto w-full max-w-[520px] pr-12 pb-40">
+    <aside
+      className={cn(
+        "m-3 flex-col justify-between gap-6 overflow-hidden rounded-md bg-sunken p-8 xl:px-12 [@media(max-height:680px)]:justify-center",
+        className,
+      )}
+    >
+      <p className="letrero text-sm text-muted [@media(max-height:680px)]:hidden">Una semana en Olla</p>
+      <div aria-hidden className="relative mx-auto w-full max-w-[500px] pr-10 pb-28">
         <WeekCard />
-        <MarketTicket className="absolute right-0 bottom-0 w-[260px] xl:-right-6" />
+        <MarketTicket className="absolute right-0 bottom-0 w-[250px] xl:-right-6" />
       </div>
-      <div className="flex max-w-md animate-rise flex-col gap-2" style={stagger(4)}>
+      <div
+        className="flex max-w-md animate-rise flex-col gap-1.5 [@media(max-height:680px)]:hidden"
+        style={stagger(4)}
+      >
         <h2 className="font-display text-xl font-semibold">El mercado sale solo del menú</h2>
         <p className="text-sm text-muted">
           Olla suma lo que se repite, resta lo que ya hay en la despensa y te dice cuánto vas a gastar en la
