@@ -31,7 +31,9 @@ describe("householdFormSchema", () => {
       defaultPeople: 4,
       weeklyBudgetCop: 250000,
       exclude: ["cerdo"],
+      detail: "simple",
     });
+    expect(householdFormSchema.parse({ ...valid, detail: "detailed" }).detail).toBe("detailed");
   });
 
   it.each([
@@ -50,7 +52,10 @@ describe("householdFormSchema", () => {
 
 describe("householdPreferencesSchema", () => {
   it("tolera preferencias vacías o mal formadas guardadas en la base", () => {
-    expect(householdPreferencesSchema.parse({})).toEqual({ exclude: [] });
-    expect(householdPreferencesSchema.parse({ exclude: "cerdo" })).toEqual({ exclude: [] });
+    expect(householdPreferencesSchema.parse({})).toEqual({ exclude: [], detail: "simple" });
+    expect(householdPreferencesSchema.parse({ exclude: "cerdo", detail: "x" })).toEqual({
+      exclude: [],
+      detail: "simple",
+    });
   });
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DETAIL_LEVELS } from "@/domain/detail-level";
 
 export const MAX_PEOPLE = 20;
 export const MAX_EXCLUSIONS = 20;
@@ -47,6 +48,7 @@ export const householdFormSchema = z.object({
         .array(z.string().max(40, "Cada elemento puede tener hasta 40 caracteres."))
         .max(MAX_EXCLUSIONS, `Hasta ${MAX_EXCLUSIONS} elementos.`),
     ),
+  detail: z.enum(DETAIL_LEVELS).catch("simple"),
 });
 
 export type HouseholdFormValues = z.output<typeof householdFormSchema>;
@@ -54,6 +56,8 @@ export type HouseholdFormField = keyof HouseholdFormValues;
 
 export const householdPreferencesSchema = z.object({
   exclude: z.array(z.string()).catch([]),
+  /** Sencillo por defecto: los hogares que existían antes de los modos siguen igual de simples. */
+  detail: z.enum(DETAIL_LEVELS).catch("simple"),
 });
 
 export type HouseholdPreferences = z.infer<typeof householdPreferencesSchema>;

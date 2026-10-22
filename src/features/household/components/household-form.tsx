@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { DetailLevel } from "@/domain/detail-level";
 import { Button } from "@/ui/button";
 import { FormMessage } from "@/ui/form-message";
 import { NumberStepper } from "@/ui/number-stepper";
@@ -8,6 +9,7 @@ import { TextField } from "@/ui/text-field";
 import type { HouseholdFormState } from "../actions";
 import { MAX_PEOPLE } from "../schemas";
 import { BudgetField } from "./budget-field";
+import { DetailLevelField } from "./detail-level-field";
 import { ExclusionsField } from "./exclusions-field";
 
 export interface HouseholdFormDefaults {
@@ -15,6 +17,7 @@ export interface HouseholdFormDefaults {
   defaultPeople: number;
   weeklyBudgetCop: number | null;
   exclude: string[];
+  detail: DetailLevel;
 }
 
 interface HouseholdFormProps {
@@ -55,6 +58,7 @@ export function HouseholdForm({ action, defaults, submitLabel }: HouseholdFormPr
         error={errors?.weeklyBudgetCop}
       />
       <ExclusionsField defaultValue={typed?.exclude ?? defaults.exclude.join(", ")} error={errors?.exclude} />
+      <DetailLevelField defaultValue={(typed?.detail as DetailLevel | undefined) ?? defaults.detail} />
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" loading={pending}>

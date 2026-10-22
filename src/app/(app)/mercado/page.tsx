@@ -37,6 +37,7 @@ async function Market({ searchParams }: Pick<PageProps<"/mercado">, "searchParam
         pantry={week.pantry}
         purchases={purchases}
         extras={extras}
+        detail={week.household.preferences.detail}
       />
     </div>
   );

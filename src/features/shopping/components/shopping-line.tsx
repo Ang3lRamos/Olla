@@ -11,10 +11,8 @@ interface ShoppingLineProps {
 }
 
 export function ShoppingLine({ priced, onToggle }: ShoppingLineProps) {
-  const { item, purchase, packagesLabel, neededPieces } = priced;
+  const { item, purchase, packagesLabel, neededPieces, amountLabel } = priced;
   const bought = item.status === "bought";
-  // Con paquetes se lee lo que se compra ("1 paquete (450 g)"); sin ellos, solo la cantidad.
-  const amount = formatQuantity(purchase.quantity);
   const leftover = purchase.quantity.amount - (bought ? item.toBuy.amount : item.remaining.amount);
 
   return (
@@ -27,8 +25,7 @@ export function ShoppingLine({ priced, onToggle }: ShoppingLineProps) {
         label={
           <span className="flex min-w-0 flex-col">
             <span>
-              {item.name}{" "}
-              <span className="text-muted">· {packagesLabel ? `${packagesLabel} (${amount})` : amount}</span>
+              {item.name} <span className="text-muted">· {amountLabel}</span>
             </span>
             {packagesLabel && (
               <span className="text-xs text-muted">

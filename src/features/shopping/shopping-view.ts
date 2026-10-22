@@ -1,6 +1,9 @@
 import { CATEGORY_LABELS, INGREDIENT_CATEGORIES, type IngredientCategory } from "@/domain/categories";
 import { getIngredient, type IngredientCatalog } from "@/domain/catalog";
 import type { PriceList } from "@/domain/costs";
+import { isSeasoning, toKitchenQuantity, type DetailLevel } from "@/domain/detail-level";
+import { formatRecipeQuantity } from "@/domain/kitchen-format";
+import { formatQuantity } from "@/domain/units";
 import { formatPackages, formatPieces, piecesIn, planPurchase, type PurchasePlan } from "@/domain/packages";
 import { stockBeforePurchases } from "@/domain/pantry";
 import { buildShoppingLines } from "@/domain/shopping-list";
@@ -19,6 +22,8 @@ export interface PricedItem {
   packagesLabel: string | null;
   /** Lo que pide el menú en porciones ("≈ 6 tajadas"), si la presentación las tiene. */
   neededPieces: string | null;
+  /** Cuánto comprar, como se lee en el modo del hogar: "1 paquete (450 g)", "1 ¼ libras", "un poco". */
+  amountLabel: string;
 }
 
 export interface ShoppingGroupView {
@@ -51,10 +56,11 @@ interface BuildShoppingViewInput {
   extras: ShoppingExtra[];
   catalog: IngredientCatalog;
   prices: PriceList;
+  detail?: DetailLevel;
 }
 
 export function buildShoppingView(input: BuildShoppingViewInput): ShoppingView {
-  const { slots, recipes, people, pantry, purchases, extras, catalog, prices } = input;
+  const { slots, recipes, people, pantry, purchases, extras, catalog, prices, detail = "detailed" } = input;
   // Lo ya cocinado salió de la despensa y no se vuelve a comprar; lo ya comprado entró a ella.
   const meals = toPlannedMeals(
     slots.filter((slot) => !slot.cooked),
@@ -71,13 +77,22 @@ export function buildShoppingView(input: BuildShoppingViewInput): ShoppingView {
     const price = prices.get(item.ingredientId);
     const purchaseFull = plan(item.ingredientId, item.toBuy);
     const purchase = item.status === "bought" ? purchaseFull : plan(item.ingredientId, item.remaining);
-    const pieces = piecesIn(item.needed, getIngredient(catalog, item.ingredientId), price);
+    const ingredient = getIngredient(catalog, item.ingredientId);
+    const pieces = piecesIn(item.needed, ingredient, price);
+    const packagesLabel = price && purchase.packages ? formatPackages(purchase.packages, price) : null;
+    const amount =
+      detail === "detailed"
+        ? formatQuantity(purchase.quantity)
+        : isSeasoning(ingredient)
+          ? "un poco"
+          : formatRecipeQuantity(toKitchenQuantity(purchase.quantity, ingredient));
     return {
       item,
       purchase,
       purchaseFull,
-      packagesLabel: price && purchase.packages ? formatPackages(purchase.packages, price) : null,
+      packagesLabel,
       neededPieces: pieces !== null && price?.pieces ? formatPieces(pieces, price.pieces.label) : null,
+      amountLabel: packagesLabel ? `${packagesLabel} (${formatQuantity(purchase.quantity)})` : amount,
     };
   });
   const sum = (values: Array<number | null>) =>

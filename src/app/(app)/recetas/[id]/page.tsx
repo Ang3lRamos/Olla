@@ -49,6 +49,7 @@ async function RecipeDetailView({ params }: Pick<PageProps<"/recetas/[id]">, "pa
           ingredients={ingredients}
           prices={recipePrices}
           defaultServings={household.defaultPeople}
+          detail={household.preferences.detail}
         />
         <section aria-labelledby="steps-title" className="flex flex-col gap-5">
           <h2 id="steps-title" className="letrero text-xl">

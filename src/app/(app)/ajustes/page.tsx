@@ -17,6 +17,7 @@ async function HouseholdSettings() {
         defaultPeople: household.defaultPeople,
         weeklyBudgetCop: household.weeklyBudgetCop,
         exclude: household.preferences.exclude,
+        detail: household.preferences.detail,
       }}
       submitLabel="Guardar cambios"
     />

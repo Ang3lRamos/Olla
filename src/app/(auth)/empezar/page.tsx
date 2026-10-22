@@ -8,7 +8,13 @@ import { getCurrentHousehold, requireUser } from "@/features/household/data";
 
 export const metadata: Metadata = { title: "Empezar" };
 
-const NEW_HOUSEHOLD = { name: "", defaultPeople: 4, weeklyBudgetCop: null, exclude: [] };
+const NEW_HOUSEHOLD = {
+  name: "",
+  defaultPeople: 4,
+  weeklyBudgetCop: null,
+  exclude: [],
+  detail: "simple" as const,
+};
 
 async function OnboardingForm() {
   await requireUser();

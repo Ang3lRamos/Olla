@@ -97,6 +97,14 @@ describe("buildShoppingView", () => {
     });
   });
 
+  it("en modo sencillo lee las cantidades en medidas de cocina", () => {
+    const amountOf = (view: ReturnType<typeof build>) =>
+      view.groups.flatMap((group) => group.items).find(({ item }) => item.ingredientId === "rice")!
+        .amountLabel;
+    expect(amountOf(build())).toBe("500 g");
+    expect(amountOf(build({ detail: "simple" }))).toBe("1 libra");
+  });
+
   it("lo ya cocinado no se vuelve a comprar", () => {
     const view = build({
       slots: [{ day: 0, meal: "lunch", recipeId: "arroz-blanco", peopleOverride: null, cooked: true }],

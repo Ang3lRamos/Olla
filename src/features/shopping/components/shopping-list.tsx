@@ -1,5 +1,6 @@
 "use client";
 
+import type { DetailLevel } from "@/domain/detail-level";
 import { X } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -29,6 +30,7 @@ export interface ShoppingListProps {
   pantry: PantryItem[];
   purchases: Purchase[];
   extras: ShoppingExtra[];
+  detail: DetailLevel;
 }
 
 export function ShoppingList(props: ShoppingListProps) {
@@ -50,6 +52,7 @@ export function ShoppingList(props: ShoppingListProps) {
     extras: shopping.extras,
     catalog,
     prices,
+    detail: props.detail,
   });
   const { totals } = view;
 
@@ -61,10 +64,10 @@ export function ShoppingList(props: ShoppingListProps) {
         items: [
           ...group.items
             .filter(({ item }) => item.status !== "bought")
-            .map(({ item, packagesLabel }) => ({
+            .map(({ item, amountLabel }) => ({
               name: item.name,
               quantity: item.remaining,
-              detail: packagesLabel,
+              detail: amountLabel,
             })),
           ...group.extras
             .filter((extra) => !extra.checked)

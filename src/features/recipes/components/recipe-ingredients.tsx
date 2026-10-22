@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import { buildCatalog, getIngredient } from "@/domain/catalog";
 import { quantityCost, recipeCost } from "@/domain/costs";
+import { exactBaseQuantity, isSeasoning, toKitchenQuantity, type DetailLevel } from "@/domain/detail-level";
 import { formatRecipeQuantity } from "@/domain/kitchen-format";
 import { formatCop } from "@/domain/money";
 import { scaleRecipe } from "@/domain/scaling";
 import type { Ingredient, IngredientPrice } from "@/domain/types";
-import { toIngredientBase } from "@/domain/units";
+import { formatQuantity, toIngredientBase } from "@/domain/units";
 import { NumberStepper } from "@/ui/number-stepper";
 import type { RecipeDetail } from "../types";
 import { MAX_RECIPE_SERVINGS } from "../schemas";
@@ -17,16 +18,31 @@ interface RecipeIngredientsProps {
   ingredients: Ingredient[];
   prices: IngredientPrice[];
   defaultServings: number;
+  detail: DetailLevel;
 }
 
 /** Ingredientes escalados en vivo con su costo; la cuenta la hace el dominio, no la UI. */
-export function RecipeIngredients({ recipe, ingredients, prices, defaultServings }: RecipeIngredientsProps) {
+export function RecipeIngredients({
+  recipe,
+  ingredients,
+  prices,
+  defaultServings,
+  detail,
+}: RecipeIngredientsProps) {
   const [servings, setServings] = useState(defaultServings);
   const catalog = useMemo(() => buildCatalog(ingredients), [ingredients]);
   const priceList = useMemo(() => new Map(prices.map((price) => [price.ingredientId, price])), [prices]);
 
-  const scaled = scaleRecipe(recipe, servings);
+  const scaled = scaleRecipe(recipe, servings).map((line, index) => ({
+    ...line,
+    ingredient: getIngredient(catalog, line.ingredientId),
+    note: recipe.ingredients[index]?.note,
+  }));
   const total = recipeCost(recipe, servings, catalog, priceList);
+  // En modo sencillo los condimentos van juntos "al gusto"; su costo sí cuenta en el total.
+  const simple = detail === "simple";
+  const main = simple ? scaled.filter((line) => !isSeasoning(line.ingredient)) : scaled;
+  const seasonings = simple ? scaled.filter((line) => isSeasoning(line.ingredient)) : [];
 
   return (
     <section aria-labelledby="ingredients-title" className="flex flex-col gap-5">
@@ -46,23 +62,26 @@ export function RecipeIngredients({ recipe, ingredients, prices, defaultServings
       </div>
 
       <ul className="flex flex-col divide-y divide-hairline border-y border-hairline">
-        {scaled.map((line, index) => {
-          const ingredient = getIngredient(catalog, line.ingredientId);
+        {main.map(({ ingredient, quantity, note }, index) => {
           const cost = quantityCost(
-            toIngredientBase(line.quantity, ingredient),
+            toIngredientBase(quantity, ingredient),
             ingredient,
             priceList.get(ingredient.id),
           );
-          const note = recipe.ingredients[index]?.note;
+          const shown = simple ? toKitchenQuantity(quantity, ingredient) : quantity;
+          const exact = simple ? null : exactBaseQuantity(quantity, ingredient);
           return (
             <li
-              key={`${line.ingredientId}-${index}`}
+              key={`${ingredient.id}-${index}`}
               className="flex items-baseline justify-between gap-4 py-2.5"
             >
               <span className="flex flex-col">
                 <span>
-                  <span className="font-medium tabular-nums">{formatRecipeQuantity(line.quantity)}</span>{" "}
+                  <span className="font-medium tabular-nums">{formatRecipeQuantity(shown)}</span>{" "}
                   {ingredient.name.toLocaleLowerCase("es")}
+                  {exact && (
+                    <span className="text-sm text-muted tabular-nums"> ({formatQuantity(exact)})</span>
+                  )}
                 </span>
                 {note && <span className="text-sm text-muted">{note}</span>}
               </span>
@@ -72,6 +91,15 @@ export function RecipeIngredients({ recipe, ingredients, prices, defaultServings
             </li>
           );
         })}
+        {seasonings.length > 0 && (
+          <li className="flex flex-col py-2.5">
+            <span>
+              <span className="font-medium">Para sazonar:</span>{" "}
+              {seasonings.map((line) => line.ingredient.name.toLocaleLowerCase("es")).join(", ")}
+            </span>
+            <span className="text-sm text-muted">Al gusto. En el modo detallado ves cuánto de cada uno.</span>
+          </li>
+        )}
       </ul>
 
       <dl className="grid grid-cols-2 gap-4">

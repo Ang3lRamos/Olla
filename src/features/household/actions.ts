@@ -26,6 +26,7 @@ function readForm(formData: FormData): RawHouseholdForm {
     defaultPeople: read("defaultPeople"),
     weeklyBudgetCop: read("weeklyBudgetCop"),
     exclude: read("exclude"),
+    detail: read("detail"),
   };
 }
 
@@ -49,7 +50,7 @@ export async function createHousehold(
   const result = validate(raw);
   if ("state" in result) return result.state;
 
-  const { name, defaultPeople, weeklyBudgetCop, exclude } = result.values;
+  const { name, defaultPeople, weeklyBudgetCop, exclude, detail } = result.values;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("create_household", {
     household_name: name,
@@ -57,7 +58,7 @@ export async function createHousehold(
     // La función acepta null (default en SQL), pero `supabase gen types` no marca opcionales
     // los argumentos con valor por defecto.
     budget_cop: weeklyBudgetCop as number,
-    household_preferences: { exclude },
+    household_preferences: { exclude, detail },
   });
   if (error) return { error: SAVE_ERROR, values: raw };
 
@@ -73,7 +74,7 @@ export async function updateHousehold(
   const result = validate(raw);
   if ("state" in result) return result.state;
 
-  const { name, defaultPeople, weeklyBudgetCop, exclude } = result.values;
+  const { name, defaultPeople, weeklyBudgetCop, exclude, detail } = result.values;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("households")
@@ -81,7 +82,7 @@ export async function updateHousehold(
       name,
       default_people: defaultPeople,
       weekly_budget_cop: weeklyBudgetCop,
-      preferences: { ...household.preferences, exclude },
+      preferences: { ...household.preferences, exclude, detail },
     })
     .eq("id", household.id);
   if (error) return { error: SAVE_ERROR, values: raw };
