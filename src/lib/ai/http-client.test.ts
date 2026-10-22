@@ -64,6 +64,13 @@ describe("createHttpAiClient", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("si el modo JSON del proveedor rechaza lo generado, repite sin ese modo", async () => {
+    const rejected = status(400, '{"error":{"code":"json_validate_failed","failed_generation":""}}');
+    const { client, body } = setup(rejected, completion('{"recipeId": "abc"}'));
+    expect(await client.completeJson(request)).toMatchObject({ ok: true });
+    expect(body(1).response_format).toBeUndefined();
+  });
+
   describe("con modelos de respaldo", () => {
     const withFallback = { ...config, models: ["grande", "mediano"] };
     function setupFallback(...responses: Response[]) {

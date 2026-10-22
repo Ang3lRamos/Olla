@@ -86,6 +86,11 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
       if (response.status === 400 && useResponseFormat && /response_format/i.test(body)) {
         return { ...fail("unavailable", body), retry: "without-response-format" };
       }
+      // Groq rechaza con 400 cuando el modelo genera JSON que su modo estricto no valida; pasa al
+      // azar. Sin ese modo, el JSON se extrae y valida aquí, con corrección si hace falta.
+      if (response.status === 400 && useResponseFormat && /json_validate_failed/i.test(body)) {
+        return { ...fail("invalid_response", body), retry: "without-response-format" };
+      }
       if (response.status === 429) return rateLimited(response, body);
       const error = fail("unavailable", `HTTP ${response.status}: ${body}`);
       if (response.status === 401 || response.status === 403) return { ...error, fatal: true };
