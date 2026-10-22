@@ -83,6 +83,7 @@ describe("buildAssistantMessages", () => {
         mode: "adjust",
         instruction: "cambia el pescado",
         notes: [{ day: 2, meal: "lunch", body: "sobró arroz" }],
+        marketExtras: ["Tortillas de maíz"],
       }),
     );
     expect(system!.content).toMatch(/Solo eliges recetas del catálogo/);
@@ -90,7 +91,12 @@ describe("buildAssistantMessages", () => {
     expect(user!.content).toContain("«cambia el pescado»");
     const data = JSON.parse(user!.content.split("Datos del hogar:\n")[1]!);
     expect(data.catalogo.map((recipe: { id: string }) => recipe.id)).toContain("lentejas");
-    expect(data).toMatchObject({ no_incluir: ["tocineta"], presupuesto_semanal_cop: 200000 });
+    expect(data).toMatchObject({
+      no_incluir: ["tocineta"],
+      presupuesto_semanal_cop: 200000,
+      despensa: ["Arroz"],
+      extras_del_mercado: ["Tortillas de maíz"],
+    });
     expect(data.notas).toEqual([{ dia: "miércoles", comida: "Almuerzo", texto: "sobró arroz" }]);
   });
 });

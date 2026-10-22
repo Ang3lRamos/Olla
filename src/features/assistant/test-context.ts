@@ -33,6 +33,7 @@ export function makeContext(overrides: Partial<AssistantContext> = {}): Assistan
     slots: [],
     recipes: RECIPES,
     pantry: ["Arroz"],
+    marketExtras: [],
     notes: [],
     ...overrides,
   };

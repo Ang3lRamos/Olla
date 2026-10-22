@@ -32,5 +32,7 @@ export interface AssistantContext {
   slots: PlannedSlot[];
   recipes: CatalogRecipe[];
   pantry: string[];
+  /** Lo que el hogar agregó al mercado aparte de las recetas ("pollo extra", "tortillas"). */
+  marketExtras: string[];
   notes: AssistantNote[];
 }

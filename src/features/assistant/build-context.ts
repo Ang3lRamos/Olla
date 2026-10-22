@@ -5,6 +5,7 @@ import { addDays, dayIndex } from "@/domain/week";
 import { summarizeWeek } from "@/domain/week-plan";
 import { listNotesBetween } from "@/features/notes/data";
 import { summarizeRecipe } from "@/features/recipes/data";
+import { getShoppingState } from "@/features/shopping/data";
 import type { loadWeek } from "@/features/week-plan/load-week";
 import { selectCandidates } from "./candidates";
 import type { AssistantContext, CatalogRecipe } from "./context";
@@ -15,6 +16,7 @@ type LoadedWeek = Awaited<ReturnType<typeof loadWeek>>;
 /** Topes para que ninguna consulta crezca sin control: el costo de cada una queda acotado. */
 export const MAX_NOTES = 30;
 export const MAX_PANTRY_ITEMS = 100;
+export const MAX_MARKET_EXTRAS = 30;
 
 interface BuildContextInput {
   week: LoadedWeek;
@@ -32,7 +34,10 @@ export async function buildAssistantContext({
 }: BuildContextInput): Promise<AssistantContext> {
   const { catalog, prices, household, plan, pantry } = week;
   // Las notas de la semana anterior ayudan a no repetir lo que no gustó.
-  const notes = await listNotesBetween(addDays(week.weekStart, -7), week.weekEnd);
+  const [notes, { extras }] = await Promise.all([
+    listNotesBetween(addDays(week.weekStart, -7), week.weekEnd),
+    getShoppingState(plan.id),
+  ]);
 
   const recipes: CatalogRecipe[] = week.recipes.map((recipe) => {
     const summary = summarizeRecipe(recipe, catalog, prices);
@@ -70,6 +75,7 @@ export async function buildAssistantContext({
       inWeek: new Set(plan.slots.map((slot) => slot.recipeId)),
       pantryNames: new Set(pantryNames),
     }),
+    marketExtras: extras.slice(0, MAX_MARKET_EXTRAS).map((extra) => extra.name),
     pantry: pantry.slice(0, MAX_PANTRY_ITEMS).map((item) => {
       const ingredient = getIngredient(catalog, item.ingredientId);
       return `${ingredient.name}: ${formatQuantity(toIngredientBase(item.quantity, ingredient))}`;
