@@ -14,7 +14,10 @@ const SAVE_ERROR = "No pudimos guardar el precio. Revisa tu conexión y vuelve a
 // Los precios cambian costos en la semana, el mercado y las recetas.
 const revalidatePrices = () => revalidatePath("/", "layout");
 
-/** Guarda el precio propio del hogar; reemplaza al de referencia en todos los cálculos. */
+/**
+ * Guarda la presentación que compra el hogar (precio, contenido y porciones); reemplaza al
+ * precio de referencia en todos los cálculos y el mercado se cuenta en esos paquetes.
+ */
 export async function saveIngredientPrice(input: IngredientPriceInput): Promise<PriceActionResult> {
   const household = await requireHousehold();
   const parsed = ingredientPriceSchema.safeParse(input);
@@ -34,6 +37,9 @@ export async function saveIngredientPrice(input: IngredientPriceInput): Promise<
       price_cop: parsed.data.priceCop,
       per_amount: parsed.data.perAmount,
       per_unit: parsed.data.perUnit,
+      package_label: parsed.data.packageLabel,
+      pieces: parsed.data.pieces,
+      piece_label: parsed.data.pieceLabel,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "household_id,ingredient_id" },

@@ -50,7 +50,14 @@ async function Budget({ searchParams }: Pick<PageProps<"/presupuesto">, "searchP
     const price = week.prices.get(ingredient.id);
     return {
       ingredient,
-      price: price ? { priceCop: price.priceCop, per: price.per } : null,
+      price: price
+        ? {
+            priceCop: price.priceCop,
+            per: price.per,
+            packageLabel: price.packageLabel ?? null,
+            pieces: price.pieces ?? null,
+          }
+        : null,
       isOwn: ownIds.has(ingredient.id),
       usedThisWeek: usedIds.has(ingredient.id),
     };

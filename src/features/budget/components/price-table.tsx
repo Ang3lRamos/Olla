@@ -36,8 +36,8 @@ export function PriceTable({ rows }: { rows: PriceTableRow[] }) {
           Precios
         </h2>
         <p className="text-sm text-muted">
-          Vienen con un precio de referencia aproximado. Pon lo que pagas tú y los costos se ajustan en toda
-          la app.
+          Vienen con un precio de referencia aproximado. Pon lo que compras tú —cuánto pagas, cuánto trae y en
+          cuántas porciones viene— y el mercado se cuenta en esos paquetes.
         </p>
       </div>
 

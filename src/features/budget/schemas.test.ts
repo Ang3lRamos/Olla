@@ -23,13 +23,49 @@ describe("ingredientPriceSchema", () => {
         perAmount: "0,5",
         perUnit: "kg",
       }),
-    ).toEqual({ ingredientId: RICE, priceCop: 3200, perAmount: 0.5, perUnit: "kg" });
+    ).toEqual({
+      ingredientId: RICE,
+      priceCop: 3200,
+      perAmount: 0.5,
+      perUnit: "kg",
+      packageLabel: null,
+      pieces: null,
+      pieceLabel: null,
+    });
+  });
+
+  it("guarda la presentación con sus porciones", () => {
+    expect(
+      ingredientPriceSchema.parse({
+        ingredientId: RICE,
+        priceCop: "9.800",
+        perAmount: "450",
+        perUnit: "g",
+        packageLabel: " paquete ",
+        pieces: "18",
+        pieceLabel: "tajadas",
+      }),
+    ).toMatchObject({ packageLabel: "paquete", pieces: 18, pieceLabel: "tajadas" });
+  });
+
+  it("sin cantidad de porciones descarta su nombre", () => {
+    expect(
+      ingredientPriceSchema.parse({
+        ingredientId: RICE,
+        priceCop: "1",
+        perAmount: "1",
+        perUnit: "g",
+        pieceLabel: "tajadas",
+      }),
+    ).toMatchObject({ pieces: null, pieceLabel: null });
   });
 
   it.each([
     [{ priceCop: "" }, "Escribe el precio en pesos."],
     [{ perAmount: "0" }, "La cantidad debe ser mayor que cero."],
     [{ priceCop: "99.999.999" }, "Ese precio parece demasiado alto."],
+    [{ pieces: "18" }, "Escribe cómo se llaman las porciones (p. ej. tajadas)."],
+    [{ pieces: "2,5", pieceLabel: "tajadas" }, "Escribe cuántas porciones trae."],
   ])("rechaza %o", (override, message) => {
     const result = ingredientPriceSchema.safeParse({
       ingredientId: RICE,
