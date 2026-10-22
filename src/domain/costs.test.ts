@@ -111,7 +111,7 @@ describe("buildPriceList", () => {
       { ingredientId: "rice", priceCop: 6000, per, householdId: null },
       { ingredientId: "oil", priceCop: 12000, per: { amount: 1, unit: "l" }, householdId: null },
     ]);
-    expect(prices.get("rice")).toEqual({ ingredientId: "rice", priceCop: 3500, per });
-    expect(prices.get("oil")?.priceCop).toBe(12000);
+    expect(prices.get("rice")).toEqual({ ingredientId: "rice", priceCop: 3500, per, own: true });
+    expect(prices.get("oil")).toMatchObject({ priceCop: 12000, own: false });
   });
 });

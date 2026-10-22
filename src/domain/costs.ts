@@ -32,8 +32,8 @@ export function buildPriceList(entries: PriceEntry[]): PriceList {
   const referenceFirst = [...entries].sort(
     (a, b) => Number(a.householdId !== null) - Number(b.householdId !== null),
   );
-  for (const { ingredientId, priceCop, per } of referenceFirst) {
-    prices.set(ingredientId, { ingredientId, priceCop, per });
+  for (const { householdId, ...price } of referenceFirst) {
+    prices.set(price.ingredientId, { ...price, own: householdId !== null });
   }
   return prices;
 }

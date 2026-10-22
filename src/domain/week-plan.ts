@@ -1,5 +1,6 @@
 import type { IngredientCatalog } from "./catalog";
-import { dailyCosts, estimateCost, type CostEstimate, type PriceList } from "./costs";
+import { dailyCosts, type CostEstimate, type PriceList } from "./costs";
+import { estimatePurchases } from "./packages";
 import { buildShoppingLines } from "./shopping-list";
 import type { PantryItem, PlannedMeal, Recipe } from "./types";
 import { MEALS, type Meal } from "./week";
@@ -10,12 +11,14 @@ export interface PlannedSlot {
   recipeId: string;
   /** Personas distintas a las de la semana para esta comida (p. ej. visita el sábado). */
   peopleOverride: number | null;
+  /** Ya se cocinó: sus ingredientes salieron de la despensa y no cuentan para el mercado. */
+  cooked?: boolean;
 }
 
 export interface WeekSummary {
   plannedMeals: number;
   totalMeals: number;
-  /** Lo que se compraría: ya descuenta la despensa. */
+  /** Lo que falta comprar para lo que aún no se cocina: descuenta la despensa, en paquetes. */
   market: CostEstimate;
   /** Valor de lo que se cocina cada día, de lunes a domingo. */
   days: CostEstimate[];
@@ -52,7 +55,12 @@ export function summarizeWeek({
 }: SummarizeWeekInput): WeekSummary {
   const meals = toPlannedMeals(slots, recipes, weekPeople);
   const days = dailyCosts(meals, catalog, prices);
-  const toBuy = buildShoppingLines(meals, pantry, catalog).map((line) => ({
+  const pending = toPlannedMeals(
+    slots.filter((slot) => !slot.cooked),
+    recipes,
+    weekPeople,
+  );
+  const toBuy = buildShoppingLines(pending, pantry, catalog).map((line) => ({
     ingredientId: line.ingredientId,
     quantity: line.toBuy,
   }));
@@ -62,7 +70,7 @@ export function summarizeWeek({
   return {
     plannedMeals: meals.length,
     totalMeals: 7 * MEALS.length,
-    market: estimateCost(toBuy, catalog, prices),
+    market: estimatePurchases(toBuy, catalog, prices),
     days,
     averagePerPlannedDayCop: plannedDays === 0 ? 0 : Math.round(cookedValue / plannedDays),
   };

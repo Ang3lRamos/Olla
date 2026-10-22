@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { subtractPantry } from "./pantry";
-import { catalog } from "./test-fixtures";
+import { adjustStock, stockBeforePurchases, subtractPantry } from "./pantry";
+import { catalog, egg, rice } from "./test-fixtures";
 
 describe("subtractPantry", () => {
   it("resta lo que hay en casa sin dejar cantidades negativas", () => {
@@ -68,5 +68,34 @@ describe("subtractPantry", () => {
       catalog,
     );
     expect(egg).toEqual({ ingredientId: "egg", quantity: { amount: 4, unit: "unit" }, fromPantry: 0 });
+  });
+});
+
+describe("adjustStock", () => {
+  it("suma compras y resta lo cocinado en la unidad base, sin bajar de cero", () => {
+    expect(adjustStock({ amount: 1, unit: "lb" }, { amount: 200, unit: "g" }, rice)).toEqual({
+      amount: 700,
+      unit: "g",
+    });
+    expect(adjustStock({ amount: 300, unit: "g" }, { amount: -500, unit: "g" }, rice)).toEqual({
+      amount: 0,
+      unit: "g",
+    });
+    expect(adjustStock(undefined, { amount: 6, unit: "unit" }, egg)).toEqual({ amount: 6, unit: "unit" });
+  });
+
+  it("no mezcla unidades que no se pueden convertir", () => {
+    expect(adjustStock({ amount: 6, unit: "unit" }, { amount: 100, unit: "g" }, egg)).toBeNull();
+  });
+});
+
+describe("stockBeforePurchases", () => {
+  it("quita de la despensa lo comprado en la semana para no contarlo dos veces", () => {
+    const before = stockBeforePurchases(
+      [{ ingredientId: "rice", quantity: { amount: 2, unit: "lb" } }],
+      [{ ingredientId: "rice", quantity: { amount: 1500, unit: "g" } }],
+      catalog,
+    );
+    expect(before).toEqual([{ ingredientId: "rice", quantity: { amount: 0, unit: "g" } }]);
   });
 });

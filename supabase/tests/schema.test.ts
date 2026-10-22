@@ -370,3 +370,29 @@ describe("borrar un usuario", () => {
     expect(await count(db, "select 1 from public.households where id = $1", [anaHousehold])).toBe(1);
   });
 });
+
+describe("presentaciones", () => {
+  const savePrice = (tx: Transaction, pieces: number | null, pieceLabel: string | null) =>
+    tx.query(
+      `insert into public.ingredient_prices (household_id, ingredient_id, price_cop, per_amount, per_unit, package_label, pieces, piece_label)
+       select $1, id, 9800, 450, 'g', 'paquete', $2, $3 from public.ingredients where name = 'Queso tajado' and household_id is null
+       on conflict (household_id, ingredient_id) do update set pieces = excluded.pieces, piece_label = excluded.piece_label`,
+      [anaHousehold, pieces, pieceLabel],
+    );
+
+  it("guarda el paquete con sus porciones", async () => {
+    await asUser(db, ANA, (tx) => savePrice(tx, 18, "tajadas"));
+    const row = await asUser(db, ANA, (tx) =>
+      tx.query<{ pieces: number }>("select pieces from public.ingredient_prices where household_id = $1", [
+        anaHousehold,
+      ]),
+    );
+    expect(row.rows[0]?.pieces).toBe(18);
+  });
+
+  it("no acepta porciones sin nombre", async () => {
+    await expect(asUser(db, ANA, (tx) => savePrice(tx, 18, null))).rejects.toThrow(
+      "ingredient_prices_pieces_with_label",
+    );
+  });
+});

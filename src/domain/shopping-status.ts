@@ -47,7 +47,8 @@ export function reconcilePurchases(lines: ShoppingLine[], purchases: Purchase[])
 
 export interface TextListGroup {
   label: string;
-  items: Array<{ name: string; quantity: BaseQuantity | null }>;
+  /** `detail` reemplaza la cantidad cuando se compra por paquetes ("1 paquete"). */
+  items: Array<{ name: string; quantity: BaseQuantity | null; detail?: string | null }>;
 }
 
 /** Lista en texto plano para mandar por WhatsApp; solo incluye lo que falta comprar. */
@@ -55,9 +56,10 @@ export function formatShoppingText(title: string, groups: TextListGroup[]): stri
   const sections = groups
     .filter((group) => group.items.length > 0)
     .map((group) => {
-      const lines = group.items.map((item) =>
-        item.quantity ? `- ${item.name}: ${formatQuantity(item.quantity)}` : `- ${item.name}`,
-      );
+      const lines = group.items.map((item) => {
+        const amount = item.detail ?? (item.quantity && formatQuantity(item.quantity));
+        return amount ? `- ${item.name}: ${amount}` : `- ${item.name}`;
+      });
       return [group.label.toLocaleUpperCase("es"), ...lines].join("\n");
     });
   return sections.length ? [title, ...sections].join("\n\n") : `${title}\n\nNo falta nada por comprar.`;

@@ -38,10 +38,25 @@ export interface PantryItem {
   quantity: Quantity;
 }
 
+/** Porciones que trae una presentación, p. ej. 18 tajadas. */
+export interface PackagePieces {
+  count: number;
+  label: string;
+}
+
+/**
+ * Precio de un ingrediente por una cantidad. Si lo puso el hogar (`own`), describe lo que de
+ * verdad compra —"un paquete de 450 g con 18 tajadas a $9.800"— y el mercado se cuenta en
+ * paquetes enteros; el de referencia es solo un promedio para estimar.
+ */
 export interface IngredientPrice {
   ingredientId: string;
   priceCop: number;
   per: Quantity;
+  own?: boolean;
+  /** Cómo se llama lo que se compra: "paquete", "bloque", "cubeta"… */
+  packageLabel?: string | null;
+  pieces?: PackagePieces | null;
 }
 
 export interface PlannedMeal {

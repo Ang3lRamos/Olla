@@ -81,14 +81,14 @@ isOneToOne: false
                   ]
                 },"ingredient_prices": {
                   Row: {
-                    "household_id": string | null,"id": string,"ingredient_id": string,"per_amount": number,"per_unit": string,"price_cop": number,"updated_at": string
+                    "household_id": string | null,"id": string,"ingredient_id": string,"package_label": string | null,"per_amount": number,"per_unit": string,"piece_label": string | null,"pieces": number | null,"price_cop": number,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "household_id"?: string | null,"id"?: string,"ingredient_id": string,"per_amount": number,"per_unit": string,"price_cop": number,"updated_at"?: string
+                    "household_id"?: string | null,"id"?: string,"ingredient_id": string,"package_label"?: string | null,"per_amount": number,"per_unit": string,"piece_label"?: string | null,"pieces"?: number | null,"price_cop": number,"updated_at"?: string
                   }
                   Update: {
-                    "household_id"?: string | null,"id"?: string,"ingredient_id"?: string,"per_amount"?: number,"per_unit"?: string,"price_cop"?: number,"updated_at"?: string
+                    "household_id"?: string | null,"id"?: string,"ingredient_id"?: string,"package_label"?: string | null,"per_amount"?: number,"per_unit"?: string,"piece_label"?: string | null,"pieces"?: number | null,"price_cop"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -127,14 +127,14 @@ isOneToOne: false
                   ]
                 },"meal_slots": {
                   Row: {
-                    "day": number,"id": string,"meal": string,"people_override": number | null,"recipe_id": string,"week_plan_id": string
+                    "cooked_at": string | null,"cooked_deductions": NonNullable<Json>,"day": number,"id": string,"meal": string,"people_override": number | null,"recipe_id": string,"week_plan_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "day": number,"id"?: string,"meal": string,"people_override"?: number | null,"recipe_id": string,"week_plan_id": string
+                    "cooked_at"?: string | null,"cooked_deductions"?: NonNullable<Json>,"day": number,"id"?: string,"meal": string,"people_override"?: number | null,"recipe_id": string,"week_plan_id": string
                   }
                   Update: {
-                    "day"?: number,"id"?: string,"meal"?: string,"people_override"?: number | null,"recipe_id"?: string,"week_plan_id"?: string
+                    "cooked_at"?: string | null,"cooked_deductions"?: NonNullable<Json>,"day"?: number,"id"?: string,"meal"?: string,"people_override"?: number | null,"recipe_id"?: string,"week_plan_id"?: string
                   }
                   Relationships: [
                     {

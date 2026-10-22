@@ -31,12 +31,17 @@ const priceRowSchema = z
     price_cop: z.number(),
     per_amount: z.number(),
     per_unit: z.enum(UNITS),
+    package_label: z.string().nullable(),
+    pieces: z.number().nullable(),
+    piece_label: z.string().nullable(),
   })
-  .transform((row) => ({
+  .transform((row): PriceEntry => ({
     ingredientId: row.ingredient_id,
     householdId: row.household_id,
     priceCop: row.price_cop,
     per: { amount: row.per_amount, unit: row.per_unit },
+    packageLabel: row.package_label,
+    pieces: row.pieces && row.piece_label ? { count: row.pieces, label: row.piece_label } : null,
   }));
 
 export interface CatalogData {
@@ -52,7 +57,11 @@ export const getCatalog = cache(async (): Promise<CatalogData> => {
   const supabase = await createSupabaseServerClient();
   const [ingredientsResult, pricesResult] = await Promise.all([
     supabase.from("ingredients").select("id, name, category, base_unit, grams_per_unit").order("name"),
-    supabase.from("ingredient_prices").select("ingredient_id, household_id, price_cop, per_amount, per_unit"),
+    supabase
+      .from("ingredient_prices")
+      .select(
+        "ingredient_id, household_id, price_cop, per_amount, per_unit, package_label, pieces, piece_label",
+      ),
   ]);
   if (ingredientsResult.error)
     throw new Error(`No se pudo leer el catálogo: ${ingredientsResult.error.message}`);
