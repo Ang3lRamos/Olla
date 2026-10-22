@@ -46,7 +46,10 @@ const toDraftLines = (recipe?: RecipeDetail): IngredientLineDraft[] =>
       }))
     : [emptyLine()];
 
-export function RecipeForm({ ingredients, recipe, cancelHref }: RecipeFormProps) {
+export function RecipeForm({ ingredients: listed, recipe, cancelHref }: RecipeFormProps) {
+  // Productos creados desde el formulario, mientras el servidor trae la lista con ellos.
+  const [created, setCreated] = useState<Ingredient[]>([]);
+  const ingredients = [...listed, ...created.filter((item) => !listed.some((other) => other.id === item.id))];
   const [state, formAction, pending] = useActionState<RecipeFormState, FormData>(saveRecipe, {});
   const [name, setName] = useState(recipe?.name ?? "");
   const [category, setCategory] = useState<RecipeCategory>(recipe?.category ?? "main");
@@ -144,6 +147,7 @@ export function RecipeForm({ ingredients, recipe, cancelHref }: RecipeFormProps)
               errors={lineErrors(index)}
               canRemove={lines.length > 1}
               onChange={(next) => updateLine(index, next)}
+              onIngredientCreated={(ingredient) => setCreated((current) => [...current, ingredient])}
               onRemove={() => {
                 setLines((current) => current.filter((item) => item.key !== line.key));
                 // Al quitar una fila cambian las posiciones; los errores de ingredientes ya no aplican.

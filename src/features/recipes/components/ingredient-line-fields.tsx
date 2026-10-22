@@ -1,6 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useState } from "react";
+import { NewProductPanel } from "@/features/catalog/components/new-product-panel";
 import { ingredientOptions, unitOptions } from "@/features/catalog/select-options";
 import type { Ingredient } from "@/domain/types";
 import { compatibleUnits, type Unit } from "@/domain/units";
@@ -24,6 +26,8 @@ interface IngredientLineFieldsProps {
   canRemove: boolean;
   onChange: (line: IngredientLineDraft) => void;
   onRemove: () => void;
+  /** Un producto nuevo del hogar; el formulario lo suma a la lista de todas las filas. */
+  onIngredientCreated: (ingredient: Ingredient) => void;
 }
 
 const FIELD =
@@ -37,14 +41,16 @@ export function IngredientLineFields({
   canRemove,
   onChange,
   onRemove,
+  onIngredientCreated,
 }: IngredientLineFieldsProps) {
+  const [creating, setCreating] = useState<string | null>(null);
   const ingredient = ingredients.find((item) => item.id === line.ingredientId);
   const units = ingredient ? compatibleUnits(ingredient) : [];
   const label = (field: string) => `${field} del ingrediente ${position}`;
   const messages = Object.values(errors).filter(Boolean);
 
-  const chooseIngredient = (ingredientId: string) => {
-    const chosen = ingredients.find((item) => item.id === ingredientId);
+  const chooseIngredient = (ingredientId: string, known?: Ingredient) => {
+    const chosen = known ?? ingredients.find((item) => item.id === ingredientId);
     // Cada ingrediente arranca en su unidad natural: "2" de arepa son 2 unidades, no 2 g.
     onChange({ ...line, ingredientId, unit: (chosen && compatibleUnits(chosen)[0]) || line.unit });
   };
@@ -60,6 +66,7 @@ export function IngredientLineFields({
           onValueChange={chooseIngredient}
           placeholder="Elige un ingrediente"
           searchable
+          onCreate={setCreating}
           className="col-span-1"
         />
         <Button
@@ -100,6 +107,17 @@ export function IngredientLineFields({
         />
       </div>
       {messages.length > 0 && <p className="animate-rise text-sm text-danger">{messages.join(" ")}</p>}
+      {creating !== null && (
+        <NewProductPanel
+          initialName={creating}
+          onCancel={() => setCreating(null)}
+          onCreated={(created) => {
+            onIngredientCreated(created);
+            setCreating(null);
+            chooseIngredient(created.id, created);
+          }}
+        />
+      )}
     </li>
   );
 }

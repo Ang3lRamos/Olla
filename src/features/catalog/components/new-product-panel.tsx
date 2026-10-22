@@ -56,6 +56,12 @@ export function NewProductPanel({ initialName, onCreated, onCancel }: NewProduct
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
+            onKeyDown={(event) => {
+              // Dentro del formulario de una receta, Enter no debe guardar la receta: crea el producto.
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              if (name.trim().length >= 2) create();
+            }}
             maxLength={80}
             className={FIELD}
           />
@@ -101,10 +107,10 @@ export function NewProductPanel({ initialName, onCreated, onCancel }: NewProduct
         </p>
       )}
       <div className="flex gap-2">
-        <Button onClick={create} loading={pending} disabled={name.trim().length < 2}>
+        <Button type="button" onClick={create} loading={pending} disabled={name.trim().length < 2}>
           Crear producto
         </Button>
-        <Button variant="ghost" onClick={onCancel}>
+        <Button type="button" variant="ghost" onClick={onCancel}>
           Cancelar
         </Button>
       </div>
