@@ -3,9 +3,11 @@ import { cn } from "./cn";
 
 interface CheckboxProps extends Omit<ComponentProps<"input">, "type"> {
   label: ReactNode;
+  /** Tacha el texto al marcar, para listas de tareas ("ya lo compré"). */
+  strikeWhenChecked?: boolean;
 }
 
-export function Checkbox({ label, className, ...props }: CheckboxProps) {
+export function Checkbox({ label, strikeWhenChecked = false, className, ...props }: CheckboxProps) {
   return (
     <label className={cn("group flex cursor-pointer items-start gap-3", className)}>
       <span className="relative mt-0.5 grid size-5 shrink-0 place-items-center">
@@ -34,7 +36,12 @@ export function Checkbox({ label, className, ...props }: CheckboxProps) {
           />
         </svg>
       </span>
-      <span className="transition-colors duration-(--dur-base) group-has-checked:text-muted group-has-checked:line-through">
+      <span
+        className={cn(
+          strikeWhenChecked &&
+            "transition-colors duration-(--dur-base) group-has-checked:text-muted group-has-checked:line-through",
+        )}
+      >
         {label}
       </span>
     </label>

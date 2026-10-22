@@ -9,6 +9,7 @@ import { summarizeWeek, type PlannedSlot } from "@/domain/week-plan";
 import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
 import { Sheet } from "@/ui/sheet";
+import { AssistantPanel } from "@/features/assistant/components/assistant-panel";
 import { buildWeekView, recipeUsage, type NoteView } from "../week-view";
 import { NotesPanel } from "./notes-panel";
 import { SlotSheetContent } from "./slot-sheet";
@@ -32,7 +33,8 @@ export interface WeekPlannerProps {
   notes: NoteView[];
 }
 
-type OpenPanel = { kind: "meal"; day: number; meal: Meal } | { kind: "day"; day: number } | null;
+type OpenPanel =
+  { kind: "meal"; day: number; meal: Meal } | { kind: "day"; day: number } | { kind: "assistant" } | null;
 
 export function WeekPlanner(props: WeekPlannerProps) {
   const { weekStart, today, weeklyBudgetCop, recipeSummaries, notes } = props;
@@ -52,7 +54,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
   const dayCosts = summary.days.map((day) => day.totalCop);
   const todayIndex = dayIndex(weekStart, today);
 
-  const openDay = panel ? days[panel.day] : undefined;
+  const openDay = panel && "day" in panel ? days[panel.day] : undefined;
   const openCell =
     panel?.kind === "meal" ? openDay?.cells.find((cell) => cell.meal === panel.meal) : undefined;
 
@@ -63,6 +65,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
         isCurrentWeek={todayIndex !== null}
         people={week.people}
         onPeopleChange={week.setPeople}
+        onOpenAssistant={() => setPanel({ kind: "assistant" })}
       />
 
       {week.error && (
@@ -103,14 +106,22 @@ export function WeekPlanner(props: WeekPlannerProps) {
         open={panel !== null}
         onClose={() => setPanel(null)}
         title={
-          openDay
-            ? openCell
-              ? `${openDay.long} ${openDay.dayOfMonth}`
-              : `Notas del ${openDay.long.toLowerCase()}`
-            : ""
+          panel?.kind === "assistant"
+            ? "Asistente"
+            : openDay
+              ? openCell
+                ? `${openDay.long} ${openDay.dayOfMonth}`
+                : `Notas del ${openDay.long.toLowerCase()}`
+              : ""
         }
         description={
-          openCell ? MEAL_LABELS[openCell.meal] : openDay ? `${openDay.dayOfMonth} · todo el día` : undefined
+          panel?.kind === "assistant"
+            ? "Propone recetas; las cantidades y los costos los calcula Olla."
+            : openCell
+              ? MEAL_LABELS[openCell.meal]
+              : openDay
+                ? `${openDay.dayOfMonth} · todo el día`
+                : undefined
         }
       >
         {openCell && (
@@ -125,6 +136,21 @@ export function WeekPlanner(props: WeekPlannerProps) {
             }
             onClear={() => {
               week.clear(openCell.day, openCell.meal);
+              setPanel(null);
+            }}
+          />
+        )}
+        {panel?.kind === "assistant" && (
+          <AssistantPanel
+            weekStart={weekStart}
+            slots={week.slots}
+            notesCount={notes.length}
+            recipeName={(recipeId) => (recipeId && recipes.get(recipeId)?.name) || "Receta"}
+            marketFor={(slots) =>
+              summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop
+            }
+            onApply={(changes) => {
+              week.applyChanges(changes);
               setPanel(null);
             }}
           />

@@ -18,6 +18,7 @@ export function ShoppingLine({ item, costCop, onToggle }: ShoppingLineProps) {
   return (
     <li className="flex items-start justify-between gap-3 py-2.5 text-[15px]">
       <Checkbox
+        strikeWhenChecked
         checked={bought}
         onChange={(event) => onToggle(event.target.checked)}
         className="min-w-0"

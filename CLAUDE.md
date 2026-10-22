@@ -33,7 +33,9 @@ Las primitivas visuales compartidas van en `src/ui/`.
 - El resto de la app usa solo la interfaz `AiClient` de `src/lib/ai/`, configurada con `AI_BASE_URL`, `AI_API_KEY` y `AI_MODEL`. Ningún otro módulo sabe qué proveedor hay detrás.
 - La IA **solo propone recetas y combinaciones** (ids del catálogo). Las cantidades, el escalado, la lista de mercado y los costos se calculan siempre en `src/domain/`.
 - Toda respuesta se valida con zod. Los errores (`timeout`, `unavailable`, `invalid_response`, `not_configured`) se muestran al usuario con opción de reintentar y sin modificar sus datos.
-- Las pruebas nunca llaman a la IA real: usan el cliente simulado.
+- Las pruebas nunca llaman a la IA real: usan un cliente simulado.
+- `AI_BASE_URL=mock` activa un asistente de reglas (`features/assistant/simulated-client.ts`) que pasa por el mismo esquema y la misma depuración. Instrucciones para probar fallas: «simular error», «simular lento», «simular respuesta inválida».
+- La respuesta del modelo nunca se aplica tal cual: `sanitize.ts` descarta ids inventados y recetas con algo de «no incluir», y la persona revisa la vista previa antes de aplicar.
 
 ## Convenciones
 - El código va en inglés (identificadores y archivos) y la interfaz y las rutas en español (`/semana`, `/mercado`).

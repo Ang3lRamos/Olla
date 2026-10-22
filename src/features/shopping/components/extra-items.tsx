@@ -23,6 +23,7 @@ export function ExtraRow({
   return (
     <li className="flex animate-rise items-center justify-between gap-3 py-2.5 text-[15px]">
       <Checkbox
+        strikeWhenChecked
         label={extra.name}
         checked={extra.checked}
         disabled={isSaving(extra)}

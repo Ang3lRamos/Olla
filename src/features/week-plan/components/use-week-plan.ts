@@ -3,7 +3,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import type { Meal } from "@/domain/week";
 import type { PlannedSlot } from "@/domain/week-plan";
-import { assignMeal, clearMeal, setWeekPeople, type WeekActionResult } from "../actions";
+import { applyMealChanges, assignMeal, clearMeal, setWeekPeople, type WeekActionResult } from "../actions";
 
 interface WeekState {
   slots: PlannedSlot[];
@@ -13,7 +13,14 @@ interface WeekState {
 type WeekChange =
   | { type: "assign"; slot: PlannedSlot }
   | { type: "clear"; day: number; meal: Meal }
-  | { type: "people"; people: number };
+  | { type: "people"; people: number }
+  | { type: "batch"; changes: MealChange[] };
+
+export interface MealChange {
+  day: number;
+  meal: Meal;
+  recipeId: string | null;
+}
 
 const sameSlot = (slot: PlannedSlot, day: number, meal: Meal) => slot.day === day && slot.meal === meal;
 
@@ -31,6 +38,23 @@ function applyChange(state: WeekState, change: WeekChange): WeekState {
       return { ...state, slots: state.slots.filter((slot) => !sameSlot(slot, change.day, change.meal)) };
     case "people":
       return { ...state, people: change.people };
+    case "batch":
+      return change.changes.reduce<WeekState>(
+        (current, item) =>
+          item.recipeId
+            ? applyChange(current, {
+                type: "assign",
+                slot: {
+                  day: item.day,
+                  meal: item.meal,
+                  recipeId: item.recipeId,
+                  peopleOverride:
+                    current.slots.find((slot) => sameSlot(slot, item.day, item.meal))?.peopleOverride ?? null,
+                },
+              })
+            : applyChange(current, { type: "clear", day: item.day, meal: item.meal }),
+        state,
+      );
   }
 }
 
@@ -58,6 +82,8 @@ export function useWeekPlan(weekStart: string, saved: WeekState) {
     assign: (slot: PlannedSlot) => run({ type: "assign", slot }, () => assignMeal({ weekStart, ...slot })),
     clear: (day: number, meal: Meal) =>
       run({ type: "clear", day, meal }, () => clearMeal({ weekStart, day, meal })),
+    applyChanges: (changes: MealChange[]) =>
+      run({ type: "batch", changes }, () => applyMealChanges({ weekStart, changes })),
     setPeople: (people: number) =>
       run({ type: "people", people }, () => setWeekPeople({ weekStart, people })),
   };

@@ -22,5 +22,21 @@ export const weekPeopleSchema = z.object({
   people: z.number().int().min(1).max(MAX_PEOPLE),
 });
 
+export const mealChangesSchema = z.object({
+  weekStart: weekStartSchema,
+  changes: z
+    .array(
+      z.object({
+        day: z.number().int().min(0).max(6),
+        meal: z.enum(MEALS),
+        /** null = vaciar la casilla. */
+        recipeId: z.uuid().nullable(),
+      }),
+    )
+    .min(1)
+    .max(21),
+});
+
 export type SlotKey = z.infer<typeof slotKeySchema>;
 export type AssignMealInput = z.infer<typeof assignMealSchema>;
+export type MealChangesInput = z.infer<typeof mealChangesSchema>;

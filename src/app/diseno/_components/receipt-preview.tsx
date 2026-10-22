@@ -46,6 +46,7 @@ export function ReceiptPreview() {
             {group.lines.map((line) => (
               <li key={line.name} className="flex items-start justify-between gap-3 text-[15px]">
                 <Checkbox
+                  strikeWhenChecked
                   defaultChecked={line.checked}
                   label={
                     <span className="flex flex-col">
