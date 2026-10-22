@@ -1,9 +1,9 @@
 "use client";
 
 import { X } from "lucide-react";
-import { IngredientOptions } from "@/features/catalog/components/ingredient-options";
+import { ingredientOptions, unitOptions } from "@/features/catalog/select-options";
 import type { Ingredient } from "@/domain/types";
-import { compatibleUnits, UNIT_LABELS, type Unit } from "@/domain/units";
+import { compatibleUnits, type Unit } from "@/domain/units";
 import { Button } from "@/ui/button";
 import { Select } from "@/ui/select";
 import { cn } from "@/ui/cn";
@@ -54,16 +54,14 @@ export function IngredientLineFields({
       <div className="grid grid-cols-[1fr_auto] gap-2 md:grid-cols-[minmax(0,2fr)_6rem_9rem_minmax(0,1.5fr)_auto]">
         <Select
           aria-label={label("Ingrediente")}
-          aria-invalid={errors.ingredientId ? true : undefined}
+          invalid={Boolean(errors.ingredientId)}
           value={line.ingredientId}
-          onChange={(event) => chooseIngredient(event.target.value)}
+          options={ingredientOptions(ingredients)}
+          onValueChange={chooseIngredient}
+          placeholder="Elige un ingrediente"
+          searchable
           className="col-span-1"
-        >
-          <option value="" disabled>
-            Elige un ingrediente
-          </option>
-          <IngredientOptions ingredients={ingredients} />
-        </Select>
+        />
         <Button
           type="button"
           variant="ghost"
@@ -86,17 +84,12 @@ export function IngredientLineFields({
           />
           <Select
             aria-label={label("Unidad")}
-            aria-invalid={errors.unit ? true : undefined}
+            invalid={Boolean(errors.unit)}
             value={line.unit}
             disabled={!ingredient}
-            onChange={(event) => onChange({ ...line, unit: event.target.value as Unit })}
-          >
-            {(units.length ? units : [line.unit]).map((unit) => (
-              <option key={unit} value={unit}>
-                {UNIT_LABELS[unit].plural}
-              </option>
-            ))}
-          </Select>
+            options={unitOptions(units.length ? units : [line.unit])}
+            onValueChange={(unit) => onChange({ ...line, unit })}
+          />
         </div>
         <input
           aria-label={label("Nota")}

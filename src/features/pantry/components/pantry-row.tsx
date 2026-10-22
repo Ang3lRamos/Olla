@@ -3,7 +3,8 @@
 import { Check, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Ingredient, Quantity } from "@/domain/types";
-import { compatibleUnits, UNIT_LABELS, type Unit } from "@/domain/units";
+import { compatibleUnits, type Unit } from "@/domain/units";
+import { unitOptions } from "@/features/catalog/select-options";
 import { formatDecimalInput, parseDecimal } from "@/lib/decimal-input";
 import { Button } from "@/ui/button";
 import { cn } from "@/ui/cn";
@@ -66,14 +67,9 @@ export function PantryRow({
         <Select
           aria-label={`Unidad de ${ingredient.name}`}
           value={quantity.unit}
-          onChange={(event) => commit(event.target.value as Unit)}
-        >
-          {compatibleUnits(ingredient).map((unit) => (
-            <option key={unit} value={unit}>
-              {UNIT_LABELS[unit].plural}
-            </option>
-          ))}
-        </Select>
+          options={unitOptions(compatibleUnits(ingredient))}
+          onValueChange={(unit) => commit(unit)}
+        />
         <Button
           type="button"
           variant="ghost"

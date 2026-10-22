@@ -22,11 +22,24 @@ export const UNIT_LABELS: Record<Unit, { singular: string; plural: string }> = {
   kg: { singular: "kg", plural: "kg" },
   lb: { singular: "libra", plural: "libras" },
   ml: { singular: "ml", plural: "ml" },
-  l: { singular: "l", plural: "l" },
+  l: { singular: "L", plural: "L" },
   cup: { singular: "taza", plural: "tazas" },
   tbsp: { singular: "cucharada", plural: "cucharadas" },
   tsp: { singular: "cucharadita", plural: "cucharaditas" },
   unit: { singular: "unidad", plural: "unidades" },
+};
+
+/** Para elegir la unidad se lee el nombre completo; al mostrar cantidades, la abreviatura. */
+export const UNIT_NAMES: Record<Unit, string> = {
+  g: "gramos",
+  kg: "kilos",
+  lb: "libras",
+  ml: "mililitros",
+  l: "litros",
+  cup: "tazas",
+  tbsp: "cucharadas",
+  tsp: "cucharaditas",
+  unit: "unidades",
 };
 
 export function toBase(quantity: Quantity): BaseQuantity {
@@ -58,7 +71,7 @@ const NUMBER_FORMAT = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 
 export function formatQuantity(quantity: BaseQuantity): string {
   const { amount, unit } = quantity;
   if (unit === "g" && amount >= 1000) return `${NUMBER_FORMAT.format(amount / 1000)} kg`;
-  if (unit === "ml" && amount >= 1000) return `${NUMBER_FORMAT.format(amount / 1000)} l`;
+  if (unit === "ml" && amount >= 1000) return `${NUMBER_FORMAT.format(amount / 1000)} L`;
 
   if (unit !== "unit") return `${NUMBER_FORMAT.format(amount)} ${unit}`;
   const { singular, plural } = UNIT_LABELS.unit;

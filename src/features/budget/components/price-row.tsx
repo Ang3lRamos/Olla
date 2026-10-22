@@ -3,7 +3,8 @@
 import { Check, RotateCcw } from "lucide-react";
 import { useState, useTransition } from "react";
 import type { Ingredient, PackagePieces, Quantity } from "@/domain/types";
-import { compatibleUnits, UNIT_LABELS, type Unit } from "@/domain/units";
+import { compatibleUnits, type Unit } from "@/domain/units";
+import { unitOptions } from "@/features/catalog/select-options";
 import { formatDecimalInput, parseDecimal } from "@/lib/decimal-input";
 import { Button } from "@/ui/button";
 import { cn } from "@/ui/cn";
@@ -148,18 +149,13 @@ export function PriceRow({ ingredient, price, isOwn }: PriceRowProps) {
           <Select
             aria-label={`Unidad del contenido de ${ingredient.name}`}
             value={draft.perUnit}
-            onChange={(event) => {
-              const next = { ...draft, perUnit: event.target.value as Unit };
+            options={unitOptions(units)}
+            onValueChange={(perUnit) => {
+              const next = { ...draft, perUnit };
               setDraft(next);
               save(next);
             }}
-          >
-            {units.map((unit) => (
-              <option key={unit} value={unit}>
-                {UNIT_LABELS[unit].singular}
-              </option>
-            ))}
-          </Select>
+          />
         </div>
       </div>
       <PresentationFields

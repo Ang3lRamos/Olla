@@ -2,7 +2,8 @@
 
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { CATEGORY_LABELS, INGREDIENT_CATEGORIES, type IngredientCategory } from "@/domain/categories";
+import type { IngredientCategory } from "@/domain/categories";
+import { categoryOptions } from "@/features/catalog/select-options";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Select } from "@/ui/select";
@@ -75,14 +76,9 @@ export function AddExtraForm({
         <Select
           aria-label="Categoría"
           value={category}
-          onChange={(event) => setCategory(event.target.value as IngredientCategory)}
-        >
-          {INGREDIENT_CATEGORIES.map((option) => (
-            <option key={option} value={option}>
-              {CATEGORY_LABELS[option]}
-            </option>
-          ))}
-        </Select>
+          options={categoryOptions}
+          onValueChange={setCategory}
+        />
         <Button type="submit" variant="secondary" disabled={!name.trim()}>
           <Plus className="size-4" aria-hidden />
           Agregar

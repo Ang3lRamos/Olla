@@ -61,9 +61,9 @@ describe("toIngredientBase", () => {
 });
 
 describe("formatQuantity", () => {
-  it("usa kg y l desde 1000", () => {
+  it("usa kg y L desde 1000", () => {
     expect(formatQuantity({ amount: 1500, unit: "g" })).toBe("1,5 kg");
-    expect(formatQuantity({ amount: 2000, unit: "ml" })).toBe("2 l");
+    expect(formatQuantity({ amount: 2000, unit: "ml" })).toBe("2 L");
   });
 
   it("deja gramos y mililitros por debajo de 1000", () => {
