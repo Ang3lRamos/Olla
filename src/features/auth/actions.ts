@@ -52,7 +52,10 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
   const { error } = await supabase.auth.signInWithPassword(parsed.credentials);
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
 
-  redirect(safeRedirectPath(formData.get("siguiente")));
+  // Quien aún no configuró su hogar va directo al onboarding, sin pasar por una página
+  // que lo redirigiría después de empezar a cargar.
+  const { data: household } = await supabase.from("households").select("id").limit(1).maybeSingle();
+  redirect(household ? safeRedirectPath(formData.get("siguiente")) : "/empezar");
 }
 
 export async function signUp(_: AuthFormState, formData: FormData): Promise<AuthFormState> {

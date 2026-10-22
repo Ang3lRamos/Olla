@@ -22,6 +22,7 @@
   --color-on-cilantro: var(--on-cilantro);
   --color-maiz: var(--maiz);
   --color-danger: var(--danger);
+  --color-scrim: var(--scrim);
   --color-transparent: transparent;
 
   --shadow-*: initial;
@@ -94,6 +95,7 @@
   --on-cilantro: #ffffff;
   --maiz: #f5c344;
   --danger: #b42318;
+  --scrim: rgb(24 24 27 / 0.45);
   --marker-size: 0.42em;
   --raised: 0 1px 2px rgb(24 24 27 / 0.06), 0 12px 32px -16px rgb(24 24 27 / 0.18);
 }
@@ -114,6 +116,7 @@
   --on-cilantro: #111113;
   --maiz: #d9a82e;
   --danger: #f97066;
+  --scrim: rgb(0 0 0 / 0.6);
   /* Sobre fondo oscuro el resaltado completo apaga el texto claro; queda como subrayado. */
   --marker-size: 0.14em;
   --raised: 0 0 0 1px var(--hairline);

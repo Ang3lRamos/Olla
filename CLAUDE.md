@@ -64,3 +64,5 @@ npm run db:types    # regenera src/lib/supabase/database.types.ts
 - Cada cambio de esquema es una migración nueva en `supabase/migrations/`; nunca se edita una ya aplicada.
 - Toda tabla nueva lleva RLS y una prueba en `supabase/tests/` (corre sobre PGlite, sin red).
 - Con Cache Components, todo lo que lea la sesión va dentro de `<Suspense>` con un esqueleto como fallback.
+- `createSupabaseServerClient()` llama `connection()`: el cliente de Supabase usa la hora actual para validar la sesión, y Next no la permite al prerenderizar. No crear clientes de Supabase por otra vía en el servidor.
+- Leer `usePathname()`/`useSearchParams()` en rutas dinámicas también exige `<Suspense>`.
