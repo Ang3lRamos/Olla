@@ -65,16 +65,19 @@ export function WeekDaysMobile({
             type="button"
             onClick={() => selectDay(index)}
             aria-pressed={index === selection.index}
-            aria-label={`${item.long} ${item.dayOfMonth}${item.isToday ? ", hoy" : ""}`}
             className={cn(
               "relative flex flex-col items-center rounded-md py-1.5 transition-colors duration-(--dur-fast) ease-out",
               index === selection.index ? "text-canvas" : "text-muted active:bg-sunken",
             )}
           >
-            <span className="letrero text-sm">{item.short}</span>
+            <span className="letrero text-sm" aria-hidden>
+              {item.short}
+            </span>
+            <span className="sr-only">{item.long}</span>
             <span className={cn("text-lg font-semibold tabular-nums", item.isToday && "marcador")}>
               {item.dayOfMonth}
             </span>
+            {item.isToday && <span className="sr-only">, hoy</span>}
           </button>
         ))}
       </nav>

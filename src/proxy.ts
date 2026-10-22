@@ -3,7 +3,7 @@ import { CONFIRMATION_PATH } from "@/features/auth/confirmation";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
 const AUTH_PAGES = ["/ingresar", "/registro"];
-const PUBLIC_PAGES = [...AUTH_PAGES, CONFIRMATION_PATH, "/diseno"];
+const PUBLIC_PAGES = [...AUTH_PAGES, CONFIRMATION_PATH];
 
 function redirectKeepingCookies(request: NextRequest, response: NextResponse, pathname: string) {
   const url = request.nextUrl.clone();

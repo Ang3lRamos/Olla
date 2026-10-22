@@ -2,11 +2,10 @@
 
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useId, useState } from "react";
-import { RECIPE_CATEGORIES, RECIPE_CATEGORY_LABELS, type RecipeCategory } from "@/domain/recipe-categories";
+import { useActionState, useState } from "react";
+import type { RecipeCategory } from "@/domain/recipe-categories";
 import type { Ingredient } from "@/domain/types";
 import { Button, buttonClasses } from "@/ui/button";
-import { cn } from "@/ui/cn";
 import { FormMessage } from "@/ui/form-message";
 import { NumberStepper } from "@/ui/number-stepper";
 import { TextField } from "@/ui/text-field";
@@ -20,6 +19,7 @@ import {
 } from "../schemas";
 import type { RecipeDetail } from "../types";
 import { IngredientLineFields, type IngredientLineDraft } from "./ingredient-line-fields";
+import { CategoryPicker, StepsField } from "./recipe-form-fields";
 
 interface RecipeFormProps {
   ingredients: Ingredient[];
@@ -54,7 +54,6 @@ export function RecipeForm({ ingredients, recipe, cancelHref }: RecipeFormProps)
   const [prepMinutes, setPrepMinutes] = useState(recipe?.prepMinutes ? String(recipe.prepMinutes) : "");
   const [steps, setSteps] = useState(recipe?.steps.join("\n") ?? "");
   const [lines, setLines] = useState(() => toDraftLines(recipe));
-  const categoryLabelId = useId();
   // Los errores del último envío se borran campo por campo a medida que se corrigen.
   const [errors, setErrors] = useState<RecipeFieldErrors>({});
   const [handledState, setHandledState] = useState(state);
@@ -120,30 +119,7 @@ export function RecipeForm({ ingredients, recipe, cancelHref }: RecipeFormProps)
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <span id={categoryLabelId} className="text-sm font-medium">
-          Categoría
-        </span>
-        <div role="radiogroup" aria-labelledby={categoryLabelId} className="flex flex-wrap gap-1.5">
-          {RECIPE_CATEGORIES.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={category === option}
-              onClick={() => setCategory(option)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-sm transition-colors duration-(--dur-fast) ease-out",
-                category === option
-                  ? "border-accent bg-accent text-on-accent"
-                  : "border-hairline-strong text-muted hover:border-muted hover:text-ink",
-              )}
-            >
-              {RECIPE_CATEGORY_LABELS[option]}
-            </button>
-          ))}
-        </div>
-      </div>
+      <CategoryPicker value={category} onChange={setCategory} />
 
       <NumberStepper
         name="baseServings"
@@ -189,31 +165,14 @@ export function RecipeForm({ ingredients, recipe, cancelHref }: RecipeFormProps)
         </Button>
       </fieldset>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="recipe-steps" className="text-sm font-medium">
-          Preparación
-        </label>
-        <textarea
-          id="recipe-steps"
-          rows={6}
-          value={steps}
-          onChange={(event) => {
-            setSteps(event.target.value);
-            clearField("steps");
-          }}
-          aria-invalid={errors.steps ? true : undefined}
-          aria-describedby="recipe-steps-hint"
-          placeholder={"Sofríe la cebolla y el tomate.\nAgrega el pollo y tapa 15 minutos."}
-          className={cn(
-            "rounded-md border border-hairline-strong bg-surface px-3 py-2.5 text-[15px] leading-relaxed placeholder:text-muted",
-            "transition-colors duration-(--dur-fast) ease-out hover:border-muted",
-            "focus:border-accent focus:ring-3 focus:ring-accent/15 focus:outline-none aria-invalid:border-danger",
-          )}
-        />
-        <p id="recipe-steps-hint" className={cn("text-sm", errors.steps ? "text-danger" : "text-muted")}>
-          {errors.steps ?? "Un paso por línea; los numeramos nosotros."}
-        </p>
-      </div>
+      <StepsField
+        value={steps}
+        error={errors.steps}
+        onChange={(next) => {
+          setSteps(next);
+          clearField("steps");
+        }}
+      />
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" loading={pending}>

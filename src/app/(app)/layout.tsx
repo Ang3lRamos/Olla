@@ -13,6 +13,12 @@ import { Skeleton } from "@/ui/skeleton";
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <a
+        href="#contenido"
+        className="sr-only z-20 rounded-md bg-accent px-3 py-2 text-on-accent focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Saltar al contenido
+      </a>
       <header className="sticky top-0 z-10 border-b border-hairline bg-canvas/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-6 px-4 md:px-8">
           <Link href="/" aria-label="Olla, inicio" className="rounded-md">
@@ -29,7 +35,11 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         </div>
       </header>
       {/* En celular deja espacio para la barra inferior fija. */}
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pt-8 pb-28 md:px-8 md:py-10">
+      <main
+        id="contenido"
+        tabIndex={-1}
+        className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pt-8 pb-28 outline-none md:px-8 md:py-10"
+      >
         {children}
       </main>
       <Suspense fallback={<MobileTabBarFallback />}>

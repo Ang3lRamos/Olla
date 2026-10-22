@@ -25,7 +25,6 @@ export function MealCell({ cell, dayLabel, onOpen, className }: MealCellProps) {
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`${dayLabel}, ${meal}: agregar receta${cell.notes.length ? " (tiene notas)" : ""}`}
         className={cn(
           "flex min-h-28 w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline-strong",
           "text-sm text-muted hover:border-accent hover:text-ink",
@@ -33,7 +32,11 @@ export function MealCell({ cell, dayLabel, onOpen, className }: MealCellProps) {
           className,
         )}
       >
+        {/* El nombre accesible sale del texto visible (WCAG 2.5.3); el contexto va solo para lectores. */}
         <span className="flex items-center gap-1.5">
+          <span className="sr-only">
+            {dayLabel}, {meal}:{" "}
+          </span>
           <Plus className="size-4" aria-hidden />
           Agregar
         </span>
@@ -46,13 +49,15 @@ export function MealCell({ cell, dayLabel, onOpen, className }: MealCellProps) {
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`${dayLabel}, ${meal}: ${cell.recipe.name}. Abrir`}
       className={cn(
         "flex min-h-28 w-full flex-col gap-1.5 rounded-md border border-hairline bg-surface p-3 text-left hover:border-hairline-strong",
         INTERACTIVE,
         className,
       )}
     >
+      <span className="sr-only">
+        {dayLabel}, {meal}:{" "}
+      </span>
       <span className="flex w-full items-center justify-between gap-2 text-xs text-muted">
         <span className="truncate">{RECIPE_CATEGORY_LABELS[cell.recipe.category]}</span>
         <span className="flex shrink-0 items-center gap-1.5">

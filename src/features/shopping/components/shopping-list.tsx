@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, X } from "lucide-react";
+import { X } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { buildCatalog } from "@/domain/catalog";
@@ -8,16 +8,15 @@ import { formatCop } from "@/domain/money";
 import type { Purchase } from "@/domain/shopping-status";
 import { formatShoppingText } from "@/domain/shopping-status";
 import type { Ingredient, IngredientPrice, PantryItem, Recipe } from "@/domain/types";
-import { formatQuantity } from "@/domain/units";
 import type { IsoDate } from "@/domain/week";
 import { formatWeekRange } from "@/domain/week";
 import type { PlannedSlot } from "@/domain/week-plan";
 import { Button, buttonClasses } from "@/ui/button";
 import type { ShoppingExtra } from "../data";
 import { buildShoppingView } from "../shopping-view";
-import { CopyListButton } from "./copy-list-button";
 import { AddExtraForm, ExtraRow } from "./extra-items";
 import { ShoppingLine } from "./shopping-line";
+import { InPantryList, ShoppingProgress } from "./shopping-progress";
 import { useShopping } from "./use-shopping";
 
 export interface ShoppingListProps {
@@ -85,37 +84,11 @@ export function ShoppingList(props: ShoppingListProps) {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-8">
       {/* En celular el avance va primero (es lo que se mira mientras se compra); en escritorio, a la derecha. */}
-      <section
-        aria-label="Avance"
-        className="flex flex-col gap-3 rounded-md border border-hairline p-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1"
-      >
-        <dl className="grid grid-cols-2 gap-3">
-          <div>
-            <dt className="text-xs text-muted">Falta por comprar</dt>
-            <dd className="font-display text-xl font-semibold tabular-nums">
-              {formatCop(totals.pendingCop)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted">Comprado</dt>
-            <dd className="font-display text-xl font-semibold tabular-nums">
-              {totals.done} de {totals.total}
-            </dd>
-          </div>
-        </dl>
-        <span className="h-1.5 overflow-hidden rounded-full bg-sunken" aria-hidden>
-          <span
-            className="block h-full origin-left rounded-full bg-cilantro transition-transform duration-(--dur-slow) ease-out"
-            style={{ transform: `scaleX(${totals.total ? totals.done / totals.total : 0})` }}
-          />
-        </span>
-        <div className="flex flex-wrap gap-2">
-          <CopyListButton getText={listText} />
-          <Link href="/presupuesto" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-            Editar precios
-          </Link>
-        </div>
-      </section>
+      <ShoppingProgress
+        totals={totals}
+        getListText={listText}
+        className="lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1"
+      />
 
       <section
         aria-label="Lista de mercado"
@@ -197,21 +170,7 @@ export function ShoppingList(props: ShoppingListProps) {
       <aside className="flex flex-col gap-6 lg:col-start-2 lg:row-start-2">
         <AddExtraForm onAdd={shopping.addExtra} />
 
-        {view.inPantry.length > 0 && (
-          <details className="group rounded-md border border-hairline p-4">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
-              <Package className="size-4 text-cilantro" aria-hidden />
-              Ya lo tienes en casa ({view.inPantry.length})
-            </summary>
-            <ul className="mt-3 flex flex-col gap-1.5 text-sm text-muted">
-              {view.inPantry.map((item) => (
-                <li key={`${item.ingredientId}-${item.toBuy.unit}`}>
-                  {item.name} · {formatQuantity(item.needed)}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
+        <InPantryList items={view.inPantry} />
       </aside>
     </div>
   );
