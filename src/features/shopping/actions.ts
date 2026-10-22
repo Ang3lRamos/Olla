@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { INGREDIENT_CATEGORIES } from "@/domain/categories";
+import { getCatalog } from "@/features/catalog/data";
 import { requireHousehold } from "@/features/household/data";
+import { changeStock } from "@/features/pantry/stock";
 import { weekStartSchema } from "@/features/week-plan/schemas";
 import { ensureWeekPlan, findWeekPlanId } from "@/features/week-plan/week-plan-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -32,7 +34,29 @@ const done = (): ShoppingActionResult => {
   return { ok: true };
 };
 
-/** Marca como comprado guardando cuánto se compró, para notar si el menú cambia después. */
+// Lo comprado entra a la despensa, así que cambia también la semana y la propia despensa.
+const doneWithStock = (): ShoppingActionResult => {
+  revalidatePath("/", "layout");
+  return { ok: true };
+};
+
+type Supabase = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+async function purchasedBefore(supabase: Supabase, weekPlanId: string, ingredientId: string, unit: string) {
+  const { data } = await supabase
+    .from("shopping_purchases")
+    .select("quantity")
+    .eq("week_plan_id", weekPlanId)
+    .eq("ingredient_id", ingredientId)
+    .eq("unit", unit)
+    .maybeSingle();
+  return data?.quantity ?? 0;
+}
+
+/**
+ * Marca como comprado guardando cuánto se compró (paquetes completos), para notar si el menú
+ * cambia después. Lo comprado entra a la despensa; si ya estaba marcado, solo la diferencia.
+ */
 export async function markPurchased(input: z.input<typeof purchaseSchema>): Promise<ShoppingActionResult> {
   const household = await requireHousehold();
   const parsed = purchaseSchema.safeParse(input);
@@ -41,6 +65,18 @@ export async function markPurchased(input: z.input<typeof purchaseSchema>): Prom
   const supabase = await createSupabaseServerClient();
   const weekPlanId = await ensureWeekPlan(supabase, household, parsed.data.weekStart);
   if (!weekPlanId) return { ok: false, error: SAVE_ERROR };
+
+  const { ingredientId, unit, quantity } = parsed.data;
+  const before = await purchasedBefore(supabase, weekPlanId, ingredientId, unit);
+  const { catalog } = await getCatalog();
+  if (!catalog.has(ingredientId)) return { ok: false, error: INVALID };
+  const stocked = await changeStock(
+    supabase,
+    household.id,
+    [{ ingredientId, quantity: { amount: quantity - before, unit } }],
+    catalog,
+  );
+  if (!stocked) return { ok: false, error: SAVE_ERROR };
 
   const { error } = await supabase.from("shopping_purchases").upsert(
     {
@@ -52,13 +88,13 @@ export async function markPurchased(input: z.input<typeof purchaseSchema>): Prom
     },
     { onConflict: "week_plan_id,ingredient_id,unit" },
   );
-  return error ? { ok: false, error: SAVE_ERROR } : done();
+  return error ? { ok: false, error: SAVE_ERROR } : doneWithStock();
 }
 
 export async function unmarkPurchased(
   input: z.input<typeof purchaseKeySchema>,
 ): Promise<ShoppingActionResult> {
-  await requireHousehold();
+  const household = await requireHousehold();
   const parsed = purchaseKeySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: INVALID };
 
@@ -66,13 +102,27 @@ export async function unmarkPurchased(
   const weekPlanId = await findWeekPlanId(supabase, parsed.data.weekStart);
   if (!weekPlanId) return done();
 
+  // Se devuelve lo que entró a la despensa al marcarlo; si ya se usó, no baja de cero.
+  const { ingredientId, unit } = parsed.data;
+  const before = await purchasedBefore(supabase, weekPlanId, ingredientId, unit);
+  const { catalog } = await getCatalog();
+  if (before > 0 && catalog.has(ingredientId)) {
+    const stocked = await changeStock(
+      supabase,
+      household.id,
+      [{ ingredientId, quantity: { amount: -before, unit } }],
+      catalog,
+    );
+    if (!stocked) return { ok: false, error: SAVE_ERROR };
+  }
+
   const { error } = await supabase
     .from("shopping_purchases")
     .delete()
     .eq("week_plan_id", weekPlanId)
     .eq("ingredient_id", parsed.data.ingredientId)
     .eq("unit", parsed.data.unit);
-  return error ? { ok: false, error: SAVE_ERROR } : done();
+  return error ? { ok: false, error: SAVE_ERROR } : doneWithStock();
 }
 
 export async function addExtra(input: z.input<typeof extraSchema>): Promise<ShoppingActionResult> {

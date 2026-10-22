@@ -1,6 +1,8 @@
 import { CATEGORY_LABELS, INGREDIENT_CATEGORIES, type IngredientCategory } from "@/domain/categories";
 import { getIngredient, type IngredientCatalog } from "@/domain/catalog";
-import { quantityCost, type PriceList } from "@/domain/costs";
+import type { PriceList } from "@/domain/costs";
+import { formatPackages, formatPieces, piecesIn, planPurchase, type PurchasePlan } from "@/domain/packages";
+import { stockBeforePurchases } from "@/domain/pantry";
 import { buildShoppingLines } from "@/domain/shopping-list";
 import { reconcilePurchases, type Purchase, type ShoppingItem } from "@/domain/shopping-status";
 import type { BaseQuantity, PantryItem, Recipe } from "@/domain/types";
@@ -9,8 +11,14 @@ import type { ShoppingExtra } from "./data";
 
 export interface PricedItem {
   item: ShoppingItem;
-  /** Costo de toda la línea del menú; null si no tiene precio. */
-  costCop: number | null;
+  /** Cómo se compra lo que falta, o lo que se compró si ya está marcado. */
+  purchase: PurchasePlan;
+  /** Lo que entra a la casa al marcarlo comprado: todo el menú, en paquetes completos. */
+  purchaseFull: PurchasePlan;
+  /** "1 paquete" cuando el hogar dijo en qué lo compra. */
+  packagesLabel: string | null;
+  /** Lo que pide el menú en porciones ("≈ 6 tajadas"), si la presentación las tiene. */
+  neededPieces: string | null;
 }
 
 export interface ShoppingGroupView {
@@ -47,15 +55,31 @@ interface BuildShoppingViewInput {
 
 export function buildShoppingView(input: BuildShoppingViewInput): ShoppingView {
   const { slots, recipes, people, pantry, purchases, extras, catalog, prices } = input;
-  const meals = toPlannedMeals(slots, recipes, people);
-  const items = reconcilePurchases(buildShoppingLines(meals, pantry, catalog), purchases);
+  // Lo ya cocinado salió de la despensa y no se vuelve a comprar; lo ya comprado entró a ella.
+  const meals = toPlannedMeals(
+    slots.filter((slot) => !slot.cooked),
+    recipes,
+    people,
+  );
+  const stock = stockBeforePurchases(pantry, purchases, catalog);
+  const items = reconcilePurchases(buildShoppingLines(meals, stock, catalog), purchases);
   const toBuy = items.filter((item) => item.status !== "in-pantry");
 
-  const cost = (ingredientId: string, quantity: BaseQuantity) =>
-    quantity.amount === 0
-      ? 0
-      : quantityCost(quantity, getIngredient(catalog, ingredientId), prices.get(ingredientId));
-  const priced = toBuy.map((item) => ({ item, costCop: cost(item.ingredientId, item.toBuy) }));
+  const plan = (ingredientId: string, quantity: BaseQuantity) =>
+    planPurchase(quantity, getIngredient(catalog, ingredientId), prices.get(ingredientId));
+  const priced = toBuy.map((item): PricedItem => {
+    const price = prices.get(item.ingredientId);
+    const purchaseFull = plan(item.ingredientId, item.toBuy);
+    const purchase = item.status === "bought" ? purchaseFull : plan(item.ingredientId, item.remaining);
+    const pieces = piecesIn(item.needed, getIngredient(catalog, item.ingredientId), price);
+    return {
+      item,
+      purchase,
+      purchaseFull,
+      packagesLabel: price && purchase.packages ? formatPackages(purchase.packages, price) : null,
+      neededPieces: pieces !== null && price?.pieces ? formatPieces(pieces, price.pieces.label) : null,
+    };
+  });
   const sum = (values: Array<number | null>) =>
     Math.round(values.reduce<number>((total, value) => total + (value ?? 0), 0));
 
@@ -72,9 +96,9 @@ export function buildShoppingView(input: BuildShoppingViewInput): ShoppingView {
     groups,
     inPantry: items.filter((item) => item.status === "in-pantry"),
     totals: {
-      marketCop: sum(priced.map(({ costCop }) => costCop)),
-      pendingCop: sum(toBuy.map((item) => cost(item.ingredientId, item.remaining))),
-      unpricedCount: priced.filter(({ costCop }) => costCop === null).length,
+      marketCop: sum(priced.map(({ purchaseFull }) => purchaseFull.costCop)),
+      pendingCop: sum(priced.map(({ item }) => plan(item.ingredientId, item.remaining).costCop)),
+      unpricedCount: priced.filter(({ purchaseFull }) => purchaseFull.costCop === null).length,
       done:
         toBuy.filter((item) => item.status === "bought").length +
         extras.filter((extra) => extra.checked).length,

@@ -67,6 +67,43 @@ describe("buildShoppingView", () => {
     expect(view.totals).toMatchObject({ done: 1, total: 6 });
   });
 
+  describe("con la presentación del hogar", () => {
+    const bag = {
+      ingredientId: "rice",
+      priceCop: 5000,
+      per: { amount: 1, unit: "kg" as const },
+      own: true,
+      packageLabel: "bolsa",
+    };
+    const withBag = (overrides: Partial<Parameters<typeof buildShoppingView>[0]> = {}) =>
+      build({ prices: new Map([...prices, ["rice", bag]]), ...overrides });
+    const rice = (view: ReturnType<typeof build>) =>
+      view.groups.flatMap((group) => group.items).find(({ item }) => item.ingredientId === "rice")!;
+
+    it("compra bolsas enteras y cobra la bolsa completa", () => {
+      expect(rice(withBag())).toMatchObject({
+        packagesLabel: "1 bolsa",
+        purchase: { packages: 1, quantity: { amount: 1000, unit: "g" }, costCop: 5000 },
+      });
+    });
+
+    it("lo comprado entra a la despensa sin contarse dos veces", () => {
+      const view = withBag({
+        pantry: [{ ingredientId: "rice", quantity: { amount: 1000, unit: "g" } }],
+        purchases: [{ ingredientId: "rice", quantity: { amount: 1000, unit: "g" } }],
+      });
+      expect(rice(view).item.status).toBe("bought");
+      expect(view.totals.marketCop).toBe(withBag().totals.marketCop);
+    });
+  });
+
+  it("lo ya cocinado no se vuelve a comprar", () => {
+    const view = build({
+      slots: [{ day: 0, meal: "lunch", recipeId: "arroz-blanco", peopleOverride: null, cooked: true }],
+    });
+    expect(view.groups).toEqual([]);
+  });
+
   it("sin comidas no hay nada que comprar", () => {
     expect(build({ slots: [] })).toMatchObject({ plannedMeals: 0, groups: [], totals: { total: 0 } });
   });

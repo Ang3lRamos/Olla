@@ -61,7 +61,11 @@ export function ShoppingList(props: ShoppingListProps) {
         items: [
           ...group.items
             .filter(({ item }) => item.status !== "bought")
-            .map(({ item }) => ({ name: item.name, quantity: item.remaining })),
+            .map(({ item, packagesLabel }) => ({
+              name: item.name,
+              quantity: item.remaining,
+              detail: packagesLabel,
+            })),
           ...group.extras
             .filter((extra) => !extra.checked)
             .map((extra) => ({ name: extra.name, quantity: null })),
@@ -126,15 +130,17 @@ export function ShoppingList(props: ShoppingListProps) {
           >
             <h3 className="mb-1 letrero text-xs text-muted">{group.label}</h3>
             <ul>
-              {group.items.map(({ item, costCop }) => (
+              {group.items.map((priced) => (
                 <ShoppingLine
-                  key={`${item.ingredientId}-${item.toBuy.unit}`}
-                  item={item}
-                  costCop={costCop}
+                  key={`${priced.item.ingredientId}-${priced.item.toBuy.unit}`}
+                  priced={priced}
                   onToggle={(checked) =>
                     checked
-                      ? shopping.purchase({ ingredientId: item.ingredientId, quantity: item.toBuy })
-                      : shopping.unpurchase(item.ingredientId, item.toBuy.unit)
+                      ? shopping.purchase({
+                          ingredientId: priced.item.ingredientId,
+                          quantity: priced.purchaseFull.quantity,
+                        })
+                      : shopping.unpurchase(priced.item.ingredientId, priced.item.toBuy.unit)
                   }
                 />
               ))}

@@ -3,7 +3,9 @@
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { buildCatalog, getIngredient } from "@/domain/catalog";
 import { CATEGORY_LABELS, INGREDIENT_CATEGORIES } from "@/domain/categories";
-import type { Ingredient, Quantity } from "@/domain/types";
+import { formatPieces, piecesIn } from "@/domain/packages";
+import type { Ingredient, IngredientPrice, Quantity } from "@/domain/types";
+import { toIngredientBase } from "@/domain/units";
 import { parseDecimal } from "@/lib/decimal-input";
 import { removePantryItem, savePantryItem } from "../actions";
 import type { PantryEntry } from "../data";
@@ -26,10 +28,19 @@ function applyChange(items: PantryEntry[], change: OptimisticChange): PantryEntr
 interface PantryManagerProps {
   items: PantryEntry[];
   ingredients: Ingredient[];
+  /** Presentaciones con porciones, para mostrar lo que hay en tajadas, unidades… */
+  prices: IngredientPrice[];
 }
 
-export function PantryManager({ items, ingredients }: PantryManagerProps) {
+export function PantryManager({ items, ingredients, prices }: PantryManagerProps) {
   const [optimisticItems, applyOptimistic] = useOptimistic(items, applyChange);
+  const piecesHint = (entry: PantryEntry) => {
+    const price = prices.find((item) => item.ingredientId === entry.ingredientId);
+    const ingredient = catalog.get(entry.ingredientId);
+    if (!price?.pieces || !ingredient) return undefined;
+    const count = piecesIn(toIngredientBase(entry.quantity, ingredient), ingredient, price);
+    return count === null ? undefined : formatPieces(count, price.pieces.label);
+  };
   const [statuses, setStatuses] = useState<Record<string, { status: RowStatus; error?: string }>>({});
   const [addError, setAddError] = useState<string>();
   const [adding, startAdding] = useTransition();
@@ -126,6 +137,7 @@ export function PantryManager({ items, ingredients }: PantryManagerProps) {
                   key={entry.ingredientId}
                   ingredient={getIngredient(catalog, entry.ingredientId)}
                   quantity={entry.quantity}
+                  piecesHint={piecesHint(entry)}
                   status={statuses[entry.ingredientId]?.status ?? "idle"}
                   error={statuses[entry.ingredientId]?.error}
                   onSave={(quantity) => save(entry, quantity)}

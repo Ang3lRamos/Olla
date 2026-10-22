@@ -14,6 +14,8 @@ export type RowStatus = "idle" | "saving" | "saved" | "error";
 interface PantryRowProps {
   ingredient: Ingredient;
   quantity: Quantity;
+  /** Lo mismo en porciones, si su presentación las tiene ("≈ 12 tajadas"). */
+  piecesHint?: string;
   status: RowStatus;
   error?: string;
   onSave: (quantity: Quantity) => void;
@@ -21,7 +23,15 @@ interface PantryRowProps {
 }
 
 /** Edición en línea: guarda al salir del campo, con Enter o al cambiar la unidad. */
-export function PantryRow({ ingredient, quantity, status, error, onSave, onRemove }: PantryRowProps) {
+export function PantryRow({
+  ingredient,
+  quantity,
+  piecesHint,
+  status,
+  error,
+  onSave,
+  onRemove,
+}: PantryRowProps) {
   const [draft, setDraft] = useState(formatDecimalInput(quantity.amount));
   const amount = parseDecimal(draft);
 
@@ -36,7 +46,10 @@ export function PantryRow({ ingredient, quantity, status, error, onSave, onRemov
   return (
     <li className="flex flex-col gap-1 py-2.5">
       <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_8rem_2.25rem] items-center gap-2">
-        <span className="truncate">{ingredient.name}</span>
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate">{ingredient.name}</span>
+          {piecesHint && <span className="text-xs text-muted">{piecesHint}</span>}
+        </span>
         <input
           aria-label={`Cantidad de ${ingredient.name}`}
           inputMode="decimal"
