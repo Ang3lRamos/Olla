@@ -12,9 +12,22 @@ const MESSAGES: Record<string, string> = {
   signup_disabled: "El registro está desactivado por ahora.",
 };
 
+const UNAVAILABLE_MESSAGE =
+  "El servicio de cuentas tardó demasiado en responder. Espera un momento y vuelve a intentarlo.";
+const GENERIC_MESSAGE = "No pudimos completar la operación. Revisa tu conexión y vuelve a intentarlo.";
+
 export function authErrorMessage(error: AuthError): string {
-  return (
-    (error.code && MESSAGES[error.code]) ??
-    "No pudimos completar la operación. Revisa tu conexión y vuelve a intentarlo."
-  );
+  const known = error.code ? MESSAGES[error.code] : undefined;
+  if (known) return known;
+
+  // Sin código conocido no hay mensaje útil para el usuario; queda en los logs del servidor.
+  console.error("[auth]", {
+    status: error.status,
+    code: error.code,
+    name: error.name,
+    message: error.message,
+  });
+  return error.name === "AuthRetryableFetchError" || (error.status ?? 0) >= 500
+    ? UNAVAILABLE_MESSAGE
+    : GENERIC_MESSAGE;
 }
