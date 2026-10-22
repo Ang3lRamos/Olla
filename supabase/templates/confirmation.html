@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border:1px solid #e7e7ea;border-radius:8px;">
+            <tr>
+              <td style="padding:32px 32px 8px;">
+                <p style="margin:0 0 24px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">Olla</p>
+                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.2;font-weight:700;">Confirma tu cuenta</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#5f5f68;">
+                  Toca el botón para confirmar tu correo y empezar a planear las comidas de tu casa.
+                </p>
+                <a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&amp;type=email"
+                   style="display:inline-block;background:#18181b;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 20px;border-radius:8px;">
+                  Confirmar mi cuenta
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px;">
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#5f5f68;">
+                  Si no creaste una cuenta en Olla, ignora este correo. Si el enlace vence, pide otro desde la app.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

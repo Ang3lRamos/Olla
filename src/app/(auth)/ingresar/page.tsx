@@ -2,10 +2,18 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthForm } from "@/features/auth/components/auth-form";
 import { AuthFormSkeleton } from "@/features/auth/components/auth-form-skeleton";
+import { AuthHeading } from "@/features/auth/components/auth-heading";
 import { INVALID_LINK_ERROR } from "@/features/auth/confirmation";
 import { safeRedirectPath } from "@/features/auth/schemas";
 
 export const metadata: Metadata = { title: "Ingresar" };
+
+const SIGN_IN_HEADING = (
+  <AuthHeading
+    title="Hola de nuevo"
+    description="Ingresa para ver la semana, el mercado y las cuentas de la casa."
+  />
+);
 
 const INVALID_LINK_MESSAGE =
   "El enlace de confirmación venció o ya se usó. Si ya confirmaste tu cuenta, ingresa; si no, regístrate de nuevo.";
@@ -16,6 +24,7 @@ async function SignInForm({ searchParams }: Pick<PageProps<"/ingresar">, "search
   return (
     <AuthForm
       mode="sign-in"
+      heading={SIGN_IN_HEADING}
       redirectTo={redirectTo === "/" ? undefined : redirectTo}
       notice={error === INVALID_LINK_ERROR ? INVALID_LINK_MESSAGE : undefined}
     />
@@ -24,14 +33,15 @@ async function SignInForm({ searchParams }: Pick<PageProps<"/ingresar">, "search
 
 export default function SignInPage({ searchParams }: PageProps<"/ingresar">) {
   return (
-    <>
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-title font-semibold">Hola de nuevo</h1>
-        <p className="text-muted">Ingresa para ver la semana, el mercado y las cuentas de la casa.</p>
-      </div>
-      <Suspense fallback={<AuthFormSkeleton />}>
-        <SignInForm searchParams={searchParams} />
-      </Suspense>
-    </>
+    <Suspense
+      fallback={
+        <>
+          {SIGN_IN_HEADING}
+          <AuthFormSkeleton />
+        </>
+      }
+    >
+      <SignInForm searchParams={searchParams} />
+    </Suspense>
   );
 }

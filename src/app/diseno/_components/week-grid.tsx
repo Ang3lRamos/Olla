@@ -35,7 +35,7 @@ export function WeekGrid() {
                 {day.date}
               </span>
             </span>
-            {day.isToday && <span className="letrero text-xs text-achiote">Hoy</span>}
+            {day.isToday && <span className="letrero text-xs text-accent">Hoy</span>}
           </header>
 
           {day.slots.map((slot, index) => (

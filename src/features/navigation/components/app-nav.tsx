@@ -28,7 +28,7 @@ export function AppNav() {
             <span
               aria-hidden
               className={cn(
-                "absolute inset-x-3 -bottom-[11px] h-0.5 origin-left rounded-full bg-achiote",
+                "absolute inset-x-3 -bottom-[11px] h-0.5 origin-left rounded-full bg-accent",
                 "transition-transform duration-(--dur-base) ease-out",
                 active ? "scale-x-100" : "scale-x-0",
               )}

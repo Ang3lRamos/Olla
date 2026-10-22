@@ -20,7 +20,7 @@ export function MealSlot({ slot, meal, className }: MealSlotProps) {
         type="button"
         className={cn(
           "flex min-h-28 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-hairline-strong",
-          "text-sm text-muted hover:border-achiote hover:text-achiote",
+          "text-sm text-muted hover:border-accent hover:text-accent",
           INTERACTIVE,
           className,
         )}
@@ -63,7 +63,7 @@ export function MealSlot({ slot, meal, className }: MealSlotProps) {
       </span>
 
       {slot.note && (
-        <span className="flex w-full items-start gap-1.5 border-t border-dashed border-hairline-strong pt-2 text-xs text-achiote">
+        <span className="flex w-full items-start gap-1.5 border-t border-dashed border-hairline-strong pt-2 text-xs text-muted italic">
           <StickyNote className="mt-px size-3 shrink-0" aria-hidden />
           {slot.note}
         </span>

@@ -42,7 +42,7 @@ export function WeekSummary() {
               <span
                 className={cn(
                   "block h-full origin-left rounded-full transition-transform duration-(--dur-slow) ease-out",
-                  budgetUsed > BUDGET_WARNING_RATIO ? "bg-achiote" : "bg-cilantro",
+                  budgetUsed > BUDGET_WARNING_RATIO ? "bg-accent" : "bg-cilantro",
                 )}
                 style={{ transform: `scaleX(${budgetUsed})` }}
               />

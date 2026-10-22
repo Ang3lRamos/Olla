@@ -6,7 +6,7 @@ const SWATCHES = [
   { name: "Lienzo", token: "canvas", className: "bg-canvas", use: "Fondo" },
   { name: "Hundido", token: "sunken", className: "bg-sunken", use: "Zonas y hoy" },
   { name: "Tinta", token: "ink", className: "bg-ink", use: "Texto" },
-  { name: "Achiote", token: "achiote", className: "bg-achiote", use: "Único acento" },
+  { name: "Acento", token: "accent", className: "bg-accent", use: "Botones y foco" },
   { name: "Cilantro", token: "cilantro", className: "bg-cilantro", use: "Comprado, despensa" },
   { name: "Maíz", token: "maiz", className: "bg-maiz", use: "Hoy (solo marcador)" },
 ];

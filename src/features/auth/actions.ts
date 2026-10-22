@@ -16,6 +16,18 @@ export interface AuthFormState {
   needsConfirmation?: boolean;
 }
 
+export interface ResendState {
+  /** Momento del último reenvío; reinicia la espera del botón. */
+  sentAt?: number;
+  error?: string;
+}
+
+/** El enlace del correo vuelve al mismo dominio del registro (local, vista previa o producción). */
+async function confirmationLinkOptions() {
+  const origin = (await headers()).get("origin");
+  return origin ? { emailRedirectTo: `${origin}${CONFIRMATION_PATH}` } : undefined;
+}
+
 function parseCredentials(formData: FormData) {
   const parsed = credentialsSchema.safeParse({
     email: formData.get("email"),
@@ -48,16 +60,27 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   if (!parsed.credentials) return parsed.state;
 
   const supabase = await createSupabaseServerClient();
-  // El enlace del correo vuelve al mismo dominio del registro (local, vista previa o producción).
-  const origin = (await headers()).get("origin");
   const { data, error } = await supabase.auth.signUp({
     ...parsed.credentials,
-    options: origin ? { emailRedirectTo: `${origin}${CONFIRMATION_PATH}` } : undefined,
+    options: await confirmationLinkOptions(),
   });
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
   if (!data.session) return { email: parsed.credentials.email, needsConfirmation: true };
 
   redirect("/empezar");
+}
+
+export async function resendConfirmation(_: ResendState, formData: FormData): Promise<ResendState> {
+  const email = credentialsSchema.shape.email.safeParse(formData.get("email"));
+  if (!email.success) return { error: "No reconocemos ese correo. Vuelve a registrarte." };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.data,
+    options: await confirmationLinkOptions(),
+  });
+  return error ? { error: authErrorMessage(error) } : { sentAt: Date.now() };
 }
 
 export async function signOut() {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CheckEmailPreview } from "./_components/check-email-preview";
 import { ReceiptPreview } from "./_components/receipt-preview";
 import { TokensPreview } from "./_components/tokens-preview";
 import { WeekPreview } from "./_components/week-preview";
@@ -13,7 +14,7 @@ export default function DesignPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-3">
           <Logo />
-          <p className="letrero text-sm text-achiote">Dirección visual</p>
+          <p className="letrero text-sm text-muted">Dirección visual</p>
           <p className="max-w-2xl text-muted">
             Propuesta para validar antes de construir las pantallas. Todos los datos son de ejemplo.
           </p>
@@ -27,6 +28,8 @@ export default function DesignPage() {
         <ReceiptPreview />
         <TokensPreview />
       </div>
+
+      <CheckEmailPreview />
     </main>
   );
 }

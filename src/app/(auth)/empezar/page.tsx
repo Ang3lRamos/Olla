@@ -20,7 +20,7 @@ export default function OnboardingPage() {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <p className="letrero text-sm text-achiote">Paso único</p>
+        <p className="letrero text-sm text-muted">Paso único</p>
         <h1 className="font-display text-title font-semibold">Cuéntanos de tu casa</h1>
         <p className="text-muted">
           Con esto calculamos porciones y mercado. Lo puedes cambiar cuando quieras.

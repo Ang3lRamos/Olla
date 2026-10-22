@@ -28,7 +28,7 @@ export function TextField({ label, hint, error, trailing, className, id, ...prop
           className={cn(
             "h-10 w-full rounded-md border border-hairline-strong bg-surface px-3 text-[15px] placeholder:text-muted",
             "transition-colors duration-(--dur-fast) ease-out hover:border-muted",
-            "focus:border-achiote focus:ring-3 focus:ring-achiote/20 focus:outline-none",
+            "focus:border-accent focus:ring-3 focus:ring-accent/20 focus:outline-none",
             "aria-invalid:border-danger aria-invalid:focus:ring-danger/20",
             trailing ? "pr-11" : undefined,
           )}

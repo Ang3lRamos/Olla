@@ -15,9 +15,9 @@
   --color-muted: var(--muted);
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
-  --color-achiote: var(--achiote);
-  --color-achiote-strong: var(--achiote-strong);
-  --color-on-achiote: var(--on-achiote);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
   --color-cilantro: var(--cilantro);
   --color-on-cilantro: var(--on-cilantro);
   --color-maiz: var(--maiz);
@@ -87,9 +87,9 @@
   --muted: #5f5f68;
   --hairline: #e7e7ea;
   --hairline-strong: #d4d4d8;
-  --achiote: #b8431b;
-  --achiote-strong: #9a3412;
-  --on-achiote: #ffffff;
+  --accent: #18181b;
+  --accent-strong: #3f3f46;
+  --on-accent: #ffffff;
   --cilantro: #2f7a45;
   --on-cilantro: #ffffff;
   --maiz: #f5c344;
@@ -107,9 +107,9 @@
   --muted: #a1a1aa;
   --hairline: #2a2a2f;
   --hairline-strong: #3a3a41;
-  --achiote: #ef7a4f;
-  --achiote-strong: #f59572;
-  --on-achiote: #111113;
+  --accent: #ededef;
+  --accent-strong: #d4d4d8;
+  --on-accent: #111113;
   --cilantro: #6cc287;
   --on-cilantro: #111113;
   --maiz: #d9a82e;
