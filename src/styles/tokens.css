@@ -2,25 +2,35 @@
  * Tokens de diseño de Olla. Es el único lugar donde se definen colores, tipografía,
  * radios, sombras y movimiento; los componentes solo usan estas utilidades.
  * Se desactiva la paleta por defecto de Tailwind para que no se cuelen colores sueltos.
+ *
+ * Los colores apuntan a variables que cambian por tema: claro por defecto, oscuro según
+ * el sistema o forzado con data-theme en <html>.
  */
-@theme {
+@theme inline {
   --color-*: initial;
-  --color-paper: #f5efe3;
-  --color-surface: #fffbf4;
-  --color-sunken: #ede5d6;
-  --color-ink: #221b14;
-  --color-muted: #6e6152;
-  --color-hairline: #e2d7c4;
-  --color-hairline-strong: #cbbda5;
-  --color-achiote: #b23e17;
-  --color-achiote-strong: #963212;
-  --color-achiote-soft: #f3dccf;
-  --color-cilantro: #3d6a34;
-  --color-cilantro-soft: #dde8d4;
-  --color-maiz: #f2c14e;
-  --color-white: #ffffff;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-achiote: var(--achiote);
+  --color-achiote-strong: var(--achiote-strong);
+  --color-on-achiote: var(--on-achiote);
+  --color-cilantro: var(--cilantro);
+  --color-on-cilantro: var(--on-cilantro);
+  --color-maiz: var(--maiz);
   --color-transparent: transparent;
 
+  --shadow-*: initial;
+  --shadow-raised: var(--raised);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
   --text-display: 2.75rem;
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.02em;
@@ -32,9 +42,6 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-full: 9999px;
-
-  --shadow-*: initial;
-  --shadow-raised: 0 1px 0 var(--color-hairline), 0 8px 24px -12px rgb(34 27 20 / 0.18);
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -50,13 +57,45 @@
   }
 }
 
-@theme inline {
-  --font-display: var(--font-bricolage), ui-serif, Georgia, serif;
-  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-}
-
 :root {
   --dur-fast: 120ms;
   --dur-base: 200ms;
   --dur-slow: 320ms;
+
+  color-scheme: light;
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --sunken: #f4f4f5;
+  --ink: #18181b;
+  --muted: #5f5f68;
+  --hairline: #e7e7ea;
+  --hairline-strong: #d4d4d8;
+  --achiote: #b8431b;
+  --achiote-strong: #9a3412;
+  --on-achiote: #ffffff;
+  --cilantro: #2f7a45;
+  --on-cilantro: #ffffff;
+  --maiz: #f5c344;
+  --marker-size: 0.42em;
+  --raised: 0 1px 2px rgb(24 24 27 / 0.06), 0 12px 32px -16px rgb(24 24 27 / 0.18);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #111113;
+  --surface: #1a1a1d;
+  --sunken: #232327;
+  --ink: #ededef;
+  --muted: #a1a1aa;
+  --hairline: #2a2a2f;
+  --hairline-strong: #3a3a41;
+  --achiote: #ef7a4f;
+  --achiote-strong: #f59572;
+  --on-achiote: #111113;
+  --cilantro: #6cc287;
+  --on-cilantro: #111113;
+  --maiz: #d9a82e;
+  /* Sobre fondo oscuro el resaltado completo apaga el texto claro; queda como subrayado. */
+  --marker-size: 0.14em;
+  --raised: 0 0 0 1px var(--hairline);
 }

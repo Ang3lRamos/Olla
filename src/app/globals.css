@@ -14,13 +14,13 @@
 @utility marcador {
   background-image: linear-gradient(var(--color-maiz), var(--color-maiz));
   background-repeat: no-repeat;
-  background-size: 100% 0.42em;
+  background-size: 100% var(--marker-size);
   background-position: 0 92%;
 }
 
 @layer base {
   html {
-    background-color: var(--color-paper);
+    background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
@@ -32,8 +32,8 @@
   }
 
   ::selection {
-    background-color: var(--color-maiz);
-    color: var(--color-ink);
+    background-color: var(--color-achiote);
+    color: var(--color-on-achiote);
   }
 }
 

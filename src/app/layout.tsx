@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import { THEME_INIT_SCRIPT } from "@/ui/theme/theme";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -20,7 +21,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-CO" className={`${bricolage.variable} ${instrument.variable} h-full antialiased`}>
+    <html
+      lang="es-CO"
+      className={`${bricolage.variable} ${instrument.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

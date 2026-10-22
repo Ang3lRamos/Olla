@@ -3,8 +3,8 @@ import { Checkbox } from "@/ui/checkbox";
 import { TextField } from "@/ui/text-field";
 
 const SWATCHES = [
-  { name: "Papel", token: "paper", className: "bg-paper", use: "Fondo" },
-  { name: "Superficie", token: "surface", className: "bg-surface", use: "Tarjetas" },
+  { name: "Lienzo", token: "canvas", className: "bg-canvas", use: "Fondo" },
+  { name: "Hundido", token: "sunken", className: "bg-sunken", use: "Zonas y hoy" },
   { name: "Tinta", token: "ink", className: "bg-ink", use: "Texto" },
   { name: "Achiote", token: "achiote", className: "bg-achiote", use: "Único acento" },
   { name: "Cilantro", token: "cilantro", className: "bg-cilantro", use: "Comprado, despensa" },

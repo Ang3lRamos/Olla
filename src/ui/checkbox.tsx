@@ -21,7 +21,7 @@ export function Checkbox({ label, className, ...props }: CheckboxProps) {
           viewBox="0 0 16 16"
           aria-hidden
           className={cn(
-            "pointer-events-none absolute size-3.5 scale-75 text-white opacity-0",
+            "pointer-events-none absolute size-3.5 scale-75 text-on-cilantro opacity-0",
             "transition-[opacity,transform] duration-(--dur-fast) ease-out peer-checked:scale-100 peer-checked:opacity-100",
           )}
         >
