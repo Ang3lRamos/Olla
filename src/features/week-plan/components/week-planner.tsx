@@ -10,6 +10,7 @@ import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
 import { Sheet } from "@/ui/sheet";
 import { AssistantPanel } from "@/features/assistant/components/assistant-panel";
+import { hasAssistant, type AiQuota } from "@/features/entitlements/quota";
 import { buildWeekView, recipeUsage, type NoteView } from "../week-view";
 import { NotesPanel } from "./notes-panel";
 import { SlotSheetContent } from "./slot-sheet";
@@ -31,6 +32,7 @@ export interface WeekPlannerProps {
   prices: IngredientPrice[];
   pantry: PantryItem[];
   notes: NoteView[];
+  aiQuota: AiQuota;
 }
 
 type OpenPanel =
@@ -66,6 +68,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
         people={week.people}
         onPeopleChange={week.setPeople}
         onOpenAssistant={() => setPanel({ kind: "assistant" })}
+        assistantLocked={!hasAssistant(props.aiQuota)}
       />
 
       {week.error && (
@@ -149,6 +152,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
             marketFor={(slots) =>
               summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop
             }
+            quota={props.aiQuota}
             onApply={(changes) => {
               week.applyChanges(changes);
               setPanel(null);

@@ -35,6 +35,7 @@ Las primitivas visuales compartidas van en `src/ui/`.
 - Toda respuesta se valida con zod. Los errores (`timeout`, `unavailable`, `invalid_response`, `not_configured`) se muestran al usuario con opción de reintentar y sin modificar sus datos.
 - Las pruebas nunca llaman a la IA real: usan un cliente simulado.
 - `AI_BASE_URL=mock` activa un asistente de reglas (`features/assistant/simulated-client.ts`) que pasa por el mismo esquema y la misma depuración. Instrucciones para probar fallas: «simular error», «simular lento», «simular respuesta inválida».
+- El asistente es solo del plan Pro y tiene tope diario. El plan vive en `household_entitlements`, que los usuarios no pueden escribir; el cupo se descuenta en la base (`consume_ai_request`) antes de llamar a la IA y se devuelve si la IA falla. Mientras no haya pagos, el plan se cambia con `npm run plan:set -- <correo> <pro|free> [consultas por día]`.
 - La respuesta del modelo nunca se aplica tal cual: `sanitize.ts` descarta ids inventados y recetas con algo de «no incluir», y la persona revisa la vista previa antes de aplicar.
 
 ## Convenciones
@@ -60,6 +61,7 @@ npm run format      # Prettier
 npm run db:seed-sql # regenera supabase/seed.sql desde src/seed
 npm run db:push     # aplica migraciones pendientes y la semilla
 npm run db:types    # regenera src/lib/supabase/database.types.ts
+npm run plan:set -- <correo> pro 20   # da el plan Pro a un hogar (sin pagos todavía)
 ```
 
 ## Base de datos

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { getAiQuota } from "@/features/entitlements/data";
 import { listNotesBetween } from "@/features/notes/data";
 import { summarizeRecipe } from "@/features/recipes/data";
 import { WeekPlanner } from "@/features/week-plan/components/week-planner";
@@ -10,7 +11,10 @@ export const metadata: Metadata = { title: "Semana" };
 
 async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">) {
   const week = await loadWeek((await searchParams).semana);
-  const notes = await listNotesBetween(week.weekStart, week.weekEnd);
+  const [notes, aiQuota] = await Promise.all([
+    listNotesBetween(week.weekStart, week.weekEnd),
+    getAiQuota(week.household.id),
+  ]);
 
   return (
     <WeekPlanner
@@ -27,6 +31,7 @@ async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">
       prices={[...week.prices.values()]}
       pantry={week.pantry}
       notes={notes}
+      aiQuota={aiQuota}
     />
   );
 }

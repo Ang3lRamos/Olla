@@ -1,6 +1,5 @@
 "use client";
 
-import { RotateCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { PlannedSlot } from "@/domain/week-plan";
 import { Button } from "@/ui/button";
@@ -8,7 +7,9 @@ import { FormMessage } from "@/ui/form-message";
 import { Spinner } from "@/ui/spinner";
 import { askAssistant, type AskAssistantResult } from "../actions";
 import type { ProposedChange } from "../sanitize";
-import { ASSISTANT_ERROR_MESSAGES } from "./assistant-messages";
+import { hasAssistant, remainingRequests, type AiQuota } from "@/features/entitlements/quota";
+import { withChanges } from "../with-changes";
+import { AssistantError } from "./assistant-error";
 import { AssistantRequestForm, type AssistantFormValues } from "./assistant-request-form";
 import { ChangePreview } from "./change-preview";
 
@@ -23,31 +24,11 @@ interface AssistantPanelProps {
   /** Mercado de la semana con esas casillas; lo calcula el dominio, no la IA. */
   marketFor: (slots: PlannedSlot[]) => number;
   onApply: (changes: ProposedChange[]) => void;
+  quota: AiQuota;
 }
 
 type PanelState =
   { kind: "form" } | { kind: "loading"; slow: boolean } | { kind: "done"; result: AskAssistantResult };
-
-function withChanges(slots: PlannedSlot[], changes: ProposedChange[]): PlannedSlot[] {
-  const untouched = slots.filter(
-    (slot) => !changes.some((change) => change.day === slot.day && change.meal === slot.meal),
-  );
-  const added = changes.flatMap((change) =>
-    change.recipeId
-      ? [
-          {
-            day: change.day,
-            meal: change.meal,
-            recipeId: change.recipeId,
-            peopleOverride:
-              slots.find((slot) => slot.day === change.day && slot.meal === change.meal)?.peopleOverride ??
-              null,
-          },
-        ]
-      : [],
-  );
-  return [...untouched, ...added];
-}
 
 export function AssistantPanel({
   weekStart,
@@ -56,6 +37,7 @@ export function AssistantPanel({
   recipeName,
   marketFor,
   onApply,
+  quota: initialQuota,
 }: AssistantPanelProps) {
   const [state, setState] = useState<PanelState>({ kind: "form" });
   const [values, setValues] = useState<AssistantFormValues>({
@@ -64,6 +46,7 @@ export function AssistantPanel({
     onlyEmpty: true,
   });
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [quota, setQuota] = useState(initialQuota);
   const requestId = useRef(0);
 
   // Si el panel se cierra mientras espera, la respuesta que llegue después se ignora.
@@ -77,25 +60,46 @@ export function AssistantPanel({
       () => id === requestId.current && setState({ kind: "loading", slow: true }),
       SLOW_NOTICE_MS,
     );
-    const result = await askAssistant({ weekStart, ...request }).catch((): AskAssistantResult => ({
+    const result = await askAssistant({
+      weekStart,
+      ...request,
+      // Solo el modo Ajustar usa la instrucción; no se arrastra a los otros modos.
+      instruction: request.mode === "adjust" ? request.instruction : "",
+    }).catch((): AskAssistantResult => ({
       ok: false,
       error: { kind: "unavailable", detail: "Fallo de red" },
       simulated: false,
+      quota: null,
     }));
     clearTimeout(slowTimer);
     if (id !== requestId.current) return;
+    if (result.quota) setQuota(result.quota);
     if (result.ok) setSelected(new Set(result.changes.map((_, index) => index)));
     setState({ kind: "done", result });
   };
 
   if (state.kind === "form") {
+    if (!hasAssistant(quota)) {
+      return <AssistantError kind="not_entitled" />;
+    }
+    const remaining = remainingRequests(quota);
     return (
-      <AssistantRequestForm
-        initial={values}
-        hasMeals={slots.length > 0}
-        notesCount={notesCount}
-        onSubmit={ask}
-      />
+      <div className="flex flex-col gap-5">
+        <p className="text-xs text-muted" aria-live="polite">
+          Plan Pro · te quedan <span className="font-medium text-ink tabular-nums">{remaining}</span> de{" "}
+          {quota.dailyLimit} consultas hoy. Se renuevan a medianoche.
+        </p>
+        {remaining === 0 ? (
+          <AssistantError kind="limit_reached" />
+        ) : (
+          <AssistantRequestForm
+            initial={values}
+            hasMeals={slots.length > 0}
+            notesCount={notesCount}
+            onSubmit={ask}
+          />
+        )}
+      </div>
     );
   }
 
@@ -113,25 +117,12 @@ export function AssistantPanel({
 
   const { result } = state;
   if (!result.ok) {
-    const message = ASSISTANT_ERROR_MESSAGES[result.error.kind];
     return (
-      <div role="alert" className="flex animate-rise flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">{message.title}</p>
-          <p className="text-sm text-muted">{message.body}</p>
-        </div>
-        <div className="flex gap-2">
-          {result.error.kind !== "not_configured" && (
-            <Button onClick={() => ask(values)}>
-              <RotateCw className="size-4" aria-hidden />
-              Reintentar
-            </Button>
-          )}
-          <Button variant="ghost" onClick={() => setState({ kind: "form" })}>
-            Volver
-          </Button>
-        </div>
-      </div>
+      <AssistantError
+        kind={result.error.kind}
+        onRetry={() => ask(values)}
+        onBack={() => setState({ kind: "form" })}
+      />
     );
   }
 

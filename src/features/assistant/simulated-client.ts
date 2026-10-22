@@ -40,7 +40,8 @@ export function createSimulatedAssistantClient(
   deps: SimulatedDeps = {},
 ): AiClient {
   const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
-  const instruction = normalizeForSearch(context.instruction);
+  // Las órdenes «simular …» solo cuentan al ajustar, que es donde se escribe una instrucción.
+  const instruction = context.mode === "adjust" ? normalizeForSearch(context.instruction) : "";
 
   return {
     async completeJson<T>(request: JsonRequest<T>): Promise<AiResult<T>> {

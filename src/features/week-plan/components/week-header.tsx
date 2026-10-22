@@ -11,6 +11,8 @@ interface WeekHeaderProps {
   people: number;
   onPeopleChange: (people: number) => void;
   onOpenAssistant: () => void;
+  /** El asistente es del plan Pro; para el resto el botón lo indica. */
+  assistantLocked: boolean;
 }
 
 export function WeekHeader({
@@ -19,6 +21,7 @@ export function WeekHeader({
   people,
   onPeopleChange,
   onOpenAssistant,
+  assistantLocked,
 }: WeekHeaderProps) {
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -37,9 +40,14 @@ export function WeekHeader({
           unit={["persona", "personas"]}
           onValueChange={onPeopleChange}
         />
-        <Button onClick={onOpenAssistant}>
+        <Button variant={assistantLocked ? "secondary" : "primary"} onClick={onOpenAssistant}>
           <MessageSquareText className="size-4" aria-hidden />
           Pedir al asistente
+          {assistantLocked && (
+            <span className="rounded-full border border-hairline-strong px-1.5 text-[11px] font-semibold">
+              Pro
+            </span>
+          )}
         </Button>
       </div>
     </header>
