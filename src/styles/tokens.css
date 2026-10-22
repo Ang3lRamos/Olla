@@ -48,11 +48,27 @@
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   --animate-rise: rise var(--dur-base) var(--ease-out) both;
+  --animate-enter-from-right: enter-from-right var(--dur-base) var(--ease-out) both;
+  --animate-enter-from-left: enter-from-left var(--dur-base) var(--ease-out) both;
 
   @keyframes rise {
     from {
       opacity: 0;
       transform: translateY(8px);
+    }
+  }
+
+  @keyframes enter-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+  }
+
+  @keyframes enter-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
     }
   }
 }

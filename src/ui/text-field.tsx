@@ -21,7 +21,7 @@ export function TextField({ label, hint, className, id, ...props }: TextFieldPro
         aria-describedby={hintId}
         className={cn(
           "h-10 rounded-md border border-hairline-strong bg-surface px-3 text-[15px] placeholder:text-muted",
-          "transition-colors duration-(--dur-fast) ease-out hover:border-muted focus:border-achiote focus:outline-none",
+          "transition-colors duration-(--dur-fast) ease-out hover:border-muted focus:border-achiote focus:ring-3 focus:ring-achiote/20 focus:outline-none",
         )}
         {...props}
       />

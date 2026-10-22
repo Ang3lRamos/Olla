@@ -1,20 +1,21 @@
-export const THEME_PREFERENCES = ["system", "light", "dark"] as const;
-export type ThemePreference = (typeof THEME_PREFERENCES)[number];
+export const THEMES = ["light", "dark"] as const;
+export type Theme = (typeof THEMES)[number];
 
 export const THEME_STORAGE_KEY = "olla-theme";
+export const THEME_CHANGE_EVENT = "olla-theme-change";
 
 /**
  * Se ejecuta en <head> antes de pintar para evitar el destello de tema incorrecto.
- * Resuelve "system" con prefers-color-scheme y sigue los cambios del sistema.
+ * Usa el tema elegido por el usuario; si aún no eligió, el del sistema.
  */
 export const THEME_INIT_SCRIPT = `(() => {
   const media = matchMedia("(prefers-color-scheme: dark)");
-  const stored = () => { try { return localStorage.getItem("${THEME_STORAGE_KEY}"); } catch { return null; } };
   const apply = () => {
-    const pref = stored();
-    document.documentElement.dataset.theme = pref === "light" || pref === "dark" ? pref : media.matches ? "dark" : "light";
+    let stored = null;
+    try { stored = localStorage.getItem("${THEME_STORAGE_KEY}"); } catch {}
+    document.documentElement.dataset.theme = stored === "light" || stored === "dark" ? stored : media.matches ? "dark" : "light";
   };
   apply();
   media.addEventListener("change", apply);
-  window.addEventListener("olla-theme-change", apply);
+  window.addEventListener("${THEME_CHANGE_EVENT}", apply);
 })();`;

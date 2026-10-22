@@ -46,7 +46,7 @@ export function WeekGrid() {
             <span className="text-sm font-medium tabular-nums">{formatCop(dayCost(day))}</span>
             <span className="h-1 overflow-hidden rounded-full bg-hairline" aria-hidden>
               <span
-                className="block h-full origin-left rounded-full bg-ink"
+                className="block h-full origin-left rounded-full bg-ink transition-transform duration-(--dur-slow) ease-out"
                 style={{ transform: `scaleX(${dayCost(day) / maxDayCost})` }}
               />
             </span>

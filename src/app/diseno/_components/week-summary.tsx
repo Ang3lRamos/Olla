@@ -41,7 +41,7 @@ export function WeekSummary() {
             <span className="h-1 overflow-hidden rounded-full bg-sunken" aria-hidden>
               <span
                 className={cn(
-                  "block h-full origin-left rounded-full",
+                  "block h-full origin-left rounded-full transition-transform duration-(--dur-slow) ease-out",
                   budgetUsed > BUDGET_WARNING_RATIO ? "bg-achiote" : "bg-cilantro",
                 )}
                 style={{ transform: `scaleX(${budgetUsed})` }}

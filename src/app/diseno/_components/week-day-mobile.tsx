@@ -1,29 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type TouchEvent } from "react";
 import { formatCop } from "@/domain/money";
 import { cn } from "@/ui/cn";
 import { MealSlot } from "./meal-slot";
 import { MEALS, SAMPLE_WEEK, dayCost } from "./sample-week";
 
 const todayIndex = SAMPLE_WEEK.findIndex((day) => day.isToday);
+const SWIPE_THRESHOLD_PX = 50;
+const STAGGER_MS = 40;
 
-/** Vista de celular: un día a la vez con selector de días. */
+/** Vista de celular: un día a la vez, con selector y deslizamiento entre días. */
 export function WeekDayMobile() {
-  const [selectedDay, setSelectedDay] = useState(todayIndex);
-  const day = SAMPLE_WEEK[selectedDay]!;
+  const [selection, setSelection] = useState({ index: todayIndex, direction: 0 });
+  const touchStartX = useRef<number | null>(null);
+  const day = SAMPLE_WEEK[selection.index]!;
+
+  const selectDay = (index: number) => {
+    if (index < 0 || index >= SAMPLE_WEEK.length || index === selection.index) return;
+    setSelection({ index, direction: Math.sign(index - selection.index) });
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const deltaX = event.changedTouches[0]!.clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX) selectDay(selection.index + (deltaX < 0 ? 1 : -1));
+  };
+
+  // El contenido entra desde el lado hacia el que se navega, para que se entienda a dónde fue.
+  const enterAnimation =
+    selection.direction > 0
+      ? "animate-enter-from-right"
+      : selection.direction < 0
+        ? "animate-enter-from-left"
+        : "animate-rise";
 
   return (
     <div className="flex flex-col gap-4 md:hidden">
-      <nav aria-label="Días de la semana" className="-mx-4 flex justify-between gap-1 overflow-x-auto px-4">
+      <nav aria-label="Días de la semana" className="relative grid grid-cols-7">
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-[calc(100%/7)] rounded-md bg-ink transition-transform duration-(--dur-base) ease-out"
+          style={{ transform: `translateX(${selection.index * 100}%)` }}
+        />
         {SAMPLE_WEEK.map((item, index) => (
           <button
             key={item.short}
-            onClick={() => setSelectedDay(index)}
-            aria-pressed={index === selectedDay}
+            type="button"
+            onClick={() => selectDay(index)}
+            aria-pressed={index === selection.index}
+            aria-label={`${item.long} ${item.date}${item.isToday ? ", hoy" : ""}`}
             className={cn(
-              "flex min-w-11 flex-col items-center rounded-md px-1.5 py-1.5 transition-colors duration-(--dur-fast) ease-out",
-              index === selectedDay ? "bg-ink text-canvas" : "text-muted hover:bg-sunken",
+              "relative flex flex-col items-center rounded-md py-1.5 transition-colors duration-(--dur-fast) ease-out",
+              index === selection.index ? "text-canvas" : "text-muted active:bg-sunken",
             )}
           >
             <span className="letrero text-sm">{item.short}</span>
@@ -34,8 +64,14 @@ export function WeekDayMobile() {
         ))}
       </nav>
 
-      <div key={selectedDay} className="flex animate-rise flex-col gap-3">
-        <div className="flex items-baseline justify-between border-b-2 border-ink pb-1">
+      <section
+        key={selection.index}
+        aria-label={day.long}
+        className="flex touch-pan-y flex-col gap-3"
+        onTouchStart={(event) => (touchStartX.current = event.touches[0]!.clientX)}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className={cn("flex items-baseline justify-between border-b-2 border-ink pb-1", enterAnimation)}>
           <h3 className="letrero text-2xl">{day.long}</h3>
           <span className="text-sm text-muted">
             Costo del día{" "}
@@ -43,12 +79,16 @@ export function WeekDayMobile() {
           </span>
         </div>
         {day.slots.map((slot, index) => (
-          <div key={MEALS[index]} className="flex flex-col gap-1">
+          <div
+            key={MEALS[index]}
+            className={cn("flex flex-col gap-1", enterAnimation)}
+            style={{ animationDelay: `${(index + 1) * STAGGER_MS}ms` }}
+          >
             <p className="letrero text-xs text-muted">{MEALS[index]}</p>
             <MealSlot slot={slot} meal={MEALS[index]!} className="min-h-0" />
           </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 }
