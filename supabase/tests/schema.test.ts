@@ -264,3 +264,59 @@ describe("mercado", () => {
     ).rejects.toThrow(/duplicate key/);
   });
 });
+
+describe("plan y cupo del asistente", () => {
+  const consume = (user: string) =>
+    asUser(db, user, (tx) =>
+      tx
+        .query<{ allowed: boolean; used: number }>("select * from public.consume_ai_request($1)", [
+          anaHousehold,
+        ])
+        .then((result) => result.rows[0]!),
+    );
+
+  it("el plan gratis no tiene asistente", async () => {
+    expect(await consume(ANA)).toMatchObject({ allowed: false, plan: "free", daily_limit: 0 });
+  });
+
+  it("nadie puede darse el plan pro desde el cliente", async () => {
+    await expect(
+      asUser(db, ANA, (tx) =>
+        tx.query(
+          "insert into public.household_entitlements (household_id, plan, ai_daily_limit) values ($1, 'pro', 500)",
+          [anaHousehold],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it("con plan pro descuenta hasta el tope del día y no más", async () => {
+    await db.query(
+      "insert into public.household_entitlements (household_id, plan, ai_daily_limit) values ($1, 'pro', 2)",
+      [anaHousehold],
+    );
+    expect(await consume(ANA)).toMatchObject({ allowed: true, used: 1 });
+    expect(await consume(ANA)).toMatchObject({ allowed: true, used: 2 });
+    expect(await consume(ANA)).toMatchObject({ allowed: false, used: 2 });
+  });
+
+  it("devolver una consulta libera cupo", async () => {
+    await asUser(db, ANA, (tx) => tx.query("select public.refund_ai_request($1)", [anaHousehold]));
+    expect(await consume(ANA)).toMatchObject({ allowed: true, used: 2 });
+  });
+
+  it("otro hogar no puede gastar ni ver el cupo ajeno", async () => {
+    await expect(consume(BETO)).rejects.toThrow("No perteneces a este hogar");
+    const quota = await asUser(db, BETO, (tx) =>
+      tx.query("select * from public.get_ai_quota($1)", [anaHousehold]),
+    );
+    expect(quota.rows).toEqual([]);
+  });
+
+  it("el cupo se lee con lo usado hoy", async () => {
+    const quota = await asUser(db, ANA, (tx) =>
+      tx.query("select * from public.get_ai_quota($1)", [anaHousehold]),
+    );
+    expect(quota.rows[0]).toMatchObject({ plan: "pro", daily_limit: 2, used: 2 });
+  });
+});

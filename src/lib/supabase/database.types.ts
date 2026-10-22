@@ -5,7 +5,47 @@ export type Database = {
   
   "public": {
           Tables: {
-            "household_members": {
+            "ai_usage": {
+                  Row: {
+                    "household_id": string,"requests": number,"used_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "household_id": string,"requests"?: number,"used_on": string
+                  }
+                  Update: {
+                    "household_id"?: string,"requests"?: number,"used_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_usage_household_id_fkey"
+      columns: ["household_id"]
+isOneToOne: false
+      referencedRelation: "households"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"household_entitlements": {
+                  Row: {
+                    "ai_daily_limit": number,"household_id": string,"plan": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai_daily_limit"?: number,"household_id": string,"plan"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ai_daily_limit"?: number,"household_id"?: string,"plan"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "household_entitlements_household_id_fkey"
+      columns: ["household_id"]
+isOneToOne: true
+      referencedRelation: "households"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"household_members": {
                   Row: {
                     "created_at": string,"household_id": string,"role": string,"user_id": string
                   }
@@ -275,14 +315,30 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "can_access_week_plan":
+            "ai_today":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"can_access_week_plan":
 { Args: { "target_week_plan_id": string }; Returns: boolean
+                           },
+"consume_ai_request":
+{ Args: { "target_household_id": string }; Returns: {
+              "allowed": boolean,"daily_limit": number,"plan": string,"used": number
+            }[]
                            },
 "create_household":
 { Args: { "budget_cop"?: number,"household_name": string,"household_preferences"?: Json,"people": number }; Returns: string
                            },
+"get_ai_quota":
+{ Args: { "target_household_id": string }; Returns: {
+              "daily_limit": number,"plan": string,"used": number
+            }[]
+                           },
 "is_household_member":
 { Args: { "target_household_id": string }; Returns: boolean
+                           },
+"refund_ai_request":
+{ Args: { "target_household_id": string }; Returns: undefined
                            },
 "save_household_recipe":
 { Args: { "ingredients": Json,"minutes": number,"recipe_category": string,"recipe_name": string,"recipe_steps": (string)[],"servings": number,"target_household_id": string,"target_recipe_id": string }; Returns: string
