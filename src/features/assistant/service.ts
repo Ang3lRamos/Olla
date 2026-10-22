@@ -1,6 +1,7 @@
 import type { AiClient, AiError } from "@/lib/ai/types";
 import type { AssistantContext } from "./context";
 import { buildAssistantMessages } from "./prompts";
+import { fillEmptySlots } from "./pick-recipe";
 import { sanitizeProposal, type SanitizedProposal } from "./sanitize";
 import { aiProposalSchema } from "./schemas";
 
@@ -23,5 +24,6 @@ export async function runAssistant(
     temperature: context.mode === "propose" ? 0.6 : 0.3,
   });
   if (!result.ok) return result;
-  return { ok: true, ...sanitizeProposal(result.data, context) };
+  const proposal = sanitizeProposal(result.data, context);
+  return { ok: true, ...(context.mode === "propose" ? fillEmptySlots(proposal, context) : proposal) };
 }

@@ -34,6 +34,8 @@ function rateLimited(response: Response, body: string): Attempt<never> {
 
 type Attempt<T> =
   | AiResult<T>
+  /** La clave o el acceso están mal: con otro modelo del mismo proveedor fallaría igual. */
+  | { ok: false; error: AiError; fatal: true }
   | {
       ok: false;
       error: AiError;
@@ -53,6 +55,7 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
 
   async function attempt<T>(
     request: JsonRequest<T>,
+    model: string,
     messages: ChatMessage[],
     useResponseFormat: boolean,
   ): Promise<Attempt<T>> {
@@ -65,7 +68,7 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
           ...(config.apiKey && { Authorization: `Bearer ${config.apiKey}` }),
         },
         body: JSON.stringify({
-          model: config.model,
+          model,
           messages,
           temperature: request.temperature ?? 0.4,
           ...(useResponseFormat && { response_format: { type: "json_object" } }),
@@ -84,9 +87,9 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
         return { ...fail("unavailable", body), retry: "without-response-format" };
       }
       if (response.status === 429) return rateLimited(response, body);
-      const retriable = response.status >= 500;
       const error = fail("unavailable", `HTTP ${response.status}: ${body}`);
-      return retriable ? { ...error, retry: "backoff" } : error;
+      if (response.status === 401 || response.status === 403) return { ...error, fatal: true };
+      return response.status >= 500 ? { ...error, retry: "backoff" } : error;
     }
 
     const completion = completionSchema.safeParse(await response.json().catch(() => null));
@@ -110,33 +113,57 @@ export function createHttpAiClient(config: AiConfig, deps: HttpClientDeps = {}):
     return { ok: true, data: validated.data };
   }
 
+  /**
+   * Intenta con un modelo. Si hay otro de respaldo, una caída, demora o falta de cupo pasa
+   * directo al siguiente en vez de insistir; las correcciones de formato sí se reintentan aquí.
+   */
+  async function completeWithModel<T>(
+    request: JsonRequest<T>,
+    model: string,
+    hasFallback: boolean,
+  ): Promise<AiResult<T> & { fatal?: true }> {
+    let messages = request.messages;
+    let useResponseFormat = true;
+    let lastError: AiError = { kind: "unavailable", detail: "Sin intentos" };
+
+    for (let tries = 0; tries <= config.maxRetries; tries++) {
+      const result = await attempt(request, model, messages, useResponseFormat);
+      if (result.ok || "fatal" in result) return result;
+      lastError = result.error;
+      if (!("retry" in result) || tries === config.maxRetries) break;
+
+      if (result.retry === "without-response-format") {
+        useResponseFormat = false;
+      } else if (result.retry === "with-correction" && result.reply) {
+        // Los modelos gratuitos suelen corregirse si se les dice qué estuvo mal.
+        messages = [
+          ...request.messages,
+          { role: "assistant", content: result.reply },
+          {
+            role: "user",
+            content: `Tu respuesta no cumple el formato pedido (${result.error.detail}). Responde de nuevo solo con el objeto JSON válido, sin texto adicional.`,
+          },
+        ];
+      } else if (hasFallback) {
+        break;
+      } else {
+        await sleep(result.waitMs ?? BASE_BACKOFF_MS * 2 ** tries);
+      }
+    }
+    return { ok: false, error: lastError };
+  }
+
   return {
     async completeJson<T>(request: JsonRequest<T>): Promise<AiResult<T>> {
-      let messages = request.messages;
-      let useResponseFormat = true;
-      let lastError: AiError = { kind: "unavailable", detail: "Sin intentos" };
-
-      for (let tries = 0; tries <= config.maxRetries; tries++) {
-        const result = await attempt(request, messages, useResponseFormat);
+      let lastError: AiError = { kind: "unavailable", detail: "Sin modelos" };
+      for (const [index, model] of config.models.entries()) {
+        const next = config.models[index + 1];
+        const result = await completeWithModel(request, model, next !== undefined);
         if (result.ok) return result;
         lastError = result.error;
-        if (!("retry" in result) || tries === config.maxRetries) break;
-
-        if (result.retry === "without-response-format") {
-          useResponseFormat = false;
-        } else if (result.retry === "with-correction" && result.reply) {
-          // Los modelos gratuitos suelen corregirse si se les dice qué estuvo mal.
-          messages = [
-            ...request.messages,
-            { role: "assistant", content: result.reply },
-            {
-              role: "user",
-              content: `Tu respuesta no cumple el formato pedido (${result.error.detail}). Responde de nuevo solo con el objeto JSON válido, sin texto adicional.`,
-            },
-          ];
-        } else {
-          await sleep(result.waitMs ?? BASE_BACKOFF_MS * 2 ** tries);
-        }
+        if (result.fatal || !next) break;
+        // Queda en los logs para saber cuánto están cargando los modelos de respaldo.
+        console.warn(`[ia] ${model} falló (${result.error.kind}); sigue ${next}`);
       }
       return { ok: false, error: lastError };
     },

@@ -70,9 +70,11 @@ export function sanitizeProposal(proposal: AiProposal, context: AssistantContext
     });
   }
 
-  const changes = [...bySlot.values()].sort((a, b) => a.day - b.day || mealOrder(a.meal) - mealOrder(b.meal));
+  const changes = [...bySlot.values()].sort(byDayAndMeal);
   return { summary: proposal.summary, changes, discarded };
 }
 
 const MEAL_ORDER: Record<Meal, number> = { breakfast: 0, lunch: 1, dinner: 2 };
-const mealOrder = (meal: Meal) => MEAL_ORDER[meal];
+
+export const byDayAndMeal = (a: ProposedChange, b: ProposedChange) =>
+  a.day - b.day || MEAL_ORDER[a.meal] - MEAL_ORDER[b.meal];

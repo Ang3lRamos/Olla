@@ -6,7 +6,7 @@ import { createHttpAiClient } from "./http-client";
 const config: AiConfig = {
   baseUrl: "http://localhost:20128/v1",
   apiKey: "clave",
-  model: "modelo-gratis",
+  models: ["modelo-gratis"],
   timeoutMs: 1000,
   maxRetries: 2,
 };
@@ -62,6 +62,56 @@ describe("createHttpAiClient", () => {
     const { client, fetch } = setup(limited, completion('{"recipeId": "abc"}'));
     expect(await client.completeJson(request)).toMatchObject({ ok: false, error: { kind: "rate_limited" } });
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  describe("con modelos de respaldo", () => {
+    const withFallback = { ...config, models: ["grande", "mediano"] };
+    function setupFallback(...responses: Response[]) {
+      const fetch = vi.fn<typeof globalThis.fetch>();
+      for (const response of responses) fetch.mockResolvedValueOnce(response);
+      const sleep = vi.fn(async () => undefined);
+      const client = createHttpAiClient(withFallback, { fetch, sleep });
+      const modelOf = (call: number) => JSON.parse(String(fetch.mock.calls[call]![1]!.body)).model;
+      return { client, fetch, sleep, modelOf };
+    }
+
+    it("sin cupo pasa al siguiente modelo sin esperar", async () => {
+      const limited = new Response("rate limit", { status: 429, headers: { "retry-after": "7" } });
+      const { client, sleep, modelOf } = setupFallback(limited, completion('{"recipeId": "abc"}'));
+      expect(await client.completeJson(request)).toMatchObject({ ok: true });
+      expect([modelOf(0), modelOf(1)]).toEqual(["grande", "mediano"]);
+      expect(sleep).not.toHaveBeenCalled();
+    });
+
+    it("si el modelo no corrige el formato, prueba con el siguiente", async () => {
+      const { client, modelOf } = setupFallback(
+        completion("no sé"),
+        completion("tampoco"),
+        completion("nada"),
+        completion('{"recipeId": "abc"}'),
+      );
+      expect(await client.completeJson(request)).toMatchObject({ ok: true });
+      expect(modelOf(3)).toBe("mediano");
+    });
+
+    it("con la clave rechazada no prueba otros modelos", async () => {
+      const { client, fetch } = setupFallback(status(401), completion('{"recipeId": "abc"}'));
+      expect(await client.completeJson(request)).toMatchObject({ ok: false, error: { kind: "unavailable" } });
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("si todos fallan informa el error del último", async () => {
+      const { client } = setupFallback(
+        status(503),
+        new Response("rate limit", { status: 429 }),
+        status(429),
+        status(429),
+      );
+      expect(await client.completeJson(request)).toMatchObject({
+        ok: false,
+        error: { kind: "rate_limited" },
+      });
+    });
   });
 
   it("se rinde tras el límite de reintentos", async () => {

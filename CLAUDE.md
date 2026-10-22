@@ -2,7 +2,7 @@
 
 # Olla
 
-Aplicación web de planeación de comidas para hogares en Colombia: recetas, despensa, menú semanal, lista de mercado, presupuesto en COP, notas y un asistente de IA que propone menús. Proyecto de portafolio con calidad de producto, preparado para convertirse en SaaS por suscripción (el hogar es la unidad de cobro). Hoy solo corre en local.
+Aplicación web de planeación de comidas para hogares en Colombia: recetas, despensa, menú semanal, lista de mercado, presupuesto en COP, notas y un asistente de IA que propone menús. Proyecto de portafolio con calidad de producto, preparado para convertirse en SaaS por suscripción (el hogar es la unidad de cobro). En producción en Vercel.
 
 Fuera de alcance: calorías, metas de peso, consejo médico o nutricional, pagos, despliegue y app nativa.
 
@@ -33,6 +33,8 @@ Las primitivas visuales compartidas van en `src/ui/`.
 - El resto de la app usa solo la interfaz `AiClient` de `src/lib/ai/`, configurada con `AI_BASE_URL`, `AI_API_KEY` y `AI_MODEL`. Ningún otro módulo sabe qué proveedor hay detrás.
 - La IA **solo propone recetas y combinaciones** (ids del catálogo). Las cantidades, el escalado, la lista de mercado y los costos se calculan siempre en `src/domain/`.
 - Toda respuesta se valida con zod. Los errores (`timeout`, `unavailable`, `invalid_response`, `not_configured`) se muestran al usuario con opción de reintentar y sin modificar sus datos.
+- `AI_MODEL` puede ser una lista separada por comas: el cliente pasa al siguiente modelo si uno se queda sin cupo, falla o tarda (no si la clave es inválida). En producción se usa Groq gratis, que tiene cupo por modelo.
+- Al proponer, las casillas que el modelo deje vacías las completa `fillEmptySlots` (`features/assistant/pick-recipe.ts`) con la misma regla de variedad y costo del asistente simulado.
 - Las pruebas nunca llaman a la IA real: usan un cliente simulado.
 - `AI_BASE_URL=mock` activa un asistente de reglas (`features/assistant/simulated-client.ts`) que pasa por el mismo esquema y la misma depuración. Instrucciones para probar fallas: «simular error», «simular lento», «simular respuesta inválida».
 - El asistente es solo del plan Pro y tiene tope diario. El plan vive en `household_entitlements`, que los usuarios no pueden escribir; el cupo se descuenta en la base (`consume_ai_request`) antes de llamar a la IA y se devuelve si la IA falla. Mientras no haya pagos, el plan se cambia con `npm run plan:set -- <correo> <pro|free> [consultas por día]`.

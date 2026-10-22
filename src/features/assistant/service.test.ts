@@ -3,6 +3,7 @@ import type { AiClient, AiResult } from "@/lib/ai/types";
 import { buildAssistantMessages } from "./prompts";
 import type { AiProposal } from "./schemas";
 import { aiProposalSchema } from "./schemas";
+import { FILLED_BY_APP_REASON } from "./pick-recipe";
 import { runAssistant } from "./service";
 import { createSimulatedAssistantClient } from "./simulated-client";
 import { makeContext } from "./test-context";
@@ -34,7 +35,7 @@ describe("runAssistant", () => {
         ],
       },
     });
-    const outcome = await runAssistant(client, makeContext());
+    const outcome = await runAssistant(client, makeContext({ mode: "adjust" }));
     expect(outcome).toMatchObject({
       ok: true,
       summary: "Semana variada",
@@ -44,7 +45,29 @@ describe("runAssistant", () => {
     expect(completeJson.mock.calls[0]![0]).toMatchObject({ schema: aiProposalSchema });
   });
 
-  it.each(["timeout", "unavailable", "invalid_response"] as const)(
+  it("al proponer completa las casillas que el modelo dejó vacías", async () => {
+    const { client } = mockClient({
+      ok: true,
+      data: { summary: "Algo", changes: [{ day: 0, meal: "lunch", recipeId: "sudado" }] },
+    });
+    const outcome = await runAssistant(client, makeContext({ onlyEmpty: false }));
+    if (!outcome.ok) throw new Error("debía proponer");
+    expect(outcome.changes).toHaveLength(21);
+    expect(outcome.changes[1]).toMatchObject({ day: 0, meal: "lunch", recipeId: "sudado" });
+    expect(outcome.changes.filter((change) => change.reason === FILLED_BY_APP_REASON)).toHaveLength(20);
+  });
+
+  it("al completar solo llena lo vacío y no repite más de la cuenta", async () => {
+    const { client } = mockClient({ ok: true, data: { summary: "Algo", changes: [] } });
+    const slots = [{ day: 2, meal: "dinner" as const, recipeId: "arepa", peopleOverride: null }];
+    const outcome = await runAssistant(client, makeContext({ slots }));
+    if (!outcome.ok) throw new Error("debía proponer");
+    expect(outcome.changes).toHaveLength(20);
+    expect(outcome.changes.some((change) => change.day === 2 && change.meal === "dinner")).toBe(false);
+    expect(outcome.changes.every((change) => change.recipeId !== "frijoles")).toBe(true);
+  });
+
+  it.each(["timeout", "unavailable", "rate_limited", "invalid_response"] as const)(
     "propaga el error %s sin inventar nada",
     async (kind) => {
       const { client } = mockClient({ ok: false, error: { kind, detail: "x" } });

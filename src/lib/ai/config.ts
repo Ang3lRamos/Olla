@@ -3,7 +3,8 @@ import { z } from "zod";
 export interface AiConfig {
   baseUrl: string;
   apiKey: string;
-  model: string;
+  /** En orden de preferencia: si uno se queda sin cupo o falla, se usa el siguiente. */
+  models: string[];
   timeoutMs: number;
   maxRetries: number;
 }
@@ -34,11 +35,14 @@ export function readAiConfig(env: Record<string, string | undefined> = process.e
   if (!parsed.success) return null;
 
   const { AI_BASE_URL, AI_API_KEY, AI_MODEL, AI_TIMEOUT_MS, AI_MAX_RETRIES } = parsed.data;
-  if (AI_BASE_URL !== SIMULATED_AI_BASE_URL && !AI_MODEL) return null;
+  const models = AI_MODEL.split(",")
+    .map((model) => model.trim())
+    .filter(Boolean);
+  if (AI_BASE_URL !== SIMULATED_AI_BASE_URL && models.length === 0) return null;
   return {
     baseUrl: AI_BASE_URL.replace(/\/+$/, ""),
     apiKey: AI_API_KEY,
-    model: AI_MODEL,
+    models,
     timeoutMs: AI_TIMEOUT_MS,
     maxRetries: AI_MAX_RETRIES,
   };

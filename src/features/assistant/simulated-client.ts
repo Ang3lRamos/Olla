@@ -1,9 +1,8 @@
-import type { RecipeCategory } from "@/domain/recipe-categories";
-import { MEALS, type Meal } from "@/domain/week";
+import { MEALS } from "@/domain/week";
 import { normalizeForSearch } from "@/features/recipes/search";
 import type { AiClient, AiResult, JsonRequest } from "@/lib/ai/types";
 import type { AssistantContext, CatalogRecipe } from "./context";
-import { isExcluded } from "./sanitize";
+import { countUsage, pickRecipeFor } from "./pick-recipe";
 import type { AiProposal } from "./schemas";
 
 /**
@@ -12,12 +11,6 @@ import type { AiProposal } from "./schemas";
  * Instrucciones especiales para probar errores: «simular error», «simular lento»,
  * «simular respuesta inválida».
  */
-
-const PREFERRED: Record<Meal, RecipeCategory[]> = {
-  breakfast: ["breakfast"],
-  lunch: ["main", "soup"],
-  dinner: ["light", "soup", "main"],
-};
 
 /** Palabras que un hogar usa y no aparecen tal cual en los ingredientes. */
 const SYNONYMS: Record<string, string[]> = {
@@ -28,7 +21,6 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 const SAVING_WORDS = /plata|barat|econom|presupuesto|ahorr|corto/;
-const MAX_REPEATS = 2;
 
 interface SimulatedDeps {
   delayMs?: number;
@@ -74,41 +66,17 @@ function simulateProposal(context: AssistantContext): AiProposal {
 const text = (recipe: CatalogRecipe) =>
   normalizeForSearch([recipe.name, ...recipe.ingredientNames].join(" "));
 
-function usageOf(context: AssistantContext) {
-  const usage = new Map<string, number>();
-  for (const slot of context.slots) usage.set(slot.recipeId, (usage.get(slot.recipeId) ?? 0) + 1);
-  return usage;
-}
-
-/** La opción más barata y menos repetida para una comida, sin repetir más de dos veces. */
-function pickFor(
-  meal: Meal,
-  context: AssistantContext,
-  usage: Map<string, number>,
-  avoid: (r: CatalogRecipe) => boolean,
-) {
-  const fitting = context.recipes.filter(
-    (recipe) =>
-      PREFERRED[meal].includes(recipe.category) && !avoid(recipe) && !isExcluded(recipe, context.exclude),
-  );
-  const leastUsedFirst = (a: CatalogRecipe, b: CatalogRecipe) =>
-    (usage.get(a.id) ?? 0) - (usage.get(b.id) ?? 0) || a.costPerServingCop - b.costPerServingCop;
-  // Si no alcanza el catálogo para respetar el máximo de repeticiones, se repite antes que dejar vacío.
-  const varied = fitting.filter((recipe) => (usage.get(recipe.id) ?? 0) < MAX_REPEATS);
-  const choice = (varied.length ? varied : fitting).sort(leastUsedFirst)[0];
-  if (choice) usage.set(choice.id, (usage.get(choice.id) ?? 0) + 1);
-  return choice;
-}
-
 function proposeWeek(context: AssistantContext): AiProposal {
   const occupied = new Set(context.slots.map((slot) => `${slot.day}-${slot.meal}`));
-  const usage = context.onlyEmpty ? usageOf(context) : new Map<string, number>();
+  const usage = context.onlyEmpty
+    ? countUsage(context.slots.map((slot) => slot.recipeId))
+    : new Map<string, number>();
   const changes: AiProposal["changes"] = [];
 
   for (let day = 0; day < 7; day++) {
     for (const meal of MEALS) {
       if (context.onlyEmpty && occupied.has(`${day}-${meal}`)) continue;
-      const recipe = pickFor(meal, context, usage, () => false);
+      const recipe = pickRecipeFor(meal, context, usage);
       if (recipe) changes.push({ day, meal, recipeId: recipe.id, reason: "Económica y sin repetirse mucho" });
     }
   }
@@ -121,7 +89,7 @@ function proposeWeek(context: AssistantContext): AiProposal {
 
 function adjustWeek(context: AssistantContext): AiProposal {
   const recipes = new Map(context.recipes.map((recipe) => [recipe.id, recipe]));
-  const usage = usageOf(context);
+  const usage = countUsage(context.slots.map((slot) => slot.recipeId));
   const instruction = normalizeForSearch(context.instruction);
 
   if (SAVING_WORDS.test(instruction)) {
@@ -131,7 +99,7 @@ function adjustWeek(context: AssistantContext): AiProposal {
       .slice(0, 3);
     const changes = expensive.flatMap((slot) => {
       const current = recipes.get(slot.recipeId)!;
-      const cheaper = pickFor(
+      const cheaper = pickRecipeFor(
         slot.meal,
         context,
         usage,
@@ -165,7 +133,7 @@ function adjustWeek(context: AssistantContext): AiProposal {
     };
   }
   const changes = targets.flatMap((slot) => {
-    const replacement = pickFor(slot.meal, context, usage, matches);
+    const replacement = pickRecipeFor(slot.meal, context, usage, matches);
     return replacement
       ? [{ day: slot.day, meal: slot.meal, recipeId: replacement.id, reason: "Cambio pedido" }]
       : [];
@@ -210,9 +178,9 @@ function reviewNotes(context: AssistantContext): AiProposal {
       const disliked = context.slots.find(
         (slot) => slot.day === note.day && slot.meal === note.meal,
       )?.recipeId;
-      const usage = usageOf(context);
+      const usage = countUsage(context.slots.map((slot) => slot.recipeId));
       for (const slot of context.slots.filter((item) => item.recipeId === disliked && item.day > note.day!)) {
-        const replacement = pickFor(slot.meal, context, usage, (recipe) => recipe.id === disliked);
+        const replacement = pickRecipeFor(slot.meal, context, usage, (recipe) => recipe.id === disliked);
         if (replacement) {
           changes.push({
             day: slot.day,
