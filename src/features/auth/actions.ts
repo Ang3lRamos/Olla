@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { CONFIRMATION_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, safeRedirectPath, type CredentialsField } from "./schemas";
 
@@ -46,7 +48,12 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   if (!parsed.credentials) return parsed.state;
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp(parsed.credentials);
+  // El enlace del correo vuelve al mismo dominio del registro (local, vista previa o producción).
+  const origin = (await headers()).get("origin");
+  const { data, error } = await supabase.auth.signUp({
+    ...parsed.credentials,
+    options: origin ? { emailRedirectTo: `${origin}${CONFIRMATION_PATH}` } : undefined,
+  });
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
   if (!data.session) return { email: parsed.credentials.email, needsConfirmation: true };
 

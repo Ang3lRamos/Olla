@@ -31,9 +31,11 @@ const MODES = {
 interface AuthFormProps {
   mode: keyof typeof MODES;
   redirectTo?: string;
+  /** Aviso que llega desde la URL, p. ej. un enlace de confirmación vencido. */
+  notice?: string;
 }
 
-export function AuthForm({ mode, redirectTo }: AuthFormProps) {
+export function AuthForm({ mode, redirectTo, notice }: AuthFormProps) {
   const config = MODES[mode];
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(config.action, {});
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +52,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       {redirectTo && <input type="hidden" name="siguiente" value={redirectTo} />}
-      {state.error && <FormMessage tone="error">{state.error}</FormMessage>}
+      {(state.error ?? notice) && <FormMessage tone="error">{state.error ?? notice}</FormMessage>}
 
       <TextField
         label="Correo"
