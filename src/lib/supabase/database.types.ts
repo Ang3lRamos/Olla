@@ -197,6 +197,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payment_events": {
+                  Row: {
+                    "event": string | null,"id": number,"outcome": string,"received_at": string,"reference": string | null,"signature_valid": boolean,"status": string | null,"transaction_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "event"?: string | null,"id"?: never,"outcome": string,"received_at"?: string,"reference"?: string | null,"signature_valid": boolean,"status"?: string | null,"transaction_id"?: string | null
+                  }
+                  Update: {
+                    "event"?: string | null,"id"?: never,"outcome"?: string,"received_at"?: string,"reference"?: string | null,"signature_valid"?: boolean,"status"?: string | null,"transaction_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"payments": {
                   Row: {
                     "amount_in_cents": number,"applied_at": string | null,"created_at": string,"household_id": string,"payment_method_type": string | null,"period": string,"plan": string,"reference": string,"status": string,"updated_at": string,"wompi_transaction_id": string | null
