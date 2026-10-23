@@ -23,7 +23,7 @@ export function WeekGrid({ days, dayCosts, dayNutrition, onOpenCell, onOpenDayNo
   return (
     <div
       data-tour="week-days"
-      className="hidden grid-cols-[5.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(3,auto)_auto] gap-x-1.5 md:grid"
+      className="hidden grid-cols-[5.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(3,auto)_auto] gap-x-1.5 lg:grid"
     >
       <div className="row-span-5 grid grid-rows-subgrid gap-y-2">
         <div />
