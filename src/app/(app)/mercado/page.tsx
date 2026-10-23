@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { dayIndex } from "@/domain/week";
 import { ShoppingList } from "@/features/shopping/components/shopping-list";
 import { ShoppingListSkeleton } from "@/features/shopping/components/shopping-list-skeleton";
+import { parseDayRange } from "@/features/shopping/day-range";
 import { getShoppingState } from "@/features/shopping/data";
 import { WeekNav } from "@/features/week-plan/components/week-nav";
 import { loadWeek } from "@/features/week-plan/load-week";
@@ -10,7 +11,8 @@ import { loadWeek } from "@/features/week-plan/load-week";
 export const metadata: Metadata = { title: "Mercado" };
 
 async function Market({ searchParams }: Pick<PageProps<"/mercado">, "searchParams">) {
-  const week = await loadWeek((await searchParams).semana);
+  const params = await searchParams;
+  const week = await loadWeek(params.semana);
   const { purchases, extras } = await getShoppingState(week.plan.id);
 
   return (
@@ -38,6 +40,7 @@ async function Market({ searchParams }: Pick<PageProps<"/mercado">, "searchParam
         purchases={purchases}
         extras={extras}
         detail={week.household.preferences.detail}
+        initialDays={parseDayRange(params.dias)}
       />
     </div>
   );

@@ -25,22 +25,29 @@ export interface ShoppingItem extends ShoppingLine {
 
 const keyOf = (ingredientId: string, unit: string) => `${ingredientId}|${unit}`;
 
-export function reconcilePurchases(lines: ShoppingLine[], purchases: Purchase[]): ShoppingItem[] {
+/**
+ * Cruza la lista con lo comprado. `lines` es la lista contra la despensa de antes de comprar
+ * (lo que este mercado pide); `current`, contra la despensa de ahora. Con `current`, lo que
+ * falta sale de lo que de verdad hay en casa: sirve para compras parciales y para mercar
+ * en varios viajes, cuando lo del primero ya se cocinó.
+ */
+export function reconcilePurchases(
+  lines: ShoppingLine[],
+  purchases: Purchase[],
+  current?: ShoppingLine[],
+): ShoppingItem[] {
   const purchased = new Map(
     purchases.map((item) => [keyOf(item.ingredientId, item.quantity.unit), item.quantity.amount]),
   );
+  const now = new Map(current?.map((line) => [keyOf(line.ingredientId, line.toBuy.unit), line.toBuy.amount]));
 
   return lines.map((line) => {
-    const bought = purchased.get(keyOf(line.ingredientId, line.toBuy.unit)) ?? 0;
-    const remaining = Math.max(Math.ceil(line.toBuy.amount - bought - 1e-9), 0);
+    const key = keyOf(line.ingredientId, line.toBuy.unit);
+    const bought = purchased.get(key) ?? 0;
+    const missing = current ? (now.get(key) ?? 0) : line.toBuy.amount - bought;
+    const remaining = Math.max(Math.ceil(missing - 1e-9), 0);
     const status: ShoppingStatus =
-      line.toBuy.amount === 0
-        ? "in-pantry"
-        : bought === 0
-          ? "pending"
-          : remaining === 0
-            ? "bought"
-            : "needs-more";
+      remaining === 0 ? (bought > 0 ? "bought" : "in-pantry") : bought === 0 ? "pending" : "needs-more";
     return { ...line, status, purchased: bought, remaining: { amount: remaining, unit: line.toBuy.unit } };
   });
 }

@@ -47,7 +47,11 @@ describe("buildShoppingView", () => {
 
   it("lo comprado baja lo pendiente pero no el total", () => {
     const before = build();
-    const after = build({ purchases: [{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }] });
+    // Lo comprado entra a la despensa: así lo deja la acción de marcar comprado.
+    const after = build({
+      pantry: [{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }],
+      purchases: [{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }],
+    });
     expect(after.totals.marketCop).toBe(before.totals.marketCop);
     expect(before.totals.pendingCop - after.totals.pendingCop).toBe(2800);
     expect(after.totals.done).toBe(1);
@@ -103,6 +107,42 @@ describe("buildShoppingView", () => {
         .amountLabel;
     expect(amountOf(build())).toBe("500 g");
     expect(amountOf(build({ detail: "simple" }))).toBe("1 libra");
+  });
+
+  describe("mercar por tramos y compras parciales", () => {
+    const rice = (view: ReturnType<typeof build>) =>
+      view.groups.flatMap((group) => group.items).find(({ item }) => item.ingredientId === "rice");
+
+    it("solo pide lo de los días elegidos", () => {
+      const slots = [
+        { day: 0, meal: "lunch" as const, recipeId: "arroz-blanco", peopleOverride: null },
+        { day: 4, meal: "breakfast" as const, recipeId: "huevos-pericos", peopleOverride: null },
+      ];
+      const monday = build({ slots, days: { from: 0, to: 2 } });
+      expect(monday.plannedMeals).toBe(1);
+      expect(rice(monday)).toBeDefined();
+      expect(rice(build({ slots, days: { from: 3, to: 6 } }))).toBeUndefined();
+    });
+
+    it("si compró menos, falta la diferencia y al marcarlo se suma a lo comprado", () => {
+      const view = build({
+        pantry: [{ ingredientId: "rice", quantity: { amount: 200, unit: "g" } }],
+        purchases: [{ ingredientId: "rice", quantity: { amount: 200, unit: "g" } }],
+      });
+      expect(rice(view)).toMatchObject({
+        item: { status: "needs-more", purchased: 200, remaining: { amount: 300 } },
+        markAsBought: { amount: 500, unit: "g" },
+      });
+    });
+
+    it("lo que falta sale de lo que hay en casa ahora, no de lo comprado antes", () => {
+      // Se compró en un viaje anterior y ya se gastó: hay que volver a comprar.
+      const view = build({
+        pantry: [],
+        purchases: [{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }],
+      });
+      expect(rice(view)?.item).toMatchObject({ status: "needs-more", remaining: { amount: 500 } });
+    });
   });
 
   it("lo ya cocinado no se vuelve a comprar", () => {
