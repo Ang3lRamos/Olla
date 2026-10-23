@@ -11,6 +11,12 @@ export interface Email {
   text: string;
 }
 
+/**
+ * Adónde llegan los avisos internos (p. ej. "reembolso pedido"). Va aparte del contacto público
+ * de los textos legales: sin dominio propio, Resend solo envía al correo de su cuenta.
+ */
+export const alertsEmail = () => process.env.ALERTS_EMAIL || process.env.LEGAL_CONTACT_EMAIL || null;
+
 export type SendResult = { ok: true } | { ok: false; error: string };
 
 /**

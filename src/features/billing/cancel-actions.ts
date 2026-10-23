@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireHousehold, requireUser } from "@/features/household/data";
-import { sendEmail } from "@/lib/email/send";
+import { alertsEmail, sendEmail } from "@/lib/email/send";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getEntitlement, getLastPayment } from "./data";
 import { refundNoticeEmail } from "./refund-notice";
@@ -62,7 +62,7 @@ export async function requestRefund(): Promise<BillingResult> {
   if (error) return { ok: false, error: `No pudimos registrar la solicitud. ${RETRY}` };
 
   // La solicitud ya quedó en el panel; el correo es el aviso para no dejarla esperando.
-  const supportEmail = process.env.LEGAL_CONTACT_EMAIL;
+  const supportEmail = alertsEmail();
   if (supportEmail) {
     const origin = (await headers()).get("origin") ?? "";
     await sendEmail(

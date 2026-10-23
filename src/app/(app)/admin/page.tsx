@@ -161,8 +161,8 @@ async function Dashboard() {
           Correo de avisos
         </h2>
         <p className="text-sm text-muted">
-          Los avisos de reembolso llegan al correo de contacto legal. Sin dominio propio, Resend solo envía al
-          correo con el que creaste la cuenta de Resend.
+          Los avisos de reembolso llegan a ALERTS_EMAIL (o, si no está, al correo de contacto legal). Sin
+          dominio propio, Resend solo envía al correo con el que creaste la cuenta de Resend.
         </p>
         <TestEmail />
       </section>

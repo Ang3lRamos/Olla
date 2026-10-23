@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { sendEmail } from "@/lib/email/send";
+import { alertsEmail, sendEmail } from "@/lib/email/send";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "./access";
 
@@ -82,8 +82,8 @@ export async function adminRejectRefund(reference: string): Promise<AdminResult>
 /** Comprueba que los avisos a soporte salen: envía uno de prueba y devuelve lo que dijo Resend. */
 export async function adminSendTestEmail(): Promise<AdminResult & { to?: string }> {
   await requireAdmin();
-  const to = process.env.LEGAL_CONTACT_EMAIL;
-  if (!to) return { ok: false, error: "Falta LEGAL_CONTACT_EMAIL en el servidor." };
+  const to = alertsEmail();
+  if (!to) return { ok: false, error: "Falta ALERTS_EMAIL (o LEGAL_CONTACT_EMAIL) en el servidor." };
   const result = await sendEmail({
     to,
     subject: "Prueba de avisos de Olla",
