@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useState, type ReactNode } from "react";
 import { Button } from "@/ui/button";
 import { FormMessage } from "@/ui/form-message";
+import { Checkbox } from "@/ui/checkbox";
 import { TextField } from "@/ui/text-field";
 import { signIn, signUp, type AuthFormState } from "../actions";
 import { MIN_PASSWORD_LENGTH } from "../schemas";
@@ -27,7 +28,7 @@ const MODES = {
     autoComplete: "new-password",
     switchText: "¿Ya tienes cuenta?",
     switchLink: { href: "/ingresar", label: "Ingresa" },
-    note: "Gratis y sin tarjeta: recetas, semana, mercado y presupuesto. El asistente es parte del plan Pro.",
+    note: "Gratis y sin tarjeta: recetas, semana, mercado y presupuesto. El asistente y la nutrición vienen en los planes Básico y Pro.",
   },
 } as const;
 
@@ -109,6 +110,7 @@ function AuthFormAttempt({
             ¿Olvidaste tu contraseña?
           </Link>
         )}
+        {mode === "sign-up" && <TermsConsent error={state.fieldErrors?.terms} />}
         <Button type="submit" loading={pending} className="mt-2 w-full">
           {config.submit}
         </Button>
@@ -128,5 +130,40 @@ function AuthFormAttempt({
         </p>
       </form>
     </>
+  );
+}
+
+const LEGAL_LINK = "font-medium text-ink underline decoration-hairline-strong underline-offset-4";
+
+/** Autorización expresa para el tratamiento de datos: casilla sin marcar por defecto, como pide la ley. */
+function TermsConsent({ error }: { error?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Checkbox
+        name="terms"
+        required
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? "terms-error" : undefined}
+        className="text-sm text-muted"
+        label={
+          <>
+            Acepto los{" "}
+            <Link href="/terminos" target="_blank" className={LEGAL_LINK}>
+              términos
+            </Link>{" "}
+            y autorizo el tratamiento de mis datos según la{" "}
+            <Link href="/privacidad" target="_blank" className={LEGAL_LINK}>
+              política de privacidad
+            </Link>
+            , incluido su envío a proveedores fuera de Colombia.
+          </>
+        }
+      />
+      {error && (
+        <p id="terms-error" className="animate-rise pl-8 text-sm text-danger">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

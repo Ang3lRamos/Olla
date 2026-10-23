@@ -8,10 +8,11 @@ import { CONFIRMATION_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, safeRedirectPath, type CredentialsField } from "./schemas";
 import { HOME_PATH } from "@/lib/routes";
+import { LEGAL_VERSION } from "@/features/legal/owner";
 
 export interface AuthFormState {
   error?: string;
-  fieldErrors?: Partial<Record<CredentialsField, string>>;
+  fieldErrors?: Partial<Record<CredentialsField | "terms", string>>;
   email?: string;
   /** Registro hecho, pero el proyecto pide confirmar el correo antes de ingresar. */
   needsConfirmation?: boolean;
@@ -62,12 +63,26 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
 
 export async function signUp(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = parseCredentials(formData);
-  if (!parsed.credentials) return parsed.state;
+  const acceptedTerms = formData.get("terms") === "on";
+  if (!parsed.credentials || !acceptedTerms) {
+    return {
+      email: String(formData.get("email") ?? ""),
+      ...parsed.state,
+      fieldErrors: {
+        ...parsed.state?.fieldErrors,
+        terms: acceptedTerms ? undefined : "Para crear la cuenta, acepta los términos y la política.",
+      },
+    };
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     ...parsed.credentials,
-    options: await confirmationLinkOptions(),
+    options: {
+      ...(await confirmationLinkOptions()),
+      // Prueba de la autorización (Ley 1581): qué versión aceptó y cuándo.
+      data: { legal_version: LEGAL_VERSION, legal_accepted_at: new Date().toISOString() },
+    },
   });
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
   if (!data.session) return { email: parsed.credentials.email, needsConfirmation: true };

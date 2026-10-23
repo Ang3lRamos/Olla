@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { PlanPicker } from "@/features/billing/components/plan-picker";
 import { PlanStatus } from "@/features/billing/components/plan-status";
@@ -28,7 +29,15 @@ async function Plans() {
       />
       <p className="max-w-2xl text-sm text-muted">
         Pagas en Wompi, de Bancolombia, con tarjeta, PSE, Nequi o botón Bancolombia; Olla no ve ni guarda tus
-        datos de pago. El plan no se renueva solo: te avisamos antes de que venza.
+        datos de pago. El plan no se renueva solo: te avisamos antes de que venza. Al pagar aceptas los{" "}
+        <Link href="/terminos" className="text-ink underline decoration-hairline-strong underline-offset-4">
+          términos
+        </Link>
+        ; si te arrepientes, te devolvemos todo en los 5 días hábiles siguientes (
+        <Link href="/reembolsos" className="text-ink underline decoration-hairline-strong underline-offset-4">
+          reembolsos
+        </Link>
+        ).
         {config?.sandbox && " Modo de pruebas: no se cobra dinero real."}
       </p>
     </>

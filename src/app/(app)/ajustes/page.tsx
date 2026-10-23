@@ -12,6 +12,12 @@ import { Skeleton } from "@/ui/skeleton";
 
 export const metadata: Metadata = { title: "Ajustes" };
 
+const LEGAL_LINKS = [
+  { href: "/terminos", label: "Términos y condiciones" },
+  { href: "/privacidad", label: "Política de privacidad" },
+  { href: "/reembolsos", label: "Política de reembolsos" },
+];
+
 async function HouseholdSettings() {
   const household = await requireHousehold();
   return (
@@ -71,6 +77,28 @@ export default function SettingsPage() {
         <Suspense fallback={<Skeleton className="h-72 w-full" />}>
           <Goals />
         </Suspense>
+      </section>
+
+      <section aria-labelledby="legal-title" className="flex flex-col gap-2 border-t border-hairline pt-8">
+        <h2 id="legal-title" className="font-display text-xl font-semibold">
+          Tus datos y lo legal
+        </h2>
+        <p className="text-sm text-muted">
+          Para conocer, corregir o borrar tus datos, o borrar la cuenta, escríbenos como explica la política
+          de privacidad.
+        </p>
+        <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          {LEGAL_LINKS.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="underline decoration-hairline-strong underline-offset-4 hover:decoration-ink"
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

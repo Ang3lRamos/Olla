@@ -4,8 +4,10 @@ import { HOME_PATH } from "@/lib/routes";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
 const AUTH_PAGES = ["/ingresar", "/registro", "/recuperar"];
-// Los avisos de pago llegan de Wompi, sin sesión; la ruta verifica su firma.
-const PUBLIC_PAGES = [...AUTH_PAGES, CONFIRMATION_PATH, "/api/wompi/eventos"];
+// Los textos legales se leen antes de registrarse. Los avisos de pago llegan de Wompi, sin
+// sesión; la ruta verifica su firma.
+const LEGAL_PAGES = ["/terminos", "/privacidad", "/reembolsos"];
+const PUBLIC_PAGES = [...AUTH_PAGES, ...LEGAL_PAGES, CONFIRMATION_PATH, "/api/wompi/eventos"];
 
 function redirectKeepingCookies(request: NextRequest, response: NextResponse, pathname: string) {
   const url = request.nextUrl.clone();
