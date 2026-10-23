@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminEmail } from "@/features/admin/emails";
 import { CONFIRMATION_PATH } from "@/features/auth/confirmation";
 import { HOME_PATH } from "@/lib/routes";
 import { refreshSession } from "@/lib/supabase/proxy-session";
@@ -23,11 +24,16 @@ function redirectKeepingCookies(request: NextRequest, response: NextResponse, pa
 
 /** Revisión optimista de sesión; la autorización real la hacen la capa de datos y la RLS. */
 export async function proxy(request: NextRequest) {
-  const { response, isSignedIn } = await refreshSession(request);
+  const { response, isSignedIn, email } = await refreshSession(request);
   const { pathname } = request.nextUrl;
 
   if (!isSignedIn && !PUBLIC_PAGES.includes(pathname)) {
     return redirectKeepingCookies(request, response, "/ingresar");
+  }
+  // El panel responde 404 de verdad: dentro de la página el notFound() llega tarde, con el
+  // streaming ya en 200.
+  if (isSignedIn && pathname.startsWith("/admin") && !isAdminEmail(email)) {
+    return NextResponse.rewrite(new URL("/no-encontrado", request.url), { status: 404 });
   }
   if (isSignedIn && AUTH_PAGES.includes(pathname)) {
     return redirectKeepingCookies(request, response, HOME_PATH);
