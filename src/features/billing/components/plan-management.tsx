@@ -41,10 +41,7 @@ export function PlanManagement({ planName, refund }: PlanManagementProps) {
     });
 
   return (
-    <section
-      aria-labelledby="manage-title"
-      className="flex max-w-2xl flex-col gap-3 border-t border-hairline pt-6"
-    >
+    <section aria-labelledby="manage-title" className="flex flex-col gap-3 border-t border-hairline pt-6">
       <h2 id="manage-title" className="font-medium">
         Administrar tu plan
       </h2>

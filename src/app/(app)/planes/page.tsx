@@ -37,7 +37,7 @@ async function Plans() {
         canStartTrial={!quota.trialUsed && quota.plan === "free"}
         paymentsEnabled={config !== null}
       />
-      <p className="max-w-2xl text-sm text-muted">
+      <p className="text-sm text-muted">
         Pagas en Wompi, de Bancolombia, con tarjeta, PSE, Nequi o botón Bancolombia; Olla no ve ni guarda tus
         datos de pago. El plan no se renueva solo: te avisamos antes de que venza. Al pagar aceptas los{" "}
         <Link href="/terminos" className="text-ink underline decoration-hairline-strong underline-offset-4">

@@ -1,7 +1,7 @@
 import "server-only";
 
 /** Versión vigente de los términos y la política; se guarda con la aceptación de cada persona. */
-export const LEGAL_VERSION = "2026-10-23";
+export const LEGAL_VERSION = "2026-10-23.2";
 export const LEGAL_UPDATED_AT = "23 de octubre de 2026";
 
 export interface LegalOwner {

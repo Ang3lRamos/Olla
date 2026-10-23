@@ -9,9 +9,15 @@ import {
 import { PlanAlertLoader } from "@/features/billing/components/plan-alert-loader";
 import { HelpButton, HelpButtonFallback } from "@/features/help/components/help-button";
 import { UserMenu } from "@/features/navigation/components/user-menu";
+import { needsLegalUpdate } from "@/features/legal/acceptance";
+import { LegalUpdateNotice } from "@/features/legal/components/legal-update-notice";
 import { Logo } from "@/ui/brand/logo";
 import { Skeleton } from "@/ui/skeleton";
 import { HOME_PATH } from "@/lib/routes";
+
+async function LegalNotice() {
+  return (await needsLegalUpdate()) ? <LegalUpdateNotice /> : null;
+}
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
@@ -43,6 +49,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
+      <Suspense fallback={null}>
+        <LegalNotice />
+      </Suspense>
       {/* En celular deja espacio para la barra inferior fija. */}
       <main
         id="contenido"
