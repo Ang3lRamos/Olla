@@ -4,6 +4,19 @@ import type { AdminAiUsage, AdminEntitlement, AdminPayment, AdminUser } from "./
 
 const USERS_PER_PAGE = 1000;
 
+/** Reembolsos pedidos que soporte aún no resuelve; para el aviso en el menú del admin. */
+export async function countPendingRefunds(): Promise<number> {
+  const admin = createSupabaseAdminClient();
+  if (!admin) return 0;
+  const { count, error } = await admin
+    .from("payments")
+    .select("reference", { count: "exact", head: true })
+    .not("refund_requested_at", "is", null)
+    .is("refunded_at", null);
+  if (error) throw new Error(`No se pudieron contar los reembolsos: ${error.message}`);
+  return count ?? 0;
+}
+
 export interface AdminSnapshot {
   users: AdminUser[];
   households: Map<string, string>;

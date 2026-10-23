@@ -9,7 +9,14 @@ import { Button, buttonClasses } from "@/ui/button";
 import { cn } from "@/ui/cn";
 import { ThemeToggle } from "@/ui/theme/theme-toggle";
 
-export function UserMenuPopover({ email, isAdmin }: { email: string; isAdmin: boolean }) {
+interface UserMenuPopoverProps {
+  email: string;
+  isAdmin: boolean;
+  /** Solo para admin: reembolsos esperando a soporte; se marca en rojo hasta resolverlos. */
+  pendingRefunds: number;
+}
+
+export function UserMenuPopover({ email, isAdmin, pendingRefunds }: UserMenuPopoverProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -40,14 +47,24 @@ export function UserMenuPopover({ email, isAdmin }: { email: string; isAdmin: bo
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label="Menú de la cuenta"
+        aria-label={
+          pendingRefunds > 0
+            ? `Menú de la cuenta (${pendingRefunds} reembolsos por revisar)`
+            : "Menú de la cuenta"
+        }
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "grid size-8 place-items-center rounded-full bg-sunken text-sm font-semibold uppercase",
+          "relative grid size-8 place-items-center rounded-full bg-sunken text-sm font-semibold uppercase",
           "transition-[background-color,transform] duration-(--dur-fast) ease-out hover:bg-hairline active:scale-95",
         )}
       >
         {email.charAt(0)}
+        {pendingRefunds > 0 && (
+          <span
+            aria-hidden
+            className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-danger ring-2 ring-canvas"
+          />
+        )}
       </button>
 
       {/* Siempre montado para poder animar también la salida (más corta que la entrada). */}
@@ -79,6 +96,11 @@ export function UserMenuPopover({ email, isAdmin }: { email: string; isAdmin: bo
           >
             <ChartColumn className="size-4" aria-hidden />
             Admin
+            {pendingRefunds > 0 && (
+              <span className="text-white ml-auto rounded-full bg-danger px-1.5 text-xs font-semibold tabular-nums">
+                {pendingRefunds} {pendingRefunds === 1 ? "reembolso" : "reembolsos"}
+              </span>
+            )}
           </Link>
         )}
         <Link
