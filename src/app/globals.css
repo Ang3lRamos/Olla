@@ -56,21 +56,22 @@
 
 @utility borde-luz {
   position: relative;
-  --borde-luz-tramo: conic-gradient(
-    from var(--borde-luz-angulo),
-    transparent 0deg 150deg,
-    color-mix(in oklab, var(--color-maiz) 40%, transparent) 250deg,
-    var(--color-maiz) 330deg,
-    color-mix(in oklab, var(--color-maiz) 70%, white) 350deg,
-    transparent 360deg
-  );
 
   /* Las dos capas se recortan a un anillo (el centro queda libre para el contenido). */
   &::before,
   &::after {
     content: "";
     position: absolute;
-    background: var(--borde-luz-tramo);
+    /* El gradiente va aquí y no en una variable de la tarjeta: tiene que leer el ángulo que se
+       anima en esta misma capa, o queda fijo en 0°. */
+    background: conic-gradient(
+      from var(--borde-luz-angulo),
+      transparent 0deg 285deg,
+      color-mix(in oklab, var(--color-maiz) 35%, transparent) 325deg,
+      var(--color-maiz) 352deg,
+      color-mix(in oklab, var(--color-maiz) 60%, white) 358deg,
+      transparent 360deg
+    );
     mask:
       linear-gradient(#000 0 0) content-box exclude,
       linear-gradient(#000 0 0);
@@ -80,18 +81,18 @@
 
   /* La línea de luz, justo sobre el borde. */
   &::before {
-    inset: -2px;
-    padding: 3px;
-    border-radius: calc(var(--radius-md) + 2px);
+    inset: -1px;
+    padding: 1.5px;
+    border-radius: inherit;
   }
 
   /* El halo: el mismo tramo difuminado en un anillo por fuera del borde. */
   &::after {
-    inset: -10px;
-    padding: 10px;
-    border-radius: calc(var(--radius-md) + 10px);
-    filter: blur(7px);
-    opacity: 0.85;
+    inset: -6px;
+    padding: 6px;
+    border-radius: calc(var(--radius-md) + 6px);
+    filter: blur(4px);
+    opacity: 0.6;
   }
 
   @media (prefers-reduced-motion: reduce) {
