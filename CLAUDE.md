@@ -66,7 +66,7 @@ Las primitivas visuales compartidas van en `src/ui/`.
 npm install
 npm run dev         # http://localhost:3000
 npm run test        # Vitest (una vez); npm run test:watch para modo observación
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # genera los tipos de rutas de Next y corre tsc --noEmit
 npm run lint        # ESLint
 npm run check       # typecheck + lint + formato + test (lo mismo que corre el CI en GitHub)
 npm run build       # build de producción
