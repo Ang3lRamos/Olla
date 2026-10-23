@@ -12,6 +12,7 @@ const NOT_RETRIABLE = new Set<AiErrorKind | PlanErrorKind>([
   "not_configured",
   "not_entitled",
   "limit_reached",
+  "free_menu_used",
 ]);
 
 interface AssistantErrorProps {
@@ -29,7 +30,7 @@ export function AssistantError({ kind, onRetry, onBack }: AssistantErrorProps) {
         <p className="text-sm text-muted">{message.body}</p>
       </div>
       <div className="flex gap-2">
-        {(kind === "not_entitled" || kind === "limit_reached") && (
+        {(kind === "not_entitled" || kind === "limit_reached" || kind === "free_menu_used") && (
           <Link href="/planes" className={buttonClasses({})}>
             {kind === "not_entitled" ? "Ver planes" : "Mejorar mi plan"}
           </Link>

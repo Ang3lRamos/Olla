@@ -9,6 +9,8 @@ export interface AiQuota {
   /** Hasta cuándo dura el plan pago o la prueba; null si no vence o es gratis. */
   expiresAt: string | null;
   trialUsed: boolean;
+  /** Solo en Gratis: si todavía puede pedir el menú de esta semana al asistente. */
+  freeMenuAvailable: boolean;
 }
 
 export const FREE_QUOTA: AiQuota = {
@@ -17,6 +19,7 @@ export const FREE_QUOTA: AiQuota = {
   used: 0,
   expiresAt: null,
   trialUsed: false,
+  freeMenuAvailable: false,
 };
 
 /** Consultas que quedan hoy; null si no hay límite. */
@@ -24,3 +27,6 @@ export const remainingRequests = (quota: AiQuota) =>
   quota.dailyLimit === null ? null : Math.max(quota.dailyLimit - quota.used, 0);
 
 export const hasAssistant = (quota: AiQuota) => quota.plan !== "free" && quota.dailyLimit !== 0;
+
+/** En Gratis, una propuesta de menú por semana para conocer el asistente. */
+export const canUseFreeMenu = (quota: AiQuota) => quota.plan === "free" && quota.freeMenuAvailable;

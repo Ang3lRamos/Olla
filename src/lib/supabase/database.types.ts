@@ -25,6 +25,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"free_weekly_menus": {
+                  Row: {
+                    "household_id": string,"used_at": string,"week_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "household_id": string,"used_at"?: string,"week_start": string
+                  }
+                  Update: {
+                    "household_id"?: string,"used_at"?: string,"week_start"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "free_weekly_menus_household_id_fkey"
+      columns: ["household_id"]
+isOneToOne: false
+      referencedRelation: "households"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"household_entitlements": {
                   Row: {
                     "ai_daily_limit": number | null,"expires_at": string | null,"household_id": string,"plan": string,"trial_used": boolean,"updated_at": string
@@ -423,6 +443,9 @@ isOneToOne: false
 "ai_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"ai_week_start":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "apply_payment":
 { Args: { "method_type": string,"paid_amount_in_cents": number,"paid_currency": string,"target_reference": string,"transaction_id": string,"transaction_status": string }; Returns: {
               "expires_at": string,"plan": string,"status": string
@@ -435,6 +458,9 @@ isOneToOne: false
 { Args: { "target_household_id": string }; Returns: {
               "allowed": boolean,"daily_limit": number,"plan": string,"used": number
             }[]
+                           },
+"consume_free_weekly_menu":
+{ Args: { "target_household_id": string }; Returns: boolean
                            },
 "create_household":
 { Args: { "budget_cop"?: number,"household_name": string,"household_preferences"?: Json,"people": number }; Returns: string
@@ -454,7 +480,7 @@ isOneToOne: false
                            },
 "get_ai_quota":
 { Args: { "target_household_id": string }; Returns: {
-              "daily_limit": number,"expires_at": string,"plan": string,"trial_used": boolean,"used": number
+              "daily_limit": number,"expires_at": string,"free_menu_available": boolean,"plan": string,"trial_used": boolean,"used": number
             }[]
                            },
 "hit_rate_limit":
@@ -480,6 +506,9 @@ isOneToOne: false
             }[]
                            },
 "refund_ai_request":
+{ Args: { "target_household_id": string }; Returns: undefined
+                           },
+"refund_free_weekly_menu":
 { Args: { "target_household_id": string }; Returns: undefined
                            },
 "remove_household_member":

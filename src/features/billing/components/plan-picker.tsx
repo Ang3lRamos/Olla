@@ -15,6 +15,7 @@ import {
   PERIOD_LABELS,
   PERIODS,
   PLAN_NAMES,
+  FREE_ASSISTANT,
   PLAN_PITCH,
   quarterlySavingsPercent,
   type PaidPlan,
@@ -138,7 +139,7 @@ export function PlanPicker({ prices, currentPlan, canStartTrial, paymentsEnabled
                     className={cn("mt-0.5 size-4 shrink-0", price ? "text-ink" : "text-muted")}
                     aria-hidden
                   />
-                  {price ? `Asistente: ${price.aiDailyLimit} consultas al día` : "Sin asistente"}
+                  {price ? `Asistente: ${price.aiDailyLimit} consultas al día` : FREE_ASSISTANT}
                 </li>
                 {INCLUDED_IN_ALL.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-muted">

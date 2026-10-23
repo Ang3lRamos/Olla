@@ -7,7 +7,8 @@ import { FormMessage } from "@/ui/form-message";
 import { Spinner } from "@/ui/spinner";
 import { askAssistant, type AskAssistantResult } from "../actions";
 import type { ProposedChange } from "../sanitize";
-import { hasAssistant, remainingRequests, type AiQuota } from "@/features/entitlements/quota";
+import { canUseFreeMenu, hasAssistant, remainingRequests, type AiQuota } from "@/features/entitlements/quota";
+import { PLAN_NAMES } from "@/features/billing/plans";
 import { withChanges } from "../with-changes";
 import { AssistantError } from "./assistant-error";
 import { AssistantRequestForm, type AssistantFormValues } from "./assistant-request-form";
@@ -80,18 +81,36 @@ export function AssistantPanel({
 
   if (state.kind === "form") {
     if (!hasAssistant(quota)) {
-      return <AssistantError kind="not_entitled" />;
+      if (!canUseFreeMenu(quota)) {
+        return <AssistantError kind={quota.plan === "free" ? "free_menu_used" : "not_entitled"} />;
+      }
+      return (
+        <div className="flex flex-col gap-5">
+          <p className="text-xs text-muted" aria-live="polite">
+            Plan Gratis · te queda <span className="font-medium text-ink">1 menú gratis</span> esta semana.
+            Ajustar y revisar notas son de los planes Básico y Pro.
+          </p>
+          <AssistantRequestForm
+            initial={{ ...values, mode: "propose" }}
+            onlyPropose
+            hasMeals={slots.length > 0}
+            notesCount={notesCount}
+            onSubmit={ask}
+          />
+        </div>
+      );
     }
     const remaining = remainingRequests(quota);
     return (
       <div className="flex flex-col gap-5">
         <p className="text-xs text-muted" aria-live="polite">
           {remaining === null ? (
-            "Plan Pro · consultas sin límite."
+            `Plan ${PLAN_NAMES[quota.plan]} · consultas sin límite.`
           ) : (
             <>
-              Plan Pro · te quedan <span className="font-medium text-ink tabular-nums">{remaining}</span> de{" "}
-              {quota.dailyLimit} consultas hoy. Se renuevan a medianoche.
+              Plan {PLAN_NAMES[quota.plan]} · te quedan{" "}
+              <span className="font-medium text-ink tabular-nums">{remaining}</span> de {quota.dailyLimit}{" "}
+              consultas hoy. Se renuevan a medianoche.
             </>
           )}
         </p>

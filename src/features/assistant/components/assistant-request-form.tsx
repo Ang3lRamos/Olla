@@ -30,12 +30,20 @@ export interface AssistantFormValues {
 
 interface AssistantRequestFormProps {
   initial: AssistantFormValues;
+  /** En el menú gratis de la semana solo se puede proponer. */
+  onlyPropose?: boolean;
   hasMeals: boolean;
   notesCount: number;
   onSubmit: (values: AssistantFormValues) => void;
 }
 
-export function AssistantRequestForm({ initial, hasMeals, notesCount, onSubmit }: AssistantRequestFormProps) {
+export function AssistantRequestForm({
+  initial,
+  onlyPropose = false,
+  hasMeals,
+  notesCount,
+  onSubmit,
+}: AssistantRequestFormProps) {
   const [values, setValues] = useState(initial);
   const set = (patch: Partial<AssistantFormValues>) => setValues((current) => ({ ...current, ...patch }));
   const canSubmit =
@@ -50,29 +58,31 @@ export function AssistantRequestForm({ initial, hasMeals, notesCount, onSubmit }
         if (canSubmit) onSubmit(values);
       }}
     >
-      <div
-        role="radiogroup"
-        aria-label="Qué quieres que haga"
-        className="grid grid-cols-3 rounded-md border border-hairline bg-sunken p-0.5"
-      >
-        {MODES.map((mode) => (
-          <button
-            key={mode.value}
-            type="button"
-            role="radio"
-            aria-checked={values.mode === mode.value}
-            onClick={() => set({ mode: mode.value })}
-            className={cn(
-              "h-8 rounded-sm px-2 text-sm transition-colors duration-(--dur-fast) ease-out",
-              values.mode === mode.value
-                ? "bg-surface font-medium text-ink shadow-raised"
-                : "text-muted hover:text-ink",
-            )}
-          >
-            {mode.label}
-          </button>
-        ))}
-      </div>
+      {!onlyPropose && (
+        <div
+          role="radiogroup"
+          aria-label="Qué quieres que haga"
+          className="grid grid-cols-3 rounded-md border border-hairline bg-sunken p-0.5"
+        >
+          {MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              role="radio"
+              aria-checked={values.mode === mode.value}
+              onClick={() => set({ mode: mode.value })}
+              className={cn(
+                "h-8 rounded-sm px-2 text-sm transition-colors duration-(--dur-fast) ease-out",
+                values.mode === mode.value
+                  ? "bg-surface font-medium text-ink shadow-raised"
+                  : "text-muted hover:text-ink",
+              )}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      )}
       <p className="text-sm text-muted">{MODES.find((mode) => mode.value === values.mode)?.hint}</p>
 
       {values.mode === "propose" && (

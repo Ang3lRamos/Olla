@@ -64,7 +64,7 @@ export const HELP_BY_SECTION: Record<string, HelpSection> = {
   },
   "/planes": {
     title: "Los planes",
-    intro: "Todo Olla es gratis; los planes suman el asistente.",
+    intro: "Todo Olla es gratis, con un menú del asistente por semana; los planes suman más.",
     tips: [
       "Pagas en Wompi con tarjeta, PSE, Nequi o Bancolombia.",
       "El plan no se renueva solo: te avisamos antes de que venza.",

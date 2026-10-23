@@ -63,11 +63,11 @@ export default function TermsPage() {
         <ul>
           <li>
             <strong>Gratis:</strong> recetas, semana, mercado, despensa y presupuesto, sin límite y sin
-            tarjeta.
+            tarjeta, más una propuesta de menú del asistente por semana (se renueva cada lunes).
           </li>
           <li>
-            <strong>Básico y Pro:</strong> suman el asistente, con un número de consultas al día, y la
-            nutrición. Lo que incluye cada plan y su precio están en la página de{" "}
+            <strong>Básico y Pro:</strong> suman el asistente completo, con un número de consultas al día, y
+            la nutrición. Lo que incluye cada plan y su precio están en la página de{" "}
             <Link href="/planes">planes</Link>. Ese precio, en pesos colombianos, es el total que pagas.
           </li>
           <li>

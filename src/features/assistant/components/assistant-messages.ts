@@ -8,6 +8,10 @@ export const ASSISTANT_ERROR_MESSAGES: Record<AiErrorKind | PlanErrorKind, { tit
       title: "El asistente es parte de los planes Básico y Pro",
       body: "Olla te propone el menú y lo ajusta con tus palabras. Pruébalo 7 días gratis o elige un plan; mientras tanto puedes planear la semana a mano.",
     },
+    free_menu_used: {
+      title: "Ya usaste el menú gratis de esta semana",
+      body: "En el plan Gratis el asistente te arma un menú por semana; el lunes tienes otro. Con Básico tienes 5 consultas al día, y puedes ajustar el menú con tus palabras.",
+    },
     limit_reached: {
       title: "Llegaste al límite de hoy",
       body: "Ya usaste todas las consultas del asistente por hoy. Se renuevan a medianoche.",

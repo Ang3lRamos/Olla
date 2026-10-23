@@ -2,7 +2,13 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { formatCop } from "@/domain/money";
 import { planCardClasses } from "@/features/billing/components/plan-card";
-import { INCLUDED_IN_ALL, PLAN_NAMES, PLAN_PITCH, type PlanPrice } from "@/features/billing/plans";
+import {
+  FREE_ASSISTANT,
+  INCLUDED_IN_ALL,
+  PLAN_NAMES,
+  PLAN_PITCH,
+  type PlanPrice,
+} from "@/features/billing/plans";
 import type { Plan } from "@/features/entitlements/quota";
 import { buttonClasses } from "@/ui/button";
 
@@ -24,8 +30,9 @@ export function LandingPricing({ prices }: { prices: PlanPrice[] }) {
           <p className="letrero text-sm text-muted">Precios</p>
           <h2 className="font-display text-3xl font-semibold tracking-tight">Todo Olla es gratis</h2>
           <p className="text-lg leading-relaxed text-muted">
-            Los planes suman el asistente y la nutrición. Se pagan por mes o por trimestre, con tarjeta, PSE o
-            Nequi, y no se renuevan solos.
+            El plan Gratis trae un menú del asistente por semana; los planes suman más consultas, ajustes con
+            tus palabras y la nutrición. Se pagan por mes o por trimestre, con tarjeta, PSE o Nequi, y no se
+            renuevan solos.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -47,7 +54,7 @@ export function LandingPricing({ prices }: { prices: PlanPrice[] }) {
                 <ul className="flex flex-1 flex-col gap-2 text-sm">
                   <li className="font-medium">
                     {plan === "free"
-                      ? "Sin asistente"
+                      ? FREE_ASSISTANT
                       : price
                         ? `Asistente: ${price.aiDailyLimit} consultas al día`
                         : "Con asistente"}

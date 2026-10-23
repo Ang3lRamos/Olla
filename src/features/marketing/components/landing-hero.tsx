@@ -58,7 +58,7 @@ export function LandingHero() {
           <Link href="/registro" className={buttonClasses({ className: "h-12 px-6 text-base" })}>
             Crear cuenta gratis
           </Link>
-          <p className="text-sm text-muted">Gratis y sin tarjeta. Pagas solo si quieres el asistente.</p>
+          <p className="text-sm text-muted">Gratis y sin tarjeta, con un menú del asistente cada semana.</p>
         </div>
       </div>
       <div aria-hidden className="relative mx-auto w-full max-w-[540px] pr-6 pb-32 sm:pr-10">

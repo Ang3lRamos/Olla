@@ -14,8 +14,11 @@ export interface PlanPrice {
 
 export const PLAN_NAMES: Record<Plan, string> = { free: "Gratis", basic: "Básico", pro: "Pro" };
 
+/** Lo que el plan Gratis tiene del asistente: una propuesta de menú a la semana. */
+export const FREE_ASSISTANT = "Asistente: 1 menú por semana";
+
 export const PLAN_PITCH: Record<Plan, string> = {
-  free: "Para planear a mano, sin asistente.",
+  free: "Para planear a mano, con un empujón semanal.",
   basic: "Para planear la semana con ayuda.",
   pro: "Para ajustar el menú cuantas veces quieras.",
 };

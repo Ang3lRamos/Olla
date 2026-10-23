@@ -85,8 +85,8 @@ export default function PlansPage() {
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-title font-semibold md:text-display">Planes</h1>
         <p className="max-w-2xl text-muted">
-          Todo Olla es gratis. Los planes suman el asistente que propone el menú, lo ajusta con tus palabras y
-          lee tus notas.
+          Todo Olla es gratis, con un menú del asistente por semana. Los planes suman más consultas, ajustar
+          el menú con tus palabras, revisar tus notas y la nutrición.
         </p>
       </div>
       <Suspense fallback={<PlansSkeleton />}>

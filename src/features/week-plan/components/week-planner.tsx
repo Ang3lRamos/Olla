@@ -12,7 +12,7 @@ import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
 import { Sheet } from "@/ui/sheet";
 import { AssistantPanel } from "@/features/assistant/components/assistant-panel";
-import { hasAssistant, type AiQuota } from "@/features/entitlements/quota";
+import { canUseFreeMenu, hasAssistant, type AiQuota } from "@/features/entitlements/quota";
 import { buildWeekView, recipeUsage, type NoteView } from "../week-view";
 import { NotesPanel } from "./notes-panel";
 import { SlotSheetContent } from "./slot-sheet";
@@ -80,7 +80,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
         people={week.people}
         onPeopleChange={week.setPeople}
         onOpenAssistant={() => setPanel({ kind: "assistant" })}
-        assistantLocked={!hasAssistant(props.aiQuota)}
+        assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
       />
 
       {week.error && (

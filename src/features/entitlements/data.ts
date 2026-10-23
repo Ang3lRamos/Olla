@@ -19,6 +19,7 @@ const quotaRowSchema = z
     used: z.number(),
     expires_at: z.string().nullable(),
     trial_used: z.boolean(),
+    free_menu_available: z.boolean(),
   })
   .transform((row): AiQuota => ({
     plan: row.plan,
@@ -26,6 +27,7 @@ const quotaRowSchema = z
     used: row.used,
     expiresAt: row.expires_at,
     trialUsed: row.trial_used,
+    freeMenuAvailable: row.free_menu_available,
   }));
 
 export async function getAiQuota(householdId: string): Promise<AiQuota> {
@@ -45,7 +47,8 @@ export async function hasPaidPlan(householdId: string): Promise<boolean> {
 }
 
 /** Lo que cambia al consumir: el vencimiento y la prueba no, así que no vienen. */
-export type QuotaUsage = Pick<AiQuota, "plan" | "dailyLimit" | "used">;
+export type QuotaUsage = Pick<AiQuota, "plan" | "dailyLimit" | "used"> &
+  Partial<Pick<AiQuota, "freeMenuAvailable">>;
 
 /** Descuenta una consulta en la base (atómico); el cliente no puede saltarse el tope. */
 export async function consumeAiRequest(
@@ -61,4 +64,19 @@ export async function consumeAiRequest(
 export async function refundAiRequest(householdId: string): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.rpc("refund_ai_request", { target_household_id: householdId });
+}
+
+/** Gasta el menú gratis de la semana (plan Gratis); false si ya se usó o el hogar paga. */
+export async function consumeFreeWeeklyMenu(householdId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("consume_free_weekly_menu", {
+    target_household_id: householdId,
+  });
+  if (error) throw new Error(`No se pudo validar el menú gratis: ${error.message}`);
+  return data;
+}
+
+export async function refundFreeWeeklyMenu(householdId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  await supabase.rpc("refund_free_weekly_menu", { target_household_id: householdId });
 }

@@ -25,7 +25,8 @@ export function LegalUpdateNotice() {
           <Link href="/privacidad" target="_blank" className={LINK}>
             política de privacidad
           </Link>
-          : varias personas por hogar, reembolsos revisados por soporte y eliminar tu cuenta desde Ajustes.
+          : un menú gratis del asistente por semana, varias personas por hogar, reembolsos revisados por
+          soporte y eliminar tu cuenta desde Ajustes.
           {failed && <span className="text-danger"> No pudimos guardarlo; vuelve a intentarlo.</span>}
         </p>
         <Button
