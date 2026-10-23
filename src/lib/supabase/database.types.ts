@@ -265,6 +265,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"rate_limits": {
+                  Row: {
+                    "bucket": string,"hits": number,"window_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bucket": string,"hits": number,"window_start": string
+                  }
+                  Update: {
+                    "bucket"?: string,"hits"?: number,"window_start"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"recipe_ingredients": {
                   Row: {
                     "id": string,"ingredient_id": string,"note": string | null,"position": number,"quantity": number,"recipe_id": string,"unit": string
@@ -416,6 +430,9 @@ isOneToOne: false
 { Args: { "target_household_id": string }; Returns: {
               "daily_limit": number,"expires_at": string,"plan": string,"trial_used": boolean,"used": number
             }[]
+                           },
+"hit_rate_limit":
+{ Args: { "max_hits": number,"target_bucket": string,"window_seconds": number }; Returns: boolean
                            },
 "is_household_member":
 { Args: { "target_household_id": string }; Returns: boolean

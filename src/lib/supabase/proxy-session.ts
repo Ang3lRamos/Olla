@@ -27,5 +27,6 @@ export async function refreshSession(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getClaims();
-  return { response, isSignedIn: Boolean(data?.claims.sub), email: data?.claims.email ?? null };
+  const userId = data?.claims.sub ?? null;
+  return { response, isSignedIn: Boolean(userId), userId, email: data?.claims.email ?? null };
 }

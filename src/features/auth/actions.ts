@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
+import { authAttemptAllowed } from "./attempts";
 import { CONFIRMATION_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, safeRedirectPath, type CredentialsField } from "./schemas";
@@ -49,6 +51,7 @@ function parseCredentials(formData: FormData) {
 export async function signIn(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = parseCredentials(formData);
   if (!parsed.credentials) return parsed.state;
+  if (!(await authAttemptAllowed())) return { email: parsed.credentials.email, error: RATE_LIMITED_MESSAGE };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.credentials);
@@ -74,6 +77,7 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
       },
     };
   }
+  if (!(await authAttemptAllowed())) return { email: parsed.credentials.email, error: RATE_LIMITED_MESSAGE };
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -93,6 +97,7 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
 export async function resendConfirmation(_: ResendState, formData: FormData): Promise<ResendState> {
   const email = credentialsSchema.shape.email.safeParse(formData.get("email"));
   if (!email.success) return { error: "No reconocemos ese correo. Vuelve a registrarte." };
+  if (!(await authAttemptAllowed())) return { error: RATE_LIMITED_MESSAGE };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.resend({

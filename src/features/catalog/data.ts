@@ -1,4 +1,5 @@
 import "server-only";
+import { cacheLife } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 import { buildCatalog, type IngredientCatalog } from "@/domain/catalog";
@@ -6,6 +7,9 @@ import { INGREDIENT_CATEGORIES } from "@/domain/categories";
 import { buildPriceList, type PriceEntry, type PriceList } from "@/domain/costs";
 import type { Ingredient } from "@/domain/types";
 import { UNITS } from "@/domain/units";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/database.types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const ingredientRowSchema = z
@@ -67,26 +71,53 @@ export interface CatalogData {
   priceEntries: PriceEntry[];
 }
 
-/** Ingredientes y precios vigentes que ve el hogar: los globales más los propios. */
-export const getCatalog = cache(async (): Promise<CatalogData> => {
-  const supabase = await createSupabaseServerClient();
-  const [ingredientsResult, pricesResult] = await Promise.all([
-    supabase
-      .from("ingredients")
-      .select("id, name, category, base_unit, grams_per_unit, household_id, nutrients")
-      .order("name"),
-    supabase
-      .from("ingredient_prices")
-      .select(
-        "ingredient_id, household_id, price_cop, per_amount, per_unit, package_label, pieces, piece_label",
-      ),
-  ]);
+const INGREDIENT_COLUMNS = "id, name, category, base_unit, grams_per_unit, household_id, nutrients";
+const PRICE_COLUMNS =
+  "ingredient_id, household_id, price_cop, per_amount, per_unit, package_label, pieces, piece_label";
+
+type Client = SupabaseClient<Database>;
+
+/** Filas del catálogo: las de referencia (sin hogar) o las propias del hogar (la RLS deja solo las suyas). */
+async function readRows(client: Client, scope: "reference" | "household") {
+  const ingredients = client.from("ingredients").select(INGREDIENT_COLUMNS);
+  const prices = client.from("ingredient_prices").select(PRICE_COLUMNS);
+  const [ingredientsResult, pricesResult] = await Promise.all(
+    scope === "reference"
+      ? [ingredients.is("household_id", null), prices.is("household_id", null)]
+      : [ingredients.not("household_id", "is", null), prices.not("household_id", "is", null)],
+  );
   if (ingredientsResult.error)
     throw new Error(`No se pudo leer el catálogo: ${ingredientsResult.error.message}`);
   if (pricesResult.error) throw new Error(`No se pudieron leer los precios: ${pricesResult.error.message}`);
+  return { ingredients: ingredientsResult.data, prices: pricesResult.data };
+}
 
-  const ingredients = z.array(ingredientRowSchema).parse(ingredientsResult.data);
-  const priceEntries = z.array(priceRowSchema).parse(pricesResult.data);
+/**
+ * El catálogo de base y los precios de referencia son iguales para todos y casi no cambian:
+ * se leen una vez y quedan en caché unas horas, en vez de consultarse en cada visita.
+ */
+async function getReferenceRows() {
+  "use cache";
+  cacheLife("hours");
+  // Sin sesión no hay RLS que lo deje leer; es contenido público de la app, así que basta la
+  // llave del servidor filtrando solo lo global.
+  return readRows(createSupabaseAdminClient()!, "reference");
+}
+
+/** Ingredientes y precios vigentes que ve el hogar: los de referencia más los propios. */
+export const getCatalog = cache(async (): Promise<CatalogData> => {
+  const supabase = await createSupabaseServerClient();
+  // Sin la llave del servidor (desarrollo local) no hay caché: se lee todo con la sesión.
+  const [reference, own] = await Promise.all([
+    createSupabaseAdminClient() ? getReferenceRows() : readRows(supabase, "reference"),
+    readRows(supabase, "household"),
+  ]);
+
+  const ingredients = z
+    .array(ingredientRowSchema)
+    .parse([...reference.ingredients, ...own.ingredients])
+    .toSorted((a, b) => a.name.localeCompare(b.name, "es"));
+  const priceEntries = z.array(priceRowSchema).parse([...reference.prices, ...own.prices]);
   return {
     ingredients,
     catalog: buildCatalog(ingredients),

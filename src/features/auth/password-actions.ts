@@ -1,5 +1,7 @@
 "use server";
 
+import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
+import { authAttemptAllowed } from "./attempts";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -25,6 +27,7 @@ export async function requestPasswordReset(
   const email = credentialsSchema.shape.email.safeParse(formData.get("email"));
   if (!email.success)
     return { email: String(formData.get("email") ?? ""), error: "Escribe un correo válido." };
+  if (!(await authAttemptAllowed())) return { email: email.data, error: RATE_LIMITED_MESSAGE };
 
   const origin = (await headers()).get("origin") ?? "";
   const supabase = await createSupabaseServerClient();

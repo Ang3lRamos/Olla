@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAdminEmail } from "@/features/admin/emails";
 import { CONFIRMATION_PATH } from "@/features/auth/confirmation";
+import { ACTIONS_PER_USER, withinRateLimit } from "@/lib/rate-limit";
 import { HOME_PATH } from "@/lib/routes";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
@@ -24,9 +25,16 @@ function redirectKeepingCookies(request: NextRequest, response: NextResponse, pa
 
 /** Revisión optimista de sesión; la autorización real la hacen la capa de datos y la RLS. */
 export async function proxy(request: NextRequest) {
-  const { response, isSignedIn, email } = await refreshSession(request);
+  const { response, isSignedIn, userId, email } = await refreshSession(request);
   const { pathname } = request.nextUrl;
 
+  // Toda acción del servidor llega como POST: un tope por persona frena scripts y abusos.
+  if (userId && request.method === "POST" && !(await withinRateLimit(`user:${userId}`, ACTIONS_PER_USER))) {
+    return new NextResponse("Demasiadas acciones seguidas. Espera un minuto.", {
+      status: 429,
+      headers: { "Retry-After": String(ACTIONS_PER_USER.windowSeconds) },
+    });
+  }
   if (!isSignedIn && !PUBLIC_PAGES.includes(pathname)) {
     return redirectKeepingCookies(request, response, "/ingresar");
   }
