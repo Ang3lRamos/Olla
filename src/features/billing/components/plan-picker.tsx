@@ -9,6 +9,7 @@ import { Button } from "@/ui/button";
 import { cn } from "@/ui/cn";
 import { FormMessage } from "@/ui/form-message";
 import { startCheckout, startTrial } from "../actions";
+import { planCardClasses } from "./plan-card";
 import {
   INCLUDED_IN_ALL,
   PERIOD_LABELS,
@@ -114,10 +115,7 @@ export function PlanPicker({ prices, currentPlan, canStartTrial, paymentsEnabled
             <li
               key={plan}
               style={{ animationDelay: `${index * 40}ms` }}
-              className={cn(
-                "flex animate-rise flex-col gap-5 rounded-md border bg-surface p-5",
-                featured ? "border-ink shadow-raised" : "border-hairline",
-              )}
+              className={planCardClasses(featured, "animate-rise p-5")}
             >
               <div className="flex flex-col gap-1">
                 <div className="flex items-baseline justify-between gap-2">

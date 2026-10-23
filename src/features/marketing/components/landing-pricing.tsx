@@ -1,10 +1,10 @@
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { formatCop } from "@/domain/money";
+import { planCardClasses } from "@/features/billing/components/plan-card";
 import { INCLUDED_IN_ALL, PLAN_NAMES, PLAN_PITCH, type PlanPrice } from "@/features/billing/plans";
 import type { Plan } from "@/features/entitlements/quota";
 import { buttonClasses } from "@/ui/button";
-import { cn } from "@/ui/cn";
 
 const PLANS: Plan[] = ["free", "basic", "pro"];
 
@@ -33,13 +33,7 @@ export function LandingPricing({ prices }: { prices: PlanPrice[] }) {
             const price = monthly(plan);
             const featured = plan === "pro";
             return (
-              <div
-                key={plan}
-                className={cn(
-                  "flex flex-col gap-5 rounded-md border p-6",
-                  featured ? "border-ink shadow-raised" : "border-hairline",
-                )}
-              >
+              <div key={plan} className={planCardClasses(featured, "p-6")}>
                 <div className="flex flex-col gap-1">
                   <h3 className="letrero text-2xl">{PLAN_NAMES[plan]}</h3>
                   <p className="text-sm text-muted">{PLAN_PITCH[plan]}</p>

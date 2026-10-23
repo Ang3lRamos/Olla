@@ -37,6 +37,70 @@
   }
 }
 
+/*
+ * Destello que recorre el contorno de la tarjeta destacada (plan Pro): un tramo de luz color maíz
+ * gira alrededor del borde. Se anima solo un ángulo, sin mover la caja; con movimiento reducido
+ * se queda quieto.
+ */
+@property --borde-luz-angulo {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes borde-luz-giro {
+  to {
+    --borde-luz-angulo: 360deg;
+  }
+}
+
+@utility borde-luz {
+  position: relative;
+  --borde-luz-tramo: conic-gradient(
+    from var(--borde-luz-angulo),
+    transparent 0deg 200deg,
+    color-mix(in oklab, var(--color-maiz) 45%, transparent) 280deg,
+    var(--color-maiz) 345deg,
+    transparent 360deg
+  );
+
+  /* Las dos capas se recortan a un anillo (el centro queda libre para el contenido). */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    background: var(--borde-luz-tramo);
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation: borde-luz-giro 6s linear infinite;
+    pointer-events: none;
+  }
+
+  /* La línea de luz, justo sobre el borde. */
+  &::before {
+    inset: -1px;
+    padding: 2px;
+    border-radius: inherit;
+  }
+
+  /* El halo: el mismo tramo difuminado en un anillo por fuera del borde. */
+  &::after {
+    inset: -10px;
+    padding: 10px;
+    border-radius: calc(var(--radius-md) + 10px);
+    filter: blur(6px);
+    opacity: 0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      animation: none;
+    }
+  }
+}
+
 /* Cambio de tema: fundido corto de toda la vista en lugar de un salto de color. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
