@@ -54,7 +54,7 @@ export const MobileTabBarFallback = () => <TabBar isActive={NONE_ACTIVE} />;
 /** Enlaces en la barra superior, desde tableta. */
 function TopLinks({ isActive }: { isActive: IsActive }) {
   return (
-    <nav aria-label="Secciones" className="hidden items-center gap-1 md:flex">
+    <nav aria-label="Secciones" className="hidden items-center gap-1 lg:flex">
       {SECTIONS.map(({ href, label }) => (
         <Link
           key={href}
@@ -86,7 +86,7 @@ function TabBar({ isActive }: { isActive: IsActive }) {
   return (
     <nav
       aria-label="Secciones"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-hairline bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-hairline bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
     >
       <ul
         className="grid"

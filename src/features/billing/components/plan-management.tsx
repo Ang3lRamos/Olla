@@ -67,7 +67,7 @@ export function PlanManagement({ planName, refund }: PlanManagementProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted hover:text-danger"
+          className={canRequestRefund ? "text-muted hover:text-danger" : "-ml-3 text-muted hover:text-danger"}
           onClick={() => setDialog("cancel")}
         >
           Cancelar plan

@@ -52,11 +52,12 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <Suspense fallback={null}>
         <LegalNotice />
       </Suspense>
-      {/* En celular deja espacio para la barra inferior fija. */}
+      {/* En celular y tablet deja espacio para la barra inferior fija; los 7 enlaces arriba solo
+          caben desde 1024 px. */}
       <main
         id="contenido"
         tabIndex={-1}
-        className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pt-8 pb-28 outline-none md:px-8 md:py-10"
+        className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pt-8 pb-28 outline-none md:px-8 lg:py-10"
       >
         {children}
       </main>

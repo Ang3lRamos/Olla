@@ -19,7 +19,7 @@ const TOP_OFFSET = 72;
 const EDGE = 16;
 /** En celular, la barra inferior fija también ocupa espacio. */
 const MOBILE_TAB_BAR = 72;
-const bottomEdge = () => EDGE + (window.matchMedia("(min-width: 768px)").matches ? 0 : MOBILE_TAB_BAR);
+const bottomEdge = () => EDGE + (window.matchMedia("(min-width: 1024px)").matches ? 0 : MOBILE_TAB_BAR);
 /** Alto aproximado de la tarjeta antes de medirla. */
 const CARD_HEIGHT_GUESS = 220;
 
