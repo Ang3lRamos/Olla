@@ -75,7 +75,7 @@
     mask:
       linear-gradient(#000 0 0) content-box exclude,
       linear-gradient(#000 0 0);
-    animation: borde-luz-giro 4s linear infinite;
+    animation: borde-luz-giro 5s linear infinite;
     pointer-events: none;
   }
 
