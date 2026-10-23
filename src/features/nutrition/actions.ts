@@ -1,15 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/features/household/data";
+import { hasPaidPlan } from "@/features/entitlements/data";
+import { requireHousehold, requireUser } from "@/features/household/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { goalsInputSchema, type GoalsInput } from "./schemas";
 
 export type GoalsResult = { ok: true } | { ok: false; error: string };
 
+const NUTRITION_IS_PAID = "Las metas de nutrición son de los planes Básico y Pro.";
+
 /** Guarda las metas de la persona: las que quedan vacías se borran. */
 export async function saveGoals(input: GoalsInput): Promise<GoalsResult> {
-  const user = await requireUser();
+  const [user, household] = await Promise.all([requireUser(), requireHousehold()]);
+  if (!(await hasPaidPlan(household.id))) return { ok: false, error: NUTRITION_IS_PAID };
   const parsed = goalsInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Revisa las metas." };
 

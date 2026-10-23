@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { withoutNutrients } from "@/domain/nutrition";
 import { getAiQuota } from "@/features/entitlements/data";
 import { GuidedTour } from "@/features/help/components/guided-tour";
 import { listNotesBetween } from "@/features/notes/data";
@@ -13,11 +14,11 @@ export const metadata: Metadata = { title: "Semana" };
 
 async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">) {
   const week = await loadWeek((await searchParams).semana);
-  const [notes, aiQuota, goals] = await Promise.all([
+  const [notes, aiQuota] = await Promise.all([
     listNotesBetween(week.weekStart, week.weekEnd),
     getAiQuota(week.household.id),
-    getMyGoals(),
   ]);
+  const paid = aiQuota.plan !== "free";
 
   return (
     <WeekPlanner
@@ -30,12 +31,12 @@ async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">
       weeklyBudgetCop={week.household.weeklyBudgetCop}
       recipes={week.recipes}
       recipeSummaries={week.recipes.map((recipe) => summarizeRecipe(recipe, week.catalog, week.prices))}
-      ingredients={week.ingredients}
+      ingredients={paid ? week.ingredients : withoutNutrients(week.ingredients)}
       prices={[...week.prices.values()]}
       pantry={week.pantry}
       notes={notes}
       aiQuota={aiQuota}
-      goals={aiQuota.plan === "free" ? [] : goals}
+      goals={paid ? await getMyGoals() : []}
     />
   );
 }

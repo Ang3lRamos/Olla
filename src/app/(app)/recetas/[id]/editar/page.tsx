@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withoutNutrients } from "@/domain/nutrition";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getCatalog } from "@/features/catalog/data";
@@ -15,7 +16,13 @@ async function EditRecipeForm({ params }: Pick<PageProps<"/recetas/[id]/editar">
   if (!recipe) notFound();
   // Las recetas del catálogo global no se editan: se duplican desde el detalle.
   if (!recipe.isOwn) redirect(`/recetas/${recipe.id}`);
-  return <RecipeForm ingredients={ingredients} recipe={recipe} cancelHref={`/recetas/${recipe.id}`} />;
+  return (
+    <RecipeForm
+      ingredients={withoutNutrients(ingredients)}
+      recipe={recipe}
+      cancelHref={`/recetas/${recipe.id}`}
+    />
+  );
 }
 
 export default function EditRecipePage({ params }: PageProps<"/recetas/[id]/editar">) {

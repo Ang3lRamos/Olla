@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { nutrientsFromLabel } from "@/domain/nutrition";
 import type { Ingredient } from "@/domain/types";
+import { hasPaidPlan } from "@/features/entitlements/data";
 import { requireHousehold } from "@/features/household/data";
 import { normalizeForSearch } from "@/features/recipes/search";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -111,6 +112,9 @@ export async function deleteIngredient(ingredientId: string): Promise<DeleteResu
 /** Guarda (o quita) los datos de nutrición de un producto propio, copiados del empaque. */
 export async function saveIngredientNutrients(input: IngredientNutrientsInput): Promise<DeleteResult> {
   const household = await requireHousehold();
+  if (!(await hasPaidPlan(household.id))) {
+    return { ok: false, error: "La nutrición es de los planes Básico y Pro." };
+  }
   const parsed = ingredientNutrientsSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? SAVE_ERROR };
   const product = (await getCatalog()).catalog.get(parsed.data.id);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withoutNutrients } from "@/domain/nutrition";
 import { Suspense } from "react";
 import { dayIndex } from "@/domain/week";
 import { ShoppingList } from "@/features/shopping/components/shopping-list";
@@ -34,7 +35,7 @@ async function Market({ searchParams }: Pick<PageProps<"/mercado">, "searchParam
         people={week.plan.people}
         slots={week.plan.slots}
         recipes={week.recipes}
-        ingredients={week.ingredients}
+        ingredients={withoutNutrients(week.ingredients)}
         prices={[...week.prices.values()]}
         pantry={week.pantry}
         purchases={purchases}

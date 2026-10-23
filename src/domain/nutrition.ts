@@ -126,3 +126,7 @@ export function nutrientsFromLabel(
   for (const key of NUTRIENT_KEYS) totals[key] = values[key] ?? 0;
   return { basis: nutrientBasisFor(baseUnit), ...totals };
 }
+
+/** Sin plan con nutrición, los valores de referencia no viajan al navegador. */
+export const withoutNutrients = (ingredients: Ingredient[]): Ingredient[] =>
+  ingredients.map((ingredient) => ({ ...ingredient, nutrients: null }));

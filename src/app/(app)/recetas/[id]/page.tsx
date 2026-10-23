@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { withoutNutrients } from "@/domain/nutrition";
 import { RECIPE_CATEGORY_LABELS } from "@/domain/recipe-categories";
 import { getCatalog } from "@/features/catalog/data";
 import { requireHousehold } from "@/features/household/data";
@@ -27,7 +28,9 @@ async function RecipeDetailView({ params }: Pick<PageProps<"/recetas/[id]">, "pa
 
   // Solo viajan al navegador los ingredientes y precios de esta receta.
   const ids = new Set(recipe.ingredients.map((line) => line.ingredientId));
-  const ingredients = [...ids].flatMap((ingredientId) => catalog.get(ingredientId) ?? []);
+  const showNutrition = quota.plan !== "free";
+  const recipeIngredients = [...ids].flatMap((ingredientId) => catalog.get(ingredientId) ?? []);
+  const ingredients = showNutrition ? recipeIngredients : withoutNutrients(recipeIngredients);
   const recipePrices = [...ids].flatMap((ingredientId) => prices.get(ingredientId) ?? []);
 
   return (
@@ -57,7 +60,7 @@ async function RecipeDetailView({ params }: Pick<PageProps<"/recetas/[id]">, "pa
           prices={recipePrices}
           defaultServings={household.defaultPeople}
           detail={household.preferences.detail}
-          showNutrition={quota.plan !== "free"}
+          showNutrition={showNutrition}
           goals={goals}
         />
         <section aria-labelledby="steps-title" className="flex flex-col gap-5">

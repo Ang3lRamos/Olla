@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withoutNutrients } from "@/domain/nutrition";
 import { Suspense } from "react";
 import { OwnProducts } from "@/features/catalog/components/own-products";
 import { getCatalog } from "@/features/catalog/data";
@@ -17,14 +18,16 @@ async function Pantry() {
     getCatalog(),
     getAiQuota(household.id),
   ]);
+  const showNutrition = quota.plan !== "free";
+  const ownProducts = ingredients.filter((ingredient) => ingredient.own);
   // Solo las presentaciones con porciones sirven aquí: para mostrar "≈ 12 tajadas".
   const withPieces = [...prices.values()].filter((price) => price.pieces);
   return (
     <>
-      <PantryManager items={items} ingredients={ingredients} prices={withPieces} />
+      <PantryManager items={items} ingredients={withoutNutrients(ingredients)} prices={withPieces} />
       <OwnProducts
-        products={ingredients.filter((ingredient) => ingredient.own)}
-        showNutrition={quota.plan !== "free"}
+        products={showNutrition ? ownProducts : withoutNutrients(ownProducts)}
+        showNutrition={showNutrition}
       />
     </>
   );

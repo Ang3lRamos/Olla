@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withoutNutrients } from "@/domain/nutrition";
 import { Suspense } from "react";
 import { getCatalog } from "@/features/catalog/data";
 import { requireHousehold } from "@/features/household/data";
@@ -10,7 +11,7 @@ export const metadata: Metadata = { title: "Nueva receta" };
 async function NewRecipeForm() {
   await requireHousehold();
   const { ingredients } = await getCatalog();
-  return <RecipeForm ingredients={ingredients} cancelHref="/recetas" />;
+  return <RecipeForm ingredients={withoutNutrients(ingredients)} cancelHref="/recetas" />;
 }
 
 export default function NewRecipePage() {

@@ -36,6 +36,14 @@ export async function getAiQuota(householdId: string): Promise<AiQuota> {
   return row ? quotaRowSchema.parse(row) : FREE_QUOTA;
 }
 
+/**
+ * Si el hogar tiene hoy un plan pago (o la prueba). Un plan vencido o cancelado cuenta como
+ * Gratis: así cada ventaja se apaga sola, sin tocar los datos que la persona guardó.
+ */
+export async function hasPaidPlan(householdId: string): Promise<boolean> {
+  return (await getAiQuota(householdId)).plan !== "free";
+}
+
 /** Lo que cambia al consumir: el vencimiento y la prueba no, así que no vienen. */
 export type QuotaUsage = Pick<AiQuota, "plan" | "dailyLimit" | "used">;
 
