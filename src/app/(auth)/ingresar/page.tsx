@@ -31,7 +31,13 @@ async function SignInForm({ searchParams }: Pick<PageProps<"/ingresar">, "search
       mode="sign-in"
       heading={SIGN_IN_HEADING}
       redirectTo={redirectTo === "/" ? undefined : redirectTo}
-      notice={error === INVALID_LINK_ERROR ? NOTICES[INVALID_LINK_ERROR] : aviso === "cuenta-borrada" ? NOTICES["cuenta-borrada"] : undefined}
+      notice={
+        error === INVALID_LINK_ERROR
+          ? NOTICES[INVALID_LINK_ERROR]
+          : aviso === "cuenta-borrada"
+            ? NOTICES["cuenta-borrada"]
+            : undefined
+      }
     />
   );
 }

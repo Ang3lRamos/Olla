@@ -7,13 +7,16 @@ Aplicación web de planeación de comidas para hogares en Colombia: recetas, des
 Fuera de alcance: calorías, metas de peso, consejo médico o nutricional, pagos, despliegue y app nativa.
 
 ## Skills obligatorias
+
 Aplica siempre estas skills al escribir, revisar o diseñar cualquier parte del proyecto:
+
 - `codigo-limpio`: cambios mínimos, nombres del dominio, sin código muerto ni comentarios del "qué".
 - `estructura-modular`: archivos de 300–400 líneas como máximo, componentes de ~200, una responsabilidad por archivo.
 - `diseno-con-referencias`: todo diseño parte de referencias reales y de los tokens; nada de estética genérica de IA.
 - `transiciones-ui`: movimiento sutil con los tokens de duración y curva, y respeto por `prefers-reduced-motion`.
 
 ## Stack
+
 - Next.js 16 (App Router, Server Components, Server Actions) con TypeScript estricto (`noUncheckedIndexedAccess`). Esta versión trae cambios respecto a versiones anteriores: consulta `node_modules/next/dist/docs/` antes de usar una API.
 - Tailwind CSS v4. Los tokens de diseño viven en un solo lugar: `src/styles/tokens.css`.
 - Supabase (Postgres, Auth y RLS) con `@supabase/ssr`. Desarrollo contra un proyecto de Supabase Cloud gratuito.
@@ -21,7 +24,9 @@ Aplica siempre estas skills al escribir, revisar o diseñar cualquier parte del 
 - Vitest para las pruebas.
 
 ## Arquitectura
+
 Cada capa depende solo de la siguiente:
+
 1. `src/app/`: rutas y composición de pantallas, sin reglas de negocio.
 2. `src/features/<funcionalidad>/`: `components/`, `actions.ts` (Server Actions: validan, orquestan y revalidan), `data.ts` (consultas a Supabase que solo mapean filas a tipos del dominio) y `schemas.ts`.
 3. `src/domain/`: funciones puras sin I/O para unidades, escalado, consolidación del mercado, resta de la despensa y costos. Toda regla de negocio va aquí y tiene pruebas.
@@ -30,6 +35,7 @@ Cada capa depende solo de la siguiente:
 Las primitivas visuales compartidas van en `src/ui/`.
 
 ### IA
+
 - El resto de la app usa solo la interfaz `AiClient` de `src/lib/ai/`, configurada con `AI_BASE_URL`, `AI_API_KEY` y `AI_MODEL`. Ningún otro módulo sabe qué proveedor hay detrás.
 - La IA **solo propone recetas y combinaciones** (ids del catálogo). Las cantidades, el escalado, la lista de mercado y los costos se calculan siempre en `src/domain/`.
 - Toda respuesta se valida con zod. Los errores (`timeout`, `unavailable`, `invalid_response`, `not_configured`) se muestran al usuario con opción de reintentar y sin modificar sus datos.
@@ -46,6 +52,7 @@ Las primitivas visuales compartidas van en `src/ui/`.
 - La respuesta del modelo nunca se aplica tal cual: `sanitize.ts` descarta ids inventados y recetas con algo de «no incluir», y la persona revisa la vista previa antes de aplicar.
 
 ## Convenciones
+
 - El código va en inglés (identificadores y archivos) y la interfaz y las rutas en español (`/semana`, `/mercado`).
 - El dinero se maneja en COP como enteros; se formatea con `Intl.NumberFormat("es-CO")`.
 - Las unidades canónicas son `g`, `ml` y `unit`; la conversión vive en `src/domain/units.ts`. Una libra son 500 g.
@@ -54,13 +61,14 @@ Las primitivas visuales compartidas van en `src/ui/`.
 - Commits pequeños con mensajes claros en español, en imperativo.
 
 ## Comandos
+
 ```bash
 npm install
 npm run dev         # http://localhost:3000
 npm run test        # Vitest (una vez); npm run test:watch para modo observación
 npm run typecheck   # tsc --noEmit
 npm run lint        # ESLint
-npm run check       # typecheck + lint + test
+npm run check       # typecheck + lint + formato + test (lo mismo que corre el CI en GitHub)
 npm run build       # build de producción
 npm run format      # Prettier
 
@@ -72,6 +80,7 @@ npm run plan:set -- <correo> pro 20   # da el plan Pro a un hogar (sin pagos tod
 ```
 
 ## Base de datos
+
 - Cada cambio de esquema es una migración nueva en `supabase/migrations/`; nunca se edita una ya aplicada.
 - Toda tabla nueva lleva RLS y una prueba en `supabase/tests/` (corre sobre PGlite, sin red).
 - Con Cache Components, todo lo que lea la sesión va dentro de `<Suspense>` con un esqueleto como fallback.
