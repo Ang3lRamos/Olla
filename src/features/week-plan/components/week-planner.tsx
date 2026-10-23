@@ -19,6 +19,7 @@ import { SlotSheetContent } from "./slot-sheet";
 import { useWeekPlan } from "./use-week-plan";
 import { WeekDaysMobile } from "./week-days-mobile";
 import { WeekGrid } from "./week-grid";
+import { CookWithPanel } from "./cook-with-panel";
 import { WeekHeader } from "./week-header";
 import { WeekSummaryBar } from "./week-summary-bar";
 
@@ -37,10 +38,16 @@ export interface WeekPlannerProps {
   aiQuota: AiQuota;
   /** Metas de la persona; vacío si no puso o si su plan no incluye nutrición. */
   goals: NutritionGoal[];
+  /** "No incluir" del hogar: no se ofrecen esas recetas al armar con lo que hay. */
+  exclude: string[];
 }
 
 type OpenPanel =
-  { kind: "meal"; day: number; meal: Meal } | { kind: "day"; day: number } | { kind: "assistant" } | null;
+  | { kind: "meal"; day: number; meal: Meal }
+  | { kind: "day"; day: number }
+  | { kind: "assistant"; focus?: string[] }
+  | { kind: "cook-with" }
+  | null;
 
 export function WeekPlanner(props: WeekPlannerProps) {
   const { weekStart, today, weeklyBudgetCop, recipeSummaries, notes } = props;
@@ -80,6 +87,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
         people={week.people}
         onPeopleChange={week.setPeople}
         onOpenAssistant={() => setPanel({ kind: "assistant" })}
+        onOpenCookWith={() => setPanel({ kind: "cook-with" })}
         assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
       />
 
@@ -125,20 +133,24 @@ export function WeekPlanner(props: WeekPlannerProps) {
         title={
           panel?.kind === "assistant"
             ? "Asistente"
-            : openDay
-              ? openCell
-                ? `${openDay.long} ${openDay.dayOfMonth}`
-                : `Notas del ${openDay.long.toLowerCase()}`
-              : ""
+            : panel?.kind === "cook-with"
+              ? "Armar con lo que tengo"
+              : openDay
+                ? openCell
+                  ? `${openDay.long} ${openDay.dayOfMonth}`
+                  : `Notas del ${openDay.long.toLowerCase()}`
+                : ""
         }
         description={
           panel?.kind === "assistant"
             ? "Propone recetas; las cantidades y los costos los calcula Olla."
-            : openCell
-              ? MEAL_LABELS[openCell.meal]
-              : openDay
-                ? `${openDay.dayOfMonth} · todo el día`
-                : undefined
+            : panel?.kind === "cook-with"
+              ? "Elige lo que compraste y Olla busca las recetas que lo aprovechan."
+              : openCell
+                ? MEAL_LABELS[openCell.meal]
+                : openDay
+                  ? `${openDay.dayOfMonth} · todo el día`
+                  : undefined
         }
       >
         {openCell && (
@@ -158,8 +170,33 @@ export function WeekPlanner(props: WeekPlannerProps) {
             }}
           />
         )}
+        {panel?.kind === "cook-with" && (
+          <CookWithPanel
+            recipes={props.recipes}
+            ingredients={props.ingredients}
+            catalog={catalog}
+            pantry={props.pantry}
+            exclude={props.exclude}
+            slots={week.slots}
+            recipeName={(recipeId) => (recipeId && recipes.get(recipeId)?.name) || "Receta"}
+            marketFor={(slots) =>
+              summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop
+            }
+            onApply={(changes) => {
+              week.applyChanges(changes);
+              setPanel(null);
+            }}
+            onAskAssistant={
+              hasAssistant(props.aiQuota) || canUseFreeMenu(props.aiQuota)
+                ? (focus) => setPanel({ kind: "assistant", focus })
+                : null
+            }
+          />
+        )}
         {panel?.kind === "assistant" && (
           <AssistantPanel
+            key={panel.focus?.join("|") ?? "libre"}
+            focus={panel.focus ?? []}
             weekStart={weekStart}
             slots={week.slots}
             notesCount={notes.length}

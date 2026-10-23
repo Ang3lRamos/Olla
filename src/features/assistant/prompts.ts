@@ -16,6 +16,7 @@ Reglas:
 - Varía: evita repetir la misma receta más de dos veces en la semana.
 - Si hay presupuesto, intenta que el mercado no lo supere.
 - "despensa" es lo que ya hay en casa y "extras_del_mercado" lo que el hogar ya decidió comprar: aprovéchalos cuando tenga sentido (p. ej. recetas que usen esos productos).
+- "para_usar" es lo que la persona compró o tiene y pidió aprovechar: es la prioridad. Elige sobre todo recetas que usen esos ingredientes y, en "summary", cuenta cuáles aprovechaste.
 - "summary" y "reason" los lee la persona: escríbelos en español natural, nombrando las recetas por su nombre. Nunca menciones ids, categorías internas (breakfast, main…) ni nombres de campos.
 - Días: 0 = lunes … 6 = domingo. Comidas: "breakfast" (desayuno), "lunch" (almuerzo), "dinner" (comida).
 
@@ -45,6 +46,7 @@ export function buildAssistantMessages(context: AssistantContext): ChatMessage[]
     no_incluir: context.exclude,
     despensa: context.pantry,
     extras_del_mercado: context.marketExtras,
+    para_usar: context.focus,
     semana_actual: context.slots.map((slot) => ({
       day: slot.day,
       meal: slot.meal,

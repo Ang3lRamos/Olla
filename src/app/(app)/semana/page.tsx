@@ -37,6 +37,7 @@ async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">
       notes={notes}
       aiQuota={aiQuota}
       goals={paid ? await getMyGoals() : []}
+      exclude={week.household.preferences.exclude}
     />
   );
 }

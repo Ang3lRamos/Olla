@@ -23,6 +23,7 @@ interface BuildContextInput {
   mode: AssistantMode;
   instruction: string;
   onlyEmpty: boolean;
+  focus?: string[];
 }
 
 /** Reúne lo que el asistente necesita, con todos los números ya calculados por el dominio. */
@@ -31,6 +32,7 @@ export async function buildAssistantContext({
   mode,
   instruction,
   onlyEmpty,
+  focus = [],
 }: BuildContextInput): Promise<AssistantContext> {
   const { catalog, prices, household, plan, pantry } = week;
   // Las notas de la semana anterior ayudan a no repetir lo que no gustó.
@@ -73,9 +75,11 @@ export async function buildAssistantContext({
       recipes,
       exclude: household.preferences.exclude,
       inWeek: new Set(plan.slots.map((slot) => slot.recipeId)),
-      pantryNames: new Set(pantryNames),
+      // Lo que se pidió aprovechar cuenta como despensa para elegir las candidatas.
+      pantryNames: new Set([...pantryNames, ...focus]),
     }),
     marketExtras: extras.slice(0, MAX_MARKET_EXTRAS).map((extra) => extra.name),
+    focus,
     pantry: pantry.slice(0, MAX_PANTRY_ITEMS).map((item) => {
       const ingredient = getIngredient(catalog, item.ingredientId);
       return `${ingredient.name}: ${formatQuantity(toIngredientBase(item.quantity, ingredient))}`;

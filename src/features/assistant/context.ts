@@ -34,5 +34,7 @@ export interface AssistantContext {
   pantry: string[];
   /** Lo que el hogar agregó al mercado aparte de las recetas ("pollo extra", "tortillas"). */
   marketExtras: string[];
+  /** Lo que la persona compró o tiene y pidió aprovechar ("armar con lo que tengo"). */
+  focus: string[];
   notes: AssistantNote[];
 }

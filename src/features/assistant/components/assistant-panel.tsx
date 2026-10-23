@@ -26,6 +26,8 @@ interface AssistantPanelProps {
   marketFor: (slots: PlannedSlot[]) => number;
   onApply: (changes: ProposedChange[]) => void;
   quota: AiQuota;
+  /** Lo que la persona compró o tiene, si viene de "Armar con lo que tengo": se prioriza al proponer. */
+  focus: string[];
 }
 
 type PanelState =
@@ -39,6 +41,7 @@ export function AssistantPanel({
   marketFor,
   onApply,
   quota: initialQuota,
+  focus,
 }: AssistantPanelProps) {
   const [state, setState] = useState<PanelState>({ kind: "form" });
   const [values, setValues] = useState<AssistantFormValues>({
@@ -66,6 +69,7 @@ export function AssistantPanel({
       ...request,
       // Solo el modo Ajustar usa la instrucción; no se arrastra a los otros modos.
       instruction: request.mode === "adjust" ? request.instruction : "",
+      focus: request.mode === "propose" ? focus : [],
     }).catch((): AskAssistantResult => ({
       ok: false,
       error: { kind: "unavailable", detail: "Fallo de red" },
@@ -79,6 +83,13 @@ export function AssistantPanel({
     setState({ kind: "done", result });
   };
 
+  const focusNote = focus.length > 0 && (
+    <p className="rounded-md bg-sunken px-3 py-2.5 text-sm">
+      <span className="font-medium">Con lo que tienes:</span> {focus.join(", ")}. Al proponer, el asistente
+      prioriza recetas que lo usen.
+    </p>
+  );
+
   if (state.kind === "form") {
     if (!hasAssistant(quota)) {
       if (!canUseFreeMenu(quota)) {
@@ -90,6 +101,7 @@ export function AssistantPanel({
             Plan Gratis · te queda <span className="font-medium text-ink">1 menú gratis</span> esta semana.
             Ajustar y revisar notas son de los planes Básico y Pro.
           </p>
+          {focusNote}
           <AssistantRequestForm
             initial={{ ...values, mode: "propose" }}
             onlyPropose
@@ -114,6 +126,7 @@ export function AssistantPanel({
             </>
           )}
         </p>
+        {focusNote}
         {remaining === 0 ? (
           <AssistantError kind="limit_reached" />
         ) : (

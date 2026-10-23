@@ -1,4 +1,4 @@
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, ShoppingBasket } from "lucide-react";
 import type { IsoDate } from "@/domain/week";
 import { MAX_PEOPLE } from "@/features/household/schemas";
 import { Button } from "@/ui/button";
@@ -11,6 +11,7 @@ interface WeekHeaderProps {
   people: number;
   onPeopleChange: (people: number) => void;
   onOpenAssistant: () => void;
+  onOpenCookWith: () => void;
   /** El asistente es de los planes pagos; para el resto el botón lo indica. */
   assistantLocked: boolean;
 }
@@ -21,6 +22,7 @@ export function WeekHeader({
   people,
   onPeopleChange,
   onOpenAssistant,
+  onOpenCookWith,
   assistantLocked,
 }: WeekHeaderProps) {
   return (
@@ -40,6 +42,10 @@ export function WeekHeader({
           unit={["persona", "personas"]}
           onValueChange={onPeopleChange}
         />
+        <Button variant="secondary" onClick={onOpenCookWith}>
+          <ShoppingBasket className="size-4" aria-hidden />
+          Armar con lo que tengo
+        </Button>
         <Button
           variant={assistantLocked ? "secondary" : "primary"}
           onClick={onOpenAssistant}

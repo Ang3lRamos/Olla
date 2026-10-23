@@ -39,7 +39,7 @@ export async function askAssistant(request: AssistantRequest): Promise<AskAssist
     };
   }
 
-  const { weekStart, mode, instruction, onlyEmpty } = parsed.data;
+  const { weekStart, mode, instruction, onlyEmpty, focus } = parsed.data;
   const { allowed, quota } = await consumeAiRequest(household.id);
   // En Gratis, "Proponer" puede usar el menú de la semana; lo demás sigue siendo de los planes pagos.
   const usesFreeMenu = !allowed && quota.plan === "free" && mode === "propose";
@@ -62,6 +62,7 @@ export async function askAssistant(request: AssistantRequest): Promise<AskAssist
     mode,
     instruction,
     onlyEmpty,
+    focus,
   });
   const { client, simulated } = getAssistantClient(context);
   const outcome = await runAssistant(client, context);

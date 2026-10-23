@@ -43,6 +43,8 @@ export const assistantRequestSchema = z.object({
   mode: z.enum(ASSISTANT_MODES),
   instruction: z.string().trim().max(400).default(""),
   onlyEmpty: z.boolean().default(true),
+  /** Lo que la persona compró o tiene y quiere usar esta semana (nombres del catálogo). */
+  focus: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
 });
 
 export type AssistantRequest = z.input<typeof assistantRequestSchema>;
