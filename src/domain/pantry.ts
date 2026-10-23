@@ -67,3 +67,35 @@ export function stockBeforePurchases(
     },
   }));
 }
+
+/**
+ * La despensa con las compras que todavía no confirma el servidor: lo marcado como comprado
+ * en pantalla ya cuenta como en casa, así la lista responde al instante.
+ */
+export function withPendingPurchases(
+  pantry: PantryItem[],
+  saved: IngredientAmount[],
+  current: IngredientAmount[],
+  catalog: IngredientCatalog,
+): PantryItem[] {
+  const savedByKey = new Map(saved.map((item) => [keyOf(item), item.quantity.amount]));
+  const deltas = new Map<string, IngredientAmount>();
+  for (const item of current) {
+    const delta = item.quantity.amount - (savedByKey.get(keyOf(item)) ?? 0);
+    if (delta !== 0) deltas.set(keyOf(item), { ...item, quantity: { ...item.quantity, amount: delta } });
+  }
+  // Lo que se desmarcó en pantalla sale de la despensa.
+  for (const item of saved) {
+    if (!current.some((other) => keyOf(other) === keyOf(item))) {
+      deltas.set(keyOf(item), { ...item, quantity: { ...item.quantity, amount: -item.quantity.amount } });
+    }
+  }
+  if (deltas.size === 0) return pantry;
+  const stock = consolidate(pantry, catalog);
+  for (const delta of deltas.values()) {
+    const existing = stock.find((item) => keyOf(item) === keyOf(delta));
+    if (existing) existing.quantity.amount = Math.max(existing.quantity.amount + delta.quantity.amount, 0);
+    else if (delta.quantity.amount > 0) stock.push(delta);
+  }
+  return stock;
+}

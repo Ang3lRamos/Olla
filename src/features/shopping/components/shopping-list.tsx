@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { buildCatalog } from "@/domain/catalog";
+import { withPendingPurchases } from "@/domain/pantry";
 import { formatCop } from "@/domain/money";
 import type { Purchase } from "@/domain/shopping-status";
 import { formatShoppingText } from "@/domain/shopping-status";
@@ -61,7 +62,8 @@ export function ShoppingList(props: ShoppingListProps) {
     slots,
     recipes,
     people,
-    pantry,
+    // Lo marcado en pantalla ya cuenta como en casa mientras confirma el servidor.
+    pantry: withPendingPurchases(pantry, props.purchases, shopping.purchases, catalog),
     purchases: shopping.purchases,
     extras: shopping.extras,
     catalog,

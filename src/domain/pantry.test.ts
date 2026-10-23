@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adjustStock, stockBeforePurchases, subtractPantry } from "./pantry";
+import { adjustStock, stockBeforePurchases, subtractPantry, withPendingPurchases } from "./pantry";
 import { catalog, egg, rice } from "./test-fixtures";
 
 describe("subtractPantry", () => {
@@ -97,5 +97,24 @@ describe("stockBeforePurchases", () => {
       catalog,
     );
     expect(before).toEqual([{ ingredientId: "rice", quantity: { amount: 0, unit: "g" } }]);
+  });
+});
+
+describe("withPendingPurchases", () => {
+  it("suma lo recién marcado y resta lo desmarcado antes de que responda el servidor", () => {
+    const pantry = [{ ingredientId: "rice", quantity: { amount: 200, unit: "g" as const } }];
+    const saved = [{ ingredientId: "rice", quantity: { amount: 200, unit: "g" as const } }];
+    expect(
+      withPendingPurchases(
+        pantry,
+        saved,
+        [{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }],
+        catalog,
+      ),
+    ).toEqual([{ ingredientId: "rice", quantity: { amount: 500, unit: "g" } }]);
+    expect(withPendingPurchases(pantry, saved, [], catalog)).toEqual([
+      { ingredientId: "rice", quantity: { amount: 0, unit: "g" } },
+    ]);
+    expect(withPendingPurchases(pantry, saved, saved, catalog)).toBe(pantry);
   });
 });
