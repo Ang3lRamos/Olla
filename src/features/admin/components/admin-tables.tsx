@@ -53,62 +53,85 @@ export function UsersTable({
   households: Map<string, string>;
   selfId: string;
 }) {
+  const householdName = (row: AdminMetrics["userRows"][number]) =>
+    row.householdId ? (households.get(row.householdId) ?? "—") : "Sin hogar";
+  const actions = (row: AdminMetrics["userRows"][number]) => (
+    <UserActions
+      userId={row.id}
+      email={row.email}
+      householdId={row.householdId}
+      onPaidPlan={row.status !== "free"}
+      isSelf={row.id === selfId}
+    />
+  );
   return (
-    <div className="overflow-x-auto rounded-md border border-hairline">
-      <table className={TABLE}>
-        <thead className={HEAD}>
-          <tr>
-            <th>Correo</th>
-            <th>Hogar</th>
-            <th>Plan</th>
-            <th>Vence</th>
-            <th className="text-right">Asistente 30 d</th>
-            <th>Registro</th>
-            <th>Último ingreso</th>
-            <th>
-              <span className="sr-only">Acciones</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className={BODY}>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <td className="max-w-64 truncate">
-                {row.email}
-                {!row.confirmed && <span className="ml-2 text-xs text-muted">sin confirmar</span>}
-              </td>
-              <td className="max-w-40 truncate">
-                {row.householdId ? (
-                  (households.get(row.householdId) ?? "—")
-                ) : (
-                  <span className="text-muted">Sin hogar</span>
-                )}
-              </td>
-              <td>
-                <PlanBadge status={row.status} />
-              </td>
-              <td className="whitespace-nowrap text-muted">
-                {row.status === "free" || !row.expiresAt ? "—" : DATE.format(new Date(row.expiresAt))}
-              </td>
-              <td className="text-right">{row.ai30}</td>
-              <td className="whitespace-nowrap">{DATE.format(new Date(row.createdAt))}</td>
-              <td className="whitespace-nowrap text-muted">
-                {row.lastSignInAt ? DATE_TIME.format(new Date(row.lastSignInAt)) : "Nunca"}
-              </td>
-              <td>
-                <UserActions
-                  userId={row.id}
-                  email={row.email}
-                  householdId={row.householdId}
-                  onPaidPlan={row.status !== "free"}
-                  isSelf={row.id === selfId}
-                />
-              </td>
+    <>
+      {/* En celular, una tarjeta por persona: los botones quedan a la vista sin deslizar la tabla. */}
+      <ul className="flex flex-col divide-y divide-hairline rounded-md border border-hairline md:hidden">
+        {rows.map((row) => (
+          <li key={row.id} className="flex flex-col gap-1.5 px-4 py-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <span className="min-w-0 font-medium break-all">{row.email}</span>
+              <PlanBadge status={row.status} />
+            </div>
+            <p className="text-muted">
+              {householdName(row)}
+              {!row.confirmed && " · sin confirmar"}
+              {row.status !== "free" && row.expiresAt && ` · vence ${DATE.format(new Date(row.expiresAt))}`}
+            </p>
+            <p className="text-xs text-muted tabular-nums">
+              Registro {DATE.format(new Date(row.createdAt))} · último ingreso{" "}
+              {row.lastSignInAt ? DATE.format(new Date(row.lastSignInAt)) : "nunca"} · asistente {row.ai30} en
+              30 d
+            </p>
+            {actions(row)}
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto rounded-md border border-hairline md:block">
+        <table className={TABLE}>
+          <thead className={HEAD}>
+            <tr>
+              <th>Correo</th>
+              <th>Hogar</th>
+              <th>Plan</th>
+              <th>Vence</th>
+              <th className="text-right">Asistente 30 d</th>
+              <th>Registro</th>
+              <th>Último ingreso</th>
+              <th>
+                <span className="sr-only">Acciones</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className={BODY}>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <td className="max-w-64 truncate">
+                  {row.email}
+                  {!row.confirmed && <span className="ml-2 text-xs text-muted">sin confirmar</span>}
+                </td>
+                <td className={cn("max-w-40 truncate", !row.householdId && "text-muted")}>
+                  {householdName(row)}
+                </td>
+                <td>
+                  <PlanBadge status={row.status} />
+                </td>
+                <td className="whitespace-nowrap text-muted">
+                  {row.status === "free" || !row.expiresAt ? "—" : DATE.format(new Date(row.expiresAt))}
+                </td>
+                <td className="text-right">{row.ai30}</td>
+                <td className="whitespace-nowrap">{DATE.format(new Date(row.createdAt))}</td>
+                <td className="whitespace-nowrap text-muted">
+                  {row.lastSignInAt ? DATE_TIME.format(new Date(row.lastSignInAt)) : "Nunca"}
+                </td>
+                <td>{actions(row)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -126,46 +149,67 @@ export function PaymentsTable({
       </p>
     );
   }
+  const who = (payment: AdminPayment) =>
+    (payment.householdId && emailOf.get(payment.householdId)) ?? "Hogar borrado";
+  const refundNote = (payment: AdminPayment) =>
+    payment.refundedAt ? "Devuelto" : payment.refundRequestedAt ? "Reembolso pedido" : null;
   return (
-    <div className="overflow-x-auto rounded-md border border-hairline">
-      <table className={TABLE}>
-        <thead className={HEAD}>
-          <tr>
-            <th>Fecha</th>
-            <th>Hogar</th>
-            <th>Plan</th>
-            <th>Medio</th>
-            <th className="text-right">Valor</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody className={BODY}>
-          {payments.map((payment) => (
-            <tr key={payment.reference}>
-              <td className="whitespace-nowrap">{DATE_TIME.format(new Date(payment.createdAt))}</td>
-              <td className="max-w-64 truncate">
-                {(payment.householdId && emailOf.get(payment.householdId)) ?? "Hogar borrado"}
-              </td>
-              <td className="whitespace-nowrap">
-                {PLAN_NAMES[payment.plan]} · {PERIOD_LABELS[payment.period].name.toLowerCase()}
-              </td>
-              <td className="text-muted">{payment.method ?? "—"}</td>
-              <td className="text-right">{formatCop(payment.amountCop)}</td>
-              <td className={cn("whitespace-nowrap", PAYMENT_STATUS[payment.status].tone)}>
+    <>
+      <ul className="flex flex-col divide-y divide-hairline rounded-md border border-hairline md:hidden">
+        {payments.map((payment) => (
+          <li key={payment.reference} className="flex flex-col gap-1 px-4 py-3 text-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 font-medium break-all">{who(payment)}</span>
+              <span className="shrink-0 tabular-nums">{formatCop(payment.amountCop)}</span>
+            </div>
+            <p className="text-muted">
+              {PLAN_NAMES[payment.plan]} · {PERIOD_LABELS[payment.period].name.toLowerCase()} ·{" "}
+              {payment.method ?? "—"}
+            </p>
+            <p className="flex flex-wrap justify-between gap-x-3 text-xs">
+              <span className="text-muted">{DATE_TIME.format(new Date(payment.createdAt))}</span>
+              <span className={PAYMENT_STATUS[payment.status].tone}>
                 {PAYMENT_STATUS[payment.status].label}
-                {payment.refundedAt ? (
-                  <span className="block text-xs text-muted">Devuelto</span>
-                ) : (
-                  payment.refundRequestedAt && (
-                    <span className="block text-xs text-muted">Reembolso pedido</span>
-                  )
-                )}
-              </td>
+                {refundNote(payment) && <span className="text-muted"> · {refundNote(payment)}</span>}
+              </span>
+            </p>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto rounded-md border border-hairline md:block">
+        <table className={TABLE}>
+          <thead className={HEAD}>
+            <tr>
+              <th>Fecha</th>
+              <th>Hogar</th>
+              <th>Plan</th>
+              <th>Medio</th>
+              <th className="text-right">Valor</th>
+              <th>Estado</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className={BODY}>
+            {payments.map((payment) => (
+              <tr key={payment.reference}>
+                <td className="whitespace-nowrap">{DATE_TIME.format(new Date(payment.createdAt))}</td>
+                <td className="max-w-64 truncate">{who(payment)}</td>
+                <td className="whitespace-nowrap">
+                  {PLAN_NAMES[payment.plan]} · {PERIOD_LABELS[payment.period].name.toLowerCase()}
+                </td>
+                <td className="text-muted">{payment.method ?? "—"}</td>
+                <td className="text-right">{formatCop(payment.amountCop)}</td>
+                <td className={cn("whitespace-nowrap", PAYMENT_STATUS[payment.status].tone)}>
+                  {PAYMENT_STATUS[payment.status].label}
+                  {refundNote(payment) && (
+                    <span className="block text-xs text-muted">{refundNote(payment)}</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

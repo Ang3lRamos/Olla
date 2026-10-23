@@ -25,7 +25,7 @@ export function DeleteAccount({ email }: { email: string }) {
       <Button
         variant="ghost"
         size="sm"
-        className="self-start px-0 text-muted hover:text-danger"
+        className="-ml-3 self-start text-muted hover:text-danger"
         onClick={() => setOpen(true)}
       >
         Eliminar mi cuenta
