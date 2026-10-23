@@ -366,6 +366,32 @@ describe("borrar un usuario", () => {
     expect(await count(db, "select 1 from public.pantry_items where household_id = $1", [household])).toBe(0);
   });
 
+  it("borra el hogar aunque tenga recetas propias con productos propios", async () => {
+    const dani = await createUser(db, "00000000-0000-0000-0000-00000000000d");
+    const household = await asUser(db, dani, (tx) => createHousehold(tx, "Casa de Dani"));
+    const ingredientId = await asUser(db, dani, async (tx) => {
+      const ingredient = await tx.query<{ id: string }>(
+        "insert into public.ingredients (household_id, name, category, base_unit) values ($1, 'Hogao casero', 'pantry', 'g') returning id",
+        [household],
+      );
+      const recipe = await tx.query<{ id: string }>(
+        "insert into public.recipes (household_id, name, category, base_servings, steps) values ($1, 'Arroz', 'main', 4, '{}') returning id",
+        [household],
+      );
+      await tx.query(
+        "insert into public.recipe_ingredients (recipe_id, ingredient_id, quantity, unit) values ($1, $2, 1, 'g')",
+        [recipe.rows[0]!.id, ingredient.rows[0]!.id],
+      );
+      return ingredient.rows[0]!.id;
+    });
+    // Mientras la receta lo use, el producto no se puede borrar.
+    await expect(
+      asUser(db, dani, (tx) => tx.query("delete from public.ingredients where id = $1", [ingredientId])),
+    ).rejects.toThrow(/foreign key/);
+    await db.query("delete from auth.users where id = $1", [dani]);
+    expect(await count(db, "select 1 from public.households where id = $1", [household])).toBe(0);
+  });
+
   it("no borra hogares que aún tienen miembros", async () => {
     expect(await count(db, "select 1 from public.households where id = $1", [anaHousehold])).toBe(1);
   });
