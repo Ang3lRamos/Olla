@@ -18,7 +18,9 @@ import {
   type RecipeFormInput,
 } from "../schemas";
 import type { RecipeDetail } from "../types";
+import type { ImportedRecipe } from "../import/to-draft";
 import { IngredientLineFields, type IngredientLineDraft } from "./ingredient-line-fields";
+import { RecipeImport } from "./recipe-import";
 import { CategoryPicker, StepsField } from "./recipe-form-fields";
 
 interface RecipeFormProps {
@@ -57,6 +59,17 @@ export function RecipeForm({ ingredients: listed, recipe, cancelHref }: RecipeFo
   const [prepMinutes, setPrepMinutes] = useState(recipe?.prepMinutes ? String(recipe.prepMinutes) : "");
   const [steps, setSteps] = useState(recipe?.steps.join("\n") ?? "");
   const [lines, setLines] = useState(() => toDraftLines(recipe));
+  // Al pegar una receta cambian las porciones; el selector (no controlado) se vuelve a montar.
+  const [imports, setImports] = useState(0);
+  const fillFrom = (imported: ImportedRecipe) => {
+    setName(imported.name);
+    setBaseServings(imported.servings);
+    setPrepMinutes(imported.prepMinutes ? String(imported.prepMinutes) : "");
+    setSteps(imported.steps);
+    setLines(imported.lines.map((line) => ({ key: crypto.randomUUID(), ...line })));
+    setErrors({});
+    setImports((count) => count + 1);
+  };
   // Los errores del último envío se borran campo por campo a medida que se corrigen.
   const [errors, setErrors] = useState<RecipeFieldErrors>({});
   const [handledState, setHandledState] = useState(state);
@@ -99,6 +112,7 @@ export function RecipeForm({ ingredients: listed, recipe, cancelHref }: RecipeFo
     <form action={formAction} className="flex max-w-4xl flex-col gap-8" noValidate>
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
       {state.error && <FormMessage tone="error">{state.error}</FormMessage>}
+      {!recipe && <RecipeImport onImported={fillFrom} />}
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <TextField
@@ -125,6 +139,7 @@ export function RecipeForm({ ingredients: listed, recipe, cancelHref }: RecipeFo
       <CategoryPicker value={category} onChange={setCategory} />
 
       <NumberStepper
+        key={imports}
         name="baseServings"
         label="¿Para cuántas porciones son estas cantidades?"
         defaultValue={baseServings}

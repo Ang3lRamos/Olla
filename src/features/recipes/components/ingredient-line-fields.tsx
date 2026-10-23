@@ -16,6 +16,8 @@ export interface IngredientLineDraft {
   quantity: string;
   unit: Unit;
   note: string;
+  /** Leído de una receta pegada y que no está en el catálogo: se ofrece crearlo. */
+  unmatchedName?: string | null;
 }
 
 interface IngredientLineFieldsProps {
@@ -107,6 +109,19 @@ export function IngredientLineFields({
         />
       </div>
       {messages.length > 0 && <p className="animate-rise text-sm text-danger">{messages.join(" ")}</p>}
+      {line.unmatchedName && !line.ingredientId && creating === null && (
+        <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted">
+          «{line.unmatchedName}» no está en tu lista.
+          <button
+            type="button"
+            onClick={() => setCreating(line.unmatchedName ?? "")}
+            className="font-medium text-ink underline decoration-hairline-strong underline-offset-4 hover:decoration-ink"
+          >
+            Crearlo
+          </button>
+          o elige otro arriba.
+        </p>
+      )}
       {creating !== null && (
         <NewProductPanel
           initialName={creating}
