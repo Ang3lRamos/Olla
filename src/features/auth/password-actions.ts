@@ -4,7 +4,7 @@ import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { authAttemptAllowed } from "./attempts";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient } from "@/lib/supabase/server";
 import { CONFIRMATION_PATH, NEW_PASSWORD_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, newPasswordSchema } from "./schemas";
@@ -30,8 +30,8 @@ export async function requestPasswordReset(
   if (!(await authAttemptAllowed())) return { email: email.data, error: RATE_LIMITED_MESSAGE };
 
   const origin = (await headers()).get("origin") ?? "";
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email.data, {
+  const auth = await createSupabaseAuthClient();
+  const { error } = await auth.auth.resetPasswordForEmail(email.data, {
     redirectTo: `${origin}${CONFIRMATION_PATH}?siguiente=${NEW_PASSWORD_PATH}`,
   });
   if (error) {
@@ -60,7 +60,7 @@ export async function updatePassword(_: NewPasswordState, formData: FormData): P
     return { fieldErrors: { password: fieldErrors.password?.[0], confirm: fieldErrors.confirm?.[0] } };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseAuthClient();
   const { data } = await supabase.auth.getClaims();
   if (!data) return { error: "El enlace venció. Pide uno nuevo desde «¿Olvidaste tu contraseña?»." };
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });

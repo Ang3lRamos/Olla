@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { authAttemptAllowed } from "./attempts";
 import { inviteTokenFrom } from "@/features/members/invite-link";
@@ -54,12 +54,13 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
   if (!parsed.credentials) return parsed.state;
   if (!(await authAttemptAllowed())) return { email: parsed.credentials.email, error: RATE_LIMITED_MESSAGE };
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.credentials);
+  const auth = await createSupabaseAuthClient();
+  const { error } = await auth.auth.signInWithPassword(parsed.credentials);
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
 
   // Quien aún no configuró su hogar va directo al onboarding, sin pasar por una página
   // que lo redirigiría después de empezar a cargar.
+  const supabase = await createSupabaseServerClient();
   const { data: household } = await supabase.from("households").select("id").limit(1).maybeSingle();
   const next = safeRedirectPath(formData.get("siguiente"));
   // Una invitación se acepta aunque la persona todavía no tenga hogar.
@@ -82,8 +83,8 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   }
   if (!(await authAttemptAllowed())) return { email: parsed.credentials.email, error: RATE_LIMITED_MESSAGE };
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
+  const auth = await createSupabaseAuthClient();
+  const { data, error } = await auth.auth.signUp({
     ...parsed.credentials,
     options: {
       ...(await confirmationLinkOptions()),
@@ -108,8 +109,8 @@ export async function resendConfirmation(_: ResendState, formData: FormData): Pr
   if (!email.success) return { error: "No reconocemos ese correo. Vuelve a registrarte." };
   if (!(await authAttemptAllowed())) return { error: RATE_LIMITED_MESSAGE };
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.resend({
+  const auth = await createSupabaseAuthClient();
+  const { error } = await auth.auth.resend({
     type: "signup",
     email: email.data,
     options: await confirmationLinkOptions(),

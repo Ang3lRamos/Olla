@@ -4,7 +4,7 @@ import {
   NEW_PASSWORD_PATH,
   parseConfirmationRequest,
 } from "@/features/auth/confirmation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthClient } from "@/lib/supabase/server";
 
 /**
  * Destino de los enlaces del correo: abre la sesión y sigue al onboarding, o a elegir una nueva
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   };
 
   if (confirmation) {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseAuthClient();
     const { error } =
       confirmation.kind === "code"
         ? await supabase.auth.exchangeCodeForSession(confirmation.code)

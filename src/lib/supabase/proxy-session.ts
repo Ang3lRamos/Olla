@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "../env";
 import type { Database } from "./database.types";
+import { authForwarding, clientIpFrom } from "./forwarded-ip";
 
 /**
  * Refresca la sesión de Supabase en cada petición y devuelve la respuesta con las
@@ -10,10 +11,14 @@ import type { Database } from "./database.types";
 export async function refreshSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Renovar la sesión cuenta en el límite por IP de Supabase: va con la IP de la persona. Este
+  // cliente solo toca la sesión, nunca datos, así que puede llevar la llave secreta.
+  const forwarding = authForwarding(clientIpFrom(request.headers.get("x-forwarded-for")));
   const supabase = createServerClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
-    publicEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    forwarding?.apiKey ?? publicEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
+      global: forwarding ? { headers: forwarding.headers } : undefined,
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll(cookiesToSet, headers) {
