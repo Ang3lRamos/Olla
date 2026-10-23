@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, LogOut, PiggyBank, Route, Settings } from "lucide-react";
+import { BadgeCheck, ChartColumn, LogOut, PiggyBank, Route, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/features/auth/actions";
@@ -9,7 +9,7 @@ import { Button, buttonClasses } from "@/ui/button";
 import { cn } from "@/ui/cn";
 import { ThemeToggle } from "@/ui/theme/theme-toggle";
 
-export function UserMenuPopover({ email }: { email: string }) {
+export function UserMenuPopover({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -67,6 +67,20 @@ export function UserMenuPopover({ email }: { email: string }) {
         <p className="mb-2 text-xs text-muted">Tema</p>
         <ThemeToggle className="w-full" />
         <div className="my-3 border-t border-hairline" />
+        {isAdmin && (
+          <Link
+            href="/admin"
+            onClick={() => setOpen(false)}
+            className={buttonClasses({
+              variant: "ghost",
+              size: "sm",
+              className: "w-full justify-start px-2",
+            })}
+          >
+            <ChartColumn className="size-4" aria-hidden />
+            Admin
+          </Link>
+        )}
         <Link
           href="/presupuesto"
           onClick={() => setOpen(false)}

@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { formatCop } from "@/domain/money";
+import { niceCeiling } from "@/ui/chart-scale";
 import { cn } from "@/ui/cn";
 
 export interface DayCost {
@@ -18,14 +19,6 @@ interface DailyCostChartProps {
 
 const PLOT_HEIGHT_PX = 168;
 const COMPACT = new Intl.NumberFormat("es-CO", { notation: "compact", maximumFractionDigits: 1 });
-
-/** Techo "bonito" del eje (1, 2 o 5 × 10ⁿ) para que las marcas sean números redondos. */
-function niceCeiling(value: number): number {
-  if (value <= 0) return 1;
-  const magnitude = 10 ** Math.floor(Math.log10(value));
-  const step = [1, 2, 5, 10].find((candidate) => candidate * magnitude >= value) ?? 10;
-  return step * magnitude;
-}
 
 export function DailyCostChart({ days, dailyCapCop }: DailyCostChartProps) {
   const [active, setActive] = useState<number | null>(null);
