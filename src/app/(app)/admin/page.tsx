@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { formatCop } from "@/domain/money";
 import { requireAdmin } from "@/features/admin/access";
-import { PaymentsTable, STATUS_LABELS, UsersTable } from "@/features/admin/components/admin-tables";
+import {
+  PaymentsTable,
+  RefundRequests,
+  STATUS_LABELS,
+  UsersTable,
+} from "@/features/admin/components/admin-tables";
 import { StatTile } from "@/features/admin/components/stat-tile";
 import { TrendChart } from "@/features/admin/components/trend-chart";
 import { loadAdminSnapshot } from "@/features/admin/data";
@@ -16,7 +21,7 @@ const RECENT_PAYMENTS = 25;
 const PLAN_ORDER: PlanStatus[] = ["pro", "basic", "trial", "courtesy", "free"];
 
 async function Dashboard() {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const snapshot = await loadAdminSnapshot();
   if (!snapshot) {
     return (
@@ -33,6 +38,15 @@ async function Dashboard() {
 
   return (
     <>
+      {metrics.refundRequests.length > 0 && (
+        <section aria-labelledby="refunds-title" className="flex flex-col gap-3">
+          <h2 id="refunds-title" className="font-display text-xl font-semibold">
+            Reembolsos por revisar ({metrics.refundRequests.length})
+          </h2>
+          <RefundRequests requests={metrics.refundRequests} emailOf={emailOf} />
+        </section>
+      )}
+
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
           label="Usuarios"
@@ -57,7 +71,7 @@ async function Dashboard() {
         <StatTile
           label="Ingresos del mes"
           value={formatCop(metrics.revenueThisMonthCop)}
-          detail={`${formatCop(metrics.revenueTotalCop)} desde el inicio`}
+          detail={`${formatCop(metrics.revenueTotalCop)} desde el inicio${metrics.refundedCop ? ` · ${formatCop(metrics.refundedCop)} devueltos` : ""}`}
         />
         <StatTile
           label="Hogares"
@@ -131,7 +145,7 @@ async function Dashboard() {
         <h2 id="users-title" className="font-display text-xl font-semibold">
           Usuarios
         </h2>
-        <UsersTable rows={metrics.userRows} households={snapshot.households} />
+        <UsersTable rows={metrics.userRows} households={snapshot.households} selfId={admin.id} />
       </section>
 
       <section aria-labelledby="payments-title" className="flex flex-col gap-3">

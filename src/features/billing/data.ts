@@ -58,3 +58,33 @@ export async function getEntitlement(householdId: string): Promise<Entitlement |
     isTrial: row.trial_used && (payments.count ?? 0) === 0,
   };
 }
+
+export interface LastPayment {
+  reference: string;
+  amountCop: number;
+  paidAt: string;
+  refundRequested: boolean;
+}
+
+/** El último pago aprobado y aplicado del hogar que no se haya devuelto; sirve para el retracto. */
+export async function getLastPayment(householdId: string): Promise<LastPayment | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .select("reference, amount_in_cents, applied_at, refund_requested_at")
+    .eq("household_id", householdId)
+    .eq("status", "APPROVED")
+    .not("applied_at", "is", null)
+    .is("refunded_at", null)
+    .order("applied_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`No se pudo leer el último pago: ${error.message}`);
+  if (!data?.applied_at) return null;
+  return {
+    reference: data.reference,
+    amountCop: data.amount_in_cents / 100,
+    paidAt: data.applied_at,
+    refundRequested: data.refund_requested_at !== null,
+  };
+}

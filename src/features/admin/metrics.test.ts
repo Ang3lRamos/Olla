@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { adminMetrics, bogotaDay, planStatusOf, type AdminPayment, type AdminUser } from "./metrics";
+import { bogotaDay } from "@/domain/business-days";
+import { adminMetrics, planStatusOf, type AdminPayment, type AdminUser } from "./metrics";
 
 const NOW = new Date("2026-10-23T15:00:00Z");
 
@@ -13,8 +14,8 @@ const user = (id: string, createdAt: string, householdId: string | null, extra: 
   ...extra,
 });
 
-const payment = (householdId: string, extra: Partial<AdminPayment> = {}): AdminPayment => ({
-  reference: `ref-${householdId}`,
+const payment = (householdId: string | null, extra: Partial<AdminPayment> = {}): AdminPayment => ({
+  reference: `ref-${householdId ?? "borrado"}`,
   householdId,
   plan: "pro",
   period: "month",
@@ -22,6 +23,8 @@ const payment = (householdId: string, extra: Partial<AdminPayment> = {}): AdminP
   status: "APPROVED",
   method: "CARD",
   createdAt: "2026-10-10T12:00:00Z",
+  refundRequestedAt: null,
+  refundedAt: null,
   ...extra,
 });
 
@@ -68,6 +71,16 @@ describe("adminMetrics", () => {
           createdAt: "2026-09-01T12:00:00Z",
         }),
         payment("h1", { reference: "ref-x", status: "DECLINED" }),
+        payment(null, {
+          reference: "ref-devuelto",
+          refundRequestedAt: "2026-10-11T12:00:00Z",
+          refundedAt: "2026-10-12T12:00:00Z",
+        }),
+        payment(null, {
+          reference: "ref-pedido",
+          createdAt: "2026-09-02T12:00:00Z",
+          refundRequestedAt: "2026-10-20T12:00:00Z",
+        }),
       ],
       aiUsage: [
         { householdId: "h1", usedOn: "2026-10-23", requests: 3 },
@@ -92,9 +105,12 @@ describe("adminMetrics", () => {
     expect(metrics.plans).toMatchObject({ pro: 1, basic: 1, free: 0 });
     expect(metrics.mrrCop).toBe(19_900 + 8_300);
     expect(metrics.revenueThisMonthCop).toBe(19_900);
-    expect(metrics.revenueTotalCop).toBe(44_800);
+    // El devuelto no cuenta; el que espera revisión sí, hasta que se apruebe.
+    expect(metrics.revenueTotalCop).toBe(44_800 + 19_900);
+    expect(metrics.refundedCop).toBe(19_900);
+    expect(metrics.refundRequests.map((item) => item.reference)).toEqual(["ref-pedido"]);
     expect(metrics.revenueSeries.map((point) => [point.label, point.value]).slice(-2)).toEqual([
-      ["sep", 24_900],
+      ["sep", 24_900 + 19_900],
       ["oct", 19_900],
     ]);
   });

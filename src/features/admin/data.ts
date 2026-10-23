@@ -40,7 +40,7 @@ export async function loadAdminSnapshot(): Promise<AdminSnapshot | null> {
     admin
       .from("payments")
       .select(
-        "reference, household_id, plan, period, amount_in_cents, status, payment_method_type, created_at",
+        "reference, household_id, plan, period, amount_in_cents, status, payment_method_type, created_at, refund_requested_at, refunded_at",
       )
       .order("created_at", { ascending: false }),
     admin.from("ai_usage").select("household_id, used_on, requests"),
@@ -76,6 +76,8 @@ export async function loadAdminSnapshot(): Promise<AdminSnapshot | null> {
       status: row.status as AdminPayment["status"],
       method: row.payment_method_type,
       createdAt: row.created_at,
+      refundRequestedAt: row.refund_requested_at,
+      refundedAt: row.refunded_at,
     })),
     aiUsage: (aiUsage.data ?? []).map((row) => ({
       householdId: row.household_id,

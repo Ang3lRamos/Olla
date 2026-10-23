@@ -9,6 +9,11 @@ interface ConfirmDialogProps {
   title: string;
   description: ReactNode;
   confirmLabel: string;
+  /** Para salir sin hacer nada; "Cancelar" confunde cuando lo que se confirma es cancelar algo. */
+  dismissLabel?: string;
+  /** Las acciones que no destruyen nada (p. ej. pedir un reembolso) no van en rojo. */
+  tone?: "danger" | "primary";
+  confirmDisabled?: boolean;
   pending?: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -23,6 +28,9 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  dismissLabel = "Cancelar",
+  tone = "danger",
+  confirmDisabled,
   pending,
   onConfirm,
   onClose,
@@ -62,9 +70,9 @@ export function ConfirmDialog({
       <div className="mt-2 text-[15px] text-muted">{description}</div>
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="ghost" onClick={onClose} autoFocus>
-          Cancelar
+          {dismissLabel}
         </Button>
-        <Button variant="danger" loading={pending} onClick={onConfirm}>
+        <Button variant={tone} loading={pending} disabled={confirmDisabled} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>

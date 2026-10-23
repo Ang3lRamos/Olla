@@ -38,7 +38,7 @@ interface AuthFormProps {
   heading: ReactNode;
   redirectTo?: string;
   /** Aviso que llega desde la URL, p. ej. un enlace de confirmación vencido. */
-  notice?: string;
+  notice?: { tone: "error" | "success"; text: string };
 }
 
 /** Cada intento es una instancia nueva, así "Usar otro correo" vuelve al formulario limpio. */
@@ -67,7 +67,11 @@ function AuthFormAttempt({
       {heading}
       <form action={formAction} className="flex flex-col gap-4" noValidate>
         {redirectTo && <input type="hidden" name="siguiente" value={redirectTo} />}
-        {(state.error ?? notice) && <FormMessage tone="error">{state.error ?? notice}</FormMessage>}
+        {state.error ? (
+          <FormMessage tone="error">{state.error}</FormMessage>
+        ) : (
+          notice && <FormMessage tone={notice.tone}>{notice.text}</FormMessage>
+        )}
 
         <TextField
           label="Correo"

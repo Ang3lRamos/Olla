@@ -1,3 +1,4 @@
+import { bogotaDay } from "@/domain/business-days";
 import type { Period } from "@/features/billing/plans";
 import type { Plan } from "@/features/entitlements/quota";
 
@@ -18,13 +19,16 @@ export interface AdminEntitlement {
 
 export interface AdminPayment {
   reference: string;
-  householdId: string;
+  /** Nulo si el hogar se borró: el pago se conserva por contabilidad. */
+  householdId: string | null;
   plan: Exclude<Plan, "free">;
   period: Period;
   amountCop: number;
   status: "PENDING" | "APPROVED" | "DECLINED" | "VOIDED" | "ERROR";
   method: string | null;
   createdAt: string;
+  refundRequestedAt: string | null;
+  refundedAt: string | null;
 }
 
 export interface AdminAiUsage {
@@ -43,10 +47,6 @@ export interface SeriesPoint {
 }
 
 const DAY_MS = 86_400_000;
-const TIME_ZONE = "America/Bogota";
-
-/** Fecha "aaaa-mm-dd" en hora de Colombia, para agrupar por día sin que la medianoche UTC parta el día. */
-export const bogotaDay = (date: Date) => date.toLocaleDateString("en-CA", { timeZone: TIME_ZONE });
 
 const lastDays = (now: Date, count: number) =>
   Array.from({ length: count }, (_, index) =>
@@ -80,8 +80,9 @@ interface Snapshot {
 }
 
 export function adminMetrics({ users, entitlements, payments, aiUsage }: Snapshot, now: Date) {
-  const approved = payments.filter((payment) => payment.status === "APPROVED");
-  const paidHouseholds = new Set(approved.map((payment) => payment.householdId));
+  // Un pago devuelto no cuenta como ingreso ni hace que el hogar figure como pago.
+  const approved = payments.filter((payment) => payment.status === "APPROVED" && !payment.refundedAt);
+  const paidHouseholds = new Set(approved.flatMap((payment) => payment.householdId ?? []));
   const entitlementOf = new Map(entitlements.map((item) => [item.householdId, item]));
   const statusOf = (householdId: string | null) =>
     householdId ? planStatusOf(entitlementOf.get(householdId), paidHouseholds, now) : "free";
@@ -95,7 +96,7 @@ export function adminMetrics({ users, entitlements, payments, aiUsage }: Snapsho
   const latestPaid = new Map<string, AdminPayment>();
   approved
     .toSorted((a, b) => a.createdAt.localeCompare(b.createdAt))
-    .forEach((payment) => latestPaid.set(payment.householdId, payment));
+    .forEach((payment) => payment.householdId && latestPaid.set(payment.householdId, payment));
   const mrrCop = [...latestPaid.values()]
     .filter((payment) => ["basic", "pro"].includes(statusOf(payment.householdId)))
     .reduce((sum, payment) => sum + payment.amountCop / (payment.period === "quarter" ? 3 : 1), 0);
@@ -129,6 +130,12 @@ export function adminMetrics({ users, entitlements, payments, aiUsage }: Snapsho
       .filter((payment) => bogotaDay(new Date(payment.createdAt)).startsWith(thisMonth))
       .reduce((sum, payment) => sum + payment.amountCop, 0),
     revenueTotalCop: approved.reduce((sum, payment) => sum + payment.amountCop, 0),
+    refundedCop: payments
+      .filter((payment) => payment.refundedAt)
+      .reduce((sum, payment) => sum + payment.amountCop, 0),
+    refundRequests: payments
+      .filter((payment) => payment.refundRequestedAt && !payment.refundedAt)
+      .toSorted((a, b) => a.refundRequestedAt!.localeCompare(b.refundRequestedAt!)),
     aiToday: aiByDay.get(today) ?? 0,
     ai30: days30.reduce((sum, day) => sum + (aiByDay.get(day) ?? 0), 0),
     signupSeries: days30.map((day) => ({

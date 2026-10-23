@@ -20,18 +20,22 @@ export default function RefundsPage() {
       <LegalSection title="1. Retracto: 5 días hábiles">
         <p>
           Si te arrepientes, te devolvemos <strong>todo</strong> lo que pagaste por un plan si lo pides dentro
-          de los <strong>5 días hábiles</strong> siguientes al pago, sin preguntas. Es el derecho de retracto
-          del Estatuto del Consumidor (Ley 1480 de 2011, artículo 47), y lo aplicamos aunque ya hayas empezado
-          a usar el plan.
+          de los <strong>5 días hábiles</strong> siguientes al pago. Es el derecho de retracto del Estatuto
+          del Consumidor (Ley 1480 de 2011, artículo 47), y lo aplicamos aunque ya hayas empezado a usar el
+          plan.
         </p>
-        <p>Al devolverte el dinero, tu hogar vuelve al plan Gratis y conservas todo lo que guardaste.</p>
+        <p>
+          Mientras revisamos tu solicitud, tu plan sigue activo. Al devolverte el dinero, tu hogar vuelve al
+          plan Gratis y conservas todo lo que guardaste.
+        </p>
       </LegalSection>
 
       <LegalSection title="2. Después de esos 5 días">
         <p>
           No hay reembolso, ni total ni proporcional. El plan sigue activo hasta su fecha de vencimiento, que
           ves en la página de planes, y después tu hogar vuelve al plan Gratis. Como el plan no se renueva
-          solo, no hay nada que cancelar.
+          solo, no tienes que cancelarlo; si igual quieres terminarlo antes, puedes hacerlo en Planes, sin
+          reembolso.
         </p>
       </LegalSection>
 
@@ -50,7 +54,10 @@ export default function RefundsPage() {
       </LegalSection>
 
       <LegalSection title="5. Cómo pedirlo">
-        <p>Escribe a {mail} con:</p>
+        <p>
+          En la app, entra a <strong>Planes → Pedir reembolso</strong>, o escribe a {mail}. Soporte te escribe
+          a tu correo en máximo 2 días hábiles para confirmar la solicitud y pedirte lo que falte:
+        </p>
         <ul>
           <li>El correo de tu cuenta en Olla.</li>
           <li>La referencia del pago o la fecha y el valor.</li>
@@ -60,9 +67,9 @@ export default function RefundsPage() {
           </li>
         </ul>
         <p>
-          Te confirmamos que recibimos la solicitud y te devolvemos el dinero en máximo{" "}
-          <strong>30 días calendario</strong>. Si pagaste con tarjeta, la devolución se hace a la misma
-          tarjeta; según tu banco, puede tardar unos días más en verse en el extracto.
+          Una vez confirmada, te devolvemos el dinero en máximo <strong>30 días calendario</strong>. Si
+          pagaste con tarjeta, la devolución se hace a la misma tarjeta; según tu banco, puede tardar unos
+          días más en verse en el extracto.
         </p>
       </LegalSection>
 

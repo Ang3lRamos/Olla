@@ -151,8 +151,9 @@ export default function PrivacyPage() {
 
       <LegalSection title="7. Cuánto tiempo los guardamos">
         <p>
-          Mientras tengas tu cuenta. Si pides borrarla, eliminamos tus datos en máximo 15 días hábiles; solo
-          conservamos los registros de pago por el tiempo que exige la ley contable y tributaria.
+          Mientras tengas tu cuenta. Si la eliminas desde Ajustes, tus datos se borran en ese momento; si nos
+          lo pides por correo, en máximo 15 días hábiles. Solo conservamos los registros de pago por el tiempo
+          que exige la ley contable y tributaria.
         </p>
       </LegalSection>
 

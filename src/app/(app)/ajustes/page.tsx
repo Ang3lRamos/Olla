@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { updateHousehold } from "@/features/household/actions";
 import { HouseholdForm } from "@/features/household/components/household-form";
 import { HouseholdFormSkeleton } from "@/features/household/components/household-form-skeleton";
-import { requireHousehold } from "@/features/household/data";
+import { requireHousehold, requireUser } from "@/features/household/data";
+import { DeleteAccount } from "@/features/account/components/delete-account";
 import { getAiQuota } from "@/features/entitlements/data";
 import { GoalsForm } from "@/features/nutrition/components/goals-form";
 import { getMyGoals } from "@/features/nutrition/data";
@@ -56,6 +57,11 @@ async function Goals() {
   return <GoalsForm goals={await getMyGoals()} />;
 }
 
+async function AccountDeletion() {
+  const user = await requireUser();
+  return user.email ? <DeleteAccount email={user.email} /> : null;
+}
+
 export default function SettingsPage() {
   return (
     <div className="flex max-w-xl flex-col gap-8">
@@ -84,8 +90,8 @@ export default function SettingsPage() {
           Tus datos y lo legal
         </h2>
         <p className="text-sm text-muted">
-          Para conocer, corregir o borrar tus datos, o borrar la cuenta, escríbenos como explica la política
-          de privacidad.
+          Para conocer o corregir tus datos, escríbenos como explica la política de privacidad. Tu cuenta la
+          puedes eliminar tú mismo aquí abajo.
         </p>
         <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
           {LEGAL_LINKS.map(({ href, label }) => (
@@ -99,6 +105,9 @@ export default function SettingsPage() {
             </li>
           ))}
         </ul>
+        <Suspense fallback={null}>
+          <AccountDeletion />
+        </Suspense>
       </section>
     </div>
   );

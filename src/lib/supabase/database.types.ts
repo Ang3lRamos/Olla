@@ -227,14 +227,14 @@ isOneToOne: false
                   ]
                 },"payments": {
                   Row: {
-                    "amount_in_cents": number,"applied_at": string | null,"created_at": string,"household_id": string,"payment_method_type": string | null,"period": string,"plan": string,"reference": string,"status": string,"updated_at": string,"wompi_transaction_id": string | null
+                    "amount_in_cents": number,"applied_at": string | null,"created_at": string,"household_id": string | null,"payment_method_type": string | null,"period": string,"plan": string,"reference": string,"refund_requested_at": string | null,"refunded_at": string | null,"status": string,"updated_at": string,"wompi_transaction_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_in_cents": number,"applied_at"?: string | null,"created_at"?: string,"household_id": string,"payment_method_type"?: string | null,"period": string,"plan": string,"reference": string,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
+                    "amount_in_cents": number,"applied_at"?: string | null,"created_at"?: string,"household_id"?: string | null,"payment_method_type"?: string | null,"period": string,"plan": string,"reference": string,"refund_requested_at"?: string | null,"refunded_at"?: string | null,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
                   }
                   Update: {
-                    "amount_in_cents"?: number,"applied_at"?: string | null,"created_at"?: string,"household_id"?: string,"payment_method_type"?: string | null,"period"?: string,"plan"?: string,"reference"?: string,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
+                    "amount_in_cents"?: number,"applied_at"?: string | null,"created_at"?: string,"household_id"?: string | null,"payment_method_type"?: string | null,"period"?: string,"plan"?: string,"reference"?: string,"refund_requested_at"?: string | null,"refunded_at"?: string | null,"status"?: string,"updated_at"?: string,"wompi_transaction_id"?: string | null
                   }
                   Relationships: [
                     {

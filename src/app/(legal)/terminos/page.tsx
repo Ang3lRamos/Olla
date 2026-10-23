@@ -133,9 +133,10 @@ export default function TermsPage() {
 
       <LegalSection title="9. Dejar de usar Olla">
         <p>
-          Puedes dejar de usar Olla cuando quieras. Si quieres que borremos tu cuenta y tus datos, escríbenos
-          a <a href={`mailto:${owner.email}`}>{owner.email}</a>; lo hacemos en un máximo de 15 días hábiles.
-          Solo conservamos los registros de pago que la ley contable y tributaria nos obliga a guardar.
+          Puedes dejar de usar Olla cuando quieras. Tu plan lo cancelas en Planes y tu cuenta la eliminas en
+          Ajustes; al eliminarla se borran de inmediato tu hogar y sus datos. También puedes pedirlo a{" "}
+          <a href={`mailto:${owner.email}`}>{owner.email}</a>. Solo conservamos los registros de pago que la
+          ley contable y tributaria nos obliga a guardar.
         </p>
       </LegalSection>
 

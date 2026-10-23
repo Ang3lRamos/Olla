@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { PlanManagement } from "@/features/billing/components/plan-management";
 import { PlanPicker } from "@/features/billing/components/plan-picker";
 import { PlanStatus } from "@/features/billing/components/plan-status";
-import { listPlanPrices } from "@/features/billing/data";
+import { getLastPayment, listPlanPrices } from "@/features/billing/data";
+import { PLAN_NAMES } from "@/features/billing/plans";
+import { refundWindow } from "@/features/billing/refund-window";
 import { reconcilePendingPayments } from "@/features/billing/reconcile";
 import { getAiQuota } from "@/features/entitlements/data";
 import { requireHousehold } from "@/features/household/data";
@@ -15,12 +18,19 @@ export const metadata: Metadata = { title: "Planes" };
 async function Plans() {
   const household = await requireHousehold();
   await reconcilePendingPayments(household.id);
-  const [quota, prices] = await Promise.all([getAiQuota(household.id), listPlanPrices()]);
+  const [quota, prices, lastPayment] = await Promise.all([
+    getAiQuota(household.id),
+    listPlanPrices(),
+    getLastPayment(household.id),
+  ]);
   const config = readWompiConfig();
+  const now = new Date();
+  // Un plan asignado a mano (sin vencimiento) no se administra desde aquí.
+  const manageable = quota.plan !== "free" && quota.expiresAt !== null;
 
   return (
     <>
-      <PlanStatus quota={quota} now={new Date()} />
+      <PlanStatus quota={quota} now={now} />
       <PlanPicker
         prices={prices}
         currentPlan={quota.plan}
@@ -40,6 +50,18 @@ async function Plans() {
         ).
         {config?.sandbox && " Modo de pruebas: no se cobra dinero real."}
       </p>
+      {manageable && (
+        <PlanManagement
+          planName={PLAN_NAMES[quota.plan]}
+          refund={
+            lastPayment && {
+              amountCop: lastPayment.amountCop,
+              ...refundWindow(lastPayment.paidAt, now),
+              requested: lastPayment.refundRequested,
+            }
+          }
+        />
+      )}
     </>
   );
 }

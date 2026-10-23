@@ -15,18 +15,23 @@ const SIGN_IN_HEADING = (
   />
 );
 
-const INVALID_LINK_MESSAGE =
-  "El enlace de confirmación venció o ya se usó. Si ya confirmaste tu cuenta, ingresa; si no, regístrate de nuevo.";
+const NOTICES = {
+  [INVALID_LINK_ERROR]: {
+    tone: "error",
+    text: "El enlace de confirmación venció o ya se usó. Si ya confirmaste tu cuenta, ingresa; si no, regístrate de nuevo.",
+  },
+  "cuenta-borrada": { tone: "success", text: "Borramos tu cuenta y los datos de tu hogar." },
+} as const;
 
 async function SignInForm({ searchParams }: Pick<PageProps<"/ingresar">, "searchParams">) {
-  const { siguiente, error } = await searchParams;
+  const { siguiente, error, aviso } = await searchParams;
   const redirectTo = safeRedirectPath(typeof siguiente === "string" ? siguiente : null);
   return (
     <AuthForm
       mode="sign-in"
       heading={SIGN_IN_HEADING}
       redirectTo={redirectTo === "/" ? undefined : redirectTo}
-      notice={error === INVALID_LINK_ERROR ? INVALID_LINK_MESSAGE : undefined}
+      notice={error === INVALID_LINK_ERROR ? NOTICES[INVALID_LINK_ERROR] : aviso === "cuenta-borrada" ? NOTICES["cuenta-borrada"] : undefined}
     />
   );
 }
