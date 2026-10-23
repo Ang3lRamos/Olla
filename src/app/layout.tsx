@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import { THEME_INIT_SCRIPT } from "@/ui/theme/theme";
 import "./globals.css";
@@ -17,6 +17,15 @@ const instrument = Instrument_Sans({
 export const metadata: Metadata = {
   title: { default: "Olla", template: "%s · Olla" },
   description: "Planea las comidas de la semana, arma el mercado y cuida el presupuesto de la casa.",
+  appleWebApp: { title: "Olla", statusBarStyle: "default" },
+};
+
+// La barra del sistema toma el color del fondo de cada tema (tokens --canvas).
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#111113" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
