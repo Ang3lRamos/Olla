@@ -11,15 +11,17 @@ import { RecipeDetailSkeleton } from "@/features/recipes/components/recipe-detai
 import { RecipeIngredients } from "@/features/recipes/components/recipe-ingredients";
 import { getRecipe } from "@/features/recipes/data";
 import { getAiQuota } from "@/features/entitlements/data";
+import { getMyGoals } from "@/features/nutrition/data";
 
 export const metadata: Metadata = { title: "Receta" };
 
 async function RecipeDetailView({ params }: Pick<PageProps<"/recetas/[id]">, "params">) {
   const [{ id }, household] = await Promise.all([params, requireHousehold()]);
-  const [recipe, { catalog, prices }, quota] = await Promise.all([
+  const [recipe, { catalog, prices }, quota, goals] = await Promise.all([
     getRecipe(id),
     getCatalog(),
     getAiQuota(household.id),
+    getMyGoals(),
   ]);
   if (!recipe) notFound();
 
@@ -56,6 +58,7 @@ async function RecipeDetailView({ params }: Pick<PageProps<"/recetas/[id]">, "pa
           defaultServings={household.defaultPeople}
           detail={household.preferences.detail}
           showNutrition={quota.plan !== "free"}
+          goals={goals}
         />
         <section aria-labelledby="steps-title" className="flex flex-col gap-5">
           <h2 id="steps-title" className="letrero text-xl">

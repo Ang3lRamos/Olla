@@ -6,6 +6,7 @@ import { buildCatalog } from "@/domain/catalog";
 import type { Ingredient, IngredientPrice, PantryItem } from "@/domain/types";
 import { dayIndex, MEAL_LABELS, type IsoDate, type Meal } from "@/domain/week";
 import { dailyNutritionPerPerson } from "@/domain/nutrition";
+import type { NutritionGoal } from "@/domain/nutrition-goals";
 import { summarizeWeek, toPlannedMeals, type PlannedSlot } from "@/domain/week-plan";
 import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
@@ -34,6 +35,8 @@ export interface WeekPlannerProps {
   pantry: PantryItem[];
   notes: NoteView[];
   aiQuota: AiQuota;
+  /** Metas de la persona; vacío si no puso o si su plan no incluye nutrición. */
+  goals: NutritionGoal[];
 }
 
 type OpenPanel =
@@ -59,7 +62,10 @@ export function WeekPlanner(props: WeekPlannerProps) {
   const dayNutrition =
     props.aiQuota.plan === "free"
       ? null
-      : dailyNutritionPerPerson(toPlannedMeals(week.slots, recipes, week.people), catalog);
+      : {
+          days: dailyNutritionPerPerson(toPlannedMeals(week.slots, recipes, week.people), catalog),
+          goals: props.goals,
+        };
   const todayIndex = dayIndex(weekStart, today);
 
   const openDay = panel && "day" in panel ? days[panel.day] : undefined;

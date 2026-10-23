@@ -6,6 +6,7 @@ import { quantityCost, recipeCost } from "@/domain/costs";
 import { exactBaseQuantity, isSeasoning, toKitchenQuantity, type DetailLevel } from "@/domain/detail-level";
 import { formatRecipeQuantity } from "@/domain/kitchen-format";
 import { recipeNutrition } from "@/domain/nutrition";
+import type { NutritionGoal } from "@/domain/nutrition-goals";
 import { formatCop } from "@/domain/money";
 import { scaleRecipe } from "@/domain/scaling";
 import type { Ingredient, IngredientPrice } from "@/domain/types";
@@ -23,6 +24,7 @@ interface RecipeIngredientsProps {
   detail: DetailLevel;
   /** Nutrición por porción: es de los planes pagos. */
   showNutrition: boolean;
+  goals: NutritionGoal[];
 }
 
 /** Ingredientes escalados en vivo con su costo; la cuenta la hace el dominio, no la UI. */
@@ -33,6 +35,7 @@ export function RecipeIngredients({
   defaultServings,
   detail,
   showNutrition,
+  goals,
 }: RecipeIngredientsProps) {
   const [servings, setServings] = useState(defaultServings);
   const catalog = useMemo(() => buildCatalog(ingredients), [ingredients]);
@@ -118,7 +121,7 @@ export function RecipeIngredients({
         </div>
       </dl>
       {showNutrition ? (
-        <RecipeNutrition {...recipeNutrition(recipe, servings, catalog)} />
+        <RecipeNutrition {...recipeNutrition(recipe, servings, catalog)} goals={goals} />
       ) : (
         <RecipeNutritionTeaser />
       )}

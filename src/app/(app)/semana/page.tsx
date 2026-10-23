@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getAiQuota } from "@/features/entitlements/data";
 import { GuidedTour } from "@/features/help/components/guided-tour";
 import { listNotesBetween } from "@/features/notes/data";
+import { getMyGoals } from "@/features/nutrition/data";
 import { summarizeRecipe } from "@/features/recipes/data";
 import { WeekPlanner } from "@/features/week-plan/components/week-planner";
 import { WeekPlannerSkeleton } from "@/features/week-plan/components/week-planner-skeleton";
@@ -12,9 +13,10 @@ export const metadata: Metadata = { title: "Semana" };
 
 async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">) {
   const week = await loadWeek((await searchParams).semana);
-  const [notes, aiQuota] = await Promise.all([
+  const [notes, aiQuota, goals] = await Promise.all([
     listNotesBetween(week.weekStart, week.weekEnd),
     getAiQuota(week.household.id),
+    getMyGoals(),
   ]);
 
   return (
@@ -33,6 +35,7 @@ async function Week({ searchParams }: Pick<PageProps<"/semana">, "searchParams">
       pantry={week.pantry}
       notes={notes}
       aiQuota={aiQuota}
+      goals={aiQuota.plan === "free" ? [] : goals}
     />
   );
 }

@@ -4,13 +4,14 @@ import { MEAL_LABELS, MEALS, type Meal } from "@/domain/week";
 import { cn } from "@/ui/cn";
 import type { DayView } from "../week-view";
 import { MealCell } from "./meal-cell";
+import type { NutritionGoal } from "@/domain/nutrition-goals";
 import { DayNutritionLine, type DayNutrition } from "./day-nutrition";
 
 interface WeekGridProps {
   days: DayView[];
   dayCosts: number[];
   /** Por persona y día, solo con plan pago; null lo oculta. */
-  dayNutrition: DayNutrition[] | null;
+  dayNutrition: { days: DayNutrition[]; goals: NutritionGoal[] } | null;
   onOpenCell: (day: number, meal: Meal) => void;
   onOpenDayNotes: (day: number) => void;
 }
@@ -78,7 +79,9 @@ export function WeekGrid({ days, dayCosts, dayNutrition, onOpenCell, onOpenDayNo
                 {day.dayNotes.length > 0 && <span className="tabular-nums">{day.dayNotes.length}</span>}
               </button>
             </span>
-            {dayNutrition && <DayNutritionLine nutrition={dayNutrition[day.day]} />}
+            {dayNutrition && (
+              <DayNutritionLine nutrition={dayNutrition.days[day.day]} goals={dayNutrition.goals} />
+            )}
             <span className="h-1 overflow-hidden rounded-full bg-hairline" aria-hidden>
               <span
                 className="block h-full origin-left rounded-full bg-chart transition-transform duration-(--dur-slow) ease-out"

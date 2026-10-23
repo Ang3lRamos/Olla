@@ -422,3 +422,25 @@ describe("presentaciones", () => {
     );
   });
 });
+
+describe("metas nutricionales", () => {
+  it("cada persona ve y cambia solo las suyas", async () => {
+    await asUser(db, ANA, (tx) =>
+      tx.query(
+        "insert into public.nutrition_goals (nutrient, target, direction) values ('protein', 120, 'min')",
+      ),
+    );
+    const mine = await asUser(db, ANA, (tx) => tx.query("select nutrient from public.nutrition_goals"));
+    const others = await asUser(db, BETO, (tx) => tx.query("select nutrient from public.nutrition_goals"));
+    expect(mine.rows).toEqual([{ nutrient: "protein" }]);
+    expect(others.rows).toEqual([]);
+    await expect(
+      asUser(db, BETO, (tx) =>
+        tx.query(
+          "insert into public.nutrition_goals (user_id, nutrient, target, direction) values ($1, 'kcal', 2000, 'max')",
+          [ANA],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+});

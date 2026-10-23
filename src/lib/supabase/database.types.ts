@@ -171,6 +171,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"nutrition_goals": {
+                  Row: {
+                    "direction": string,"nutrient": string,"target": number,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "direction": string,"nutrient": string,"target": number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "direction"?: string,"nutrient"?: string,"target"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"pantry_items": {
                   Row: {
                     "household_id": string,"id": string,"ingredient_id": string,"quantity": number,"unit": string,"updated_at": string

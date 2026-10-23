@@ -7,6 +7,7 @@ import { MEAL_LABELS, type Meal } from "@/domain/week";
 import { cn } from "@/ui/cn";
 import type { DayView } from "../week-view";
 import { MealCell } from "./meal-cell";
+import type { NutritionGoal } from "@/domain/nutrition-goals";
 import { DayNutritionLine, type DayNutrition } from "./day-nutrition";
 
 const SWIPE_THRESHOLD_PX = 50;
@@ -15,7 +16,7 @@ const STAGGER_MS = 40;
 interface WeekDaysMobileProps {
   days: DayView[];
   dayCosts: number[];
-  dayNutrition: DayNutrition[] | null;
+  dayNutrition: { days: DayNutrition[]; goals: NutritionGoal[] } | null;
   initialDay: number;
   onOpenCell: (day: number, meal: Meal) => void;
   onOpenDayNotes: (day: number) => void;
@@ -99,7 +100,9 @@ export function WeekDaysMobile({
               Costo del día{" "}
               <span className="font-semibold text-ink tabular-nums">{formatCop(dayCosts[day.day] ?? 0)}</span>
             </span>
-            {dayNutrition && <DayNutritionLine nutrition={dayNutrition[day.day]} />}
+            {dayNutrition && (
+              <DayNutritionLine nutrition={dayNutrition.days[day.day]} goals={dayNutrition.goals} />
+            )}
           </span>
         </div>
         {day.cells.map((cell, index) => (
