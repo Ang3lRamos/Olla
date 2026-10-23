@@ -11,6 +11,20 @@ export interface BaseQuantity {
   unit: BaseUnit;
 }
 
+/**
+ * Aporte nutricional aproximado de un ingrediente: por 100 g, por 100 ml o por unidad. Es una
+ * referencia para estimar, no una medición.
+ */
+export interface Nutrients {
+  basis: "100g" | "100ml" | "unit";
+  kcal: number;
+  protein: number;
+  carbs: number;
+  sugar: number;
+  fat: number;
+  fiber: number;
+}
+
 export interface Ingredient {
   id: string;
   name: string;
@@ -21,6 +35,7 @@ export interface Ingredient {
   gramsPerUnit: number | null;
   /** Lo creó el hogar (se puede editar y borrar); los del catálogo de base no. */
   own?: boolean;
+  nutrients?: Nutrients | null;
 }
 
 export interface RecipeIngredient {

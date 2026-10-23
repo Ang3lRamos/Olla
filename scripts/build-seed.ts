@@ -5,6 +5,7 @@
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { SEED_INGREDIENTS, SEED_RECIPES } from "../src/seed";
+import { SEED_NUTRIENTS } from "../src/seed/nutrients";
 
 const OUTPUT = fileURLToPath(new URL("../supabase/seed.sql", import.meta.url));
 
@@ -13,9 +14,12 @@ const text = (value: string | null | undefined) =>
 const textArray = (values: string[]) => `array[${values.map(text).join(", ")}]::text[]`;
 const rows = (values: string[][]) => values.map((row) => `  (${row.join(", ")})`).join(",\n");
 
-const ingredients = Object.values(SEED_INGREDIENTS);
+const ingredients = Object.entries(SEED_INGREDIENTS).map(([key, ingredient]) => ({
+  ...ingredient,
+  nutrients: SEED_NUTRIENTS[key as keyof typeof SEED_NUTRIENTS],
+}));
 
-const ingredientsSql = `insert into public.ingredients (household_id, name, category, base_unit, grams_per_unit) values
+const ingredientsSql = `insert into public.ingredients (household_id, name, category, base_unit, grams_per_unit, nutrients) values
 ${rows(
   ingredients.map((ingredient) => [
     "null",
@@ -23,10 +27,12 @@ ${rows(
     text(ingredient.category),
     text(ingredient.baseUnit),
     ingredient.gramsPerUnit === null ? "null" : String(ingredient.gramsPerUnit),
+    `${text(JSON.stringify(ingredient.nutrients))}::jsonb`,
   ]),
 )}
 on conflict (household_id, name) do update set
-  category = excluded.category, base_unit = excluded.base_unit, grams_per_unit = excluded.grams_per_unit;`;
+  category = excluded.category, base_unit = excluded.base_unit, grams_per_unit = excluded.grams_per_unit,
+  nutrients = excluded.nutrients;`;
 
 const pricesSql = `insert into public.ingredient_prices (household_id, ingredient_id, price_cop, per_amount, per_unit)
 select null, i.id, v.price_cop, v.per_amount, v.per_unit

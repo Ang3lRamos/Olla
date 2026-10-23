@@ -7,6 +7,7 @@ import { MEAL_LABELS, type Meal } from "@/domain/week";
 import { cn } from "@/ui/cn";
 import type { DayView } from "../week-view";
 import { MealCell } from "./meal-cell";
+import { DayNutritionLine, type DayNutrition } from "./day-nutrition";
 
 const SWIPE_THRESHOLD_PX = 50;
 const STAGGER_MS = 40;
@@ -14,6 +15,7 @@ const STAGGER_MS = 40;
 interface WeekDaysMobileProps {
   days: DayView[];
   dayCosts: number[];
+  dayNutrition: DayNutrition[] | null;
   initialDay: number;
   onOpenCell: (day: number, meal: Meal) => void;
   onOpenDayNotes: (day: number) => void;
@@ -23,6 +25,7 @@ interface WeekDaysMobileProps {
 export function WeekDaysMobile({
   days,
   dayCosts,
+  dayNutrition,
   initialDay,
   onOpenCell,
   onOpenDayNotes,
@@ -91,9 +94,12 @@ export function WeekDaysMobile({
       >
         <div className={cn("flex items-baseline justify-between border-b-2 border-ink pb-1", enterAnimation)}>
           <h3 className="letrero text-2xl">{day.long}</h3>
-          <span className="text-sm text-muted">
-            Costo del día{" "}
-            <span className="font-semibold text-ink tabular-nums">{formatCop(dayCosts[day.day] ?? 0)}</span>
+          <span className="flex flex-col items-end">
+            <span className="text-sm text-muted">
+              Costo del día{" "}
+              <span className="font-semibold text-ink tabular-nums">{formatCop(dayCosts[day.day] ?? 0)}</span>
+            </span>
+            {dayNutrition && <DayNutritionLine nutrition={dayNutrition[day.day]} />}
           </span>
         </div>
         {day.cells.map((cell, index) => (

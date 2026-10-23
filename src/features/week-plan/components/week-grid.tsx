@@ -4,16 +4,19 @@ import { MEAL_LABELS, MEALS, type Meal } from "@/domain/week";
 import { cn } from "@/ui/cn";
 import type { DayView } from "../week-view";
 import { MealCell } from "./meal-cell";
+import { DayNutritionLine, type DayNutrition } from "./day-nutrition";
 
 interface WeekGridProps {
   days: DayView[];
   dayCosts: number[];
+  /** Por persona y día, solo con plan pago; null lo oculta. */
+  dayNutrition: DayNutrition[] | null;
   onOpenCell: (day: number, meal: Meal) => void;
   onOpenDayNotes: (day: number) => void;
 }
 
 /** Escritorio: cada día es una columna en subgrid para que las filas de comidas se alineen. */
-export function WeekGrid({ days, dayCosts, onOpenCell, onOpenDayNotes }: WeekGridProps) {
+export function WeekGrid({ days, dayCosts, dayNutrition, onOpenCell, onOpenDayNotes }: WeekGridProps) {
   const maxDayCost = Math.max(...dayCosts, 1);
 
   return (
@@ -75,6 +78,7 @@ export function WeekGrid({ days, dayCosts, onOpenCell, onOpenDayNotes }: WeekGri
                 {day.dayNotes.length > 0 && <span className="tabular-nums">{day.dayNotes.length}</span>}
               </button>
             </span>
+            {dayNutrition && <DayNutritionLine nutrition={dayNutrition[day.day]} />}
             <span className="h-1 overflow-hidden rounded-full bg-hairline" aria-hidden>
               <span
                 className="block h-full origin-left rounded-full bg-chart transition-transform duration-(--dur-slow) ease-out"

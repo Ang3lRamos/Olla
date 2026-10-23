@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { buildCatalog } from "@/domain/catalog";
 import type { Ingredient, IngredientPrice, PantryItem } from "@/domain/types";
 import { dayIndex, MEAL_LABELS, type IsoDate, type Meal } from "@/domain/week";
-import { summarizeWeek, type PlannedSlot } from "@/domain/week-plan";
+import { dailyNutritionPerPerson } from "@/domain/nutrition";
+import { summarizeWeek, toPlannedMeals, type PlannedSlot } from "@/domain/week-plan";
 import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
 import { Sheet } from "@/ui/sheet";
@@ -54,6 +55,11 @@ export function WeekPlanner(props: WeekPlannerProps) {
   const days = buildWeekView({ weekStart, today, people: week.people, slots: week.slots, notes, ...shared });
   const summary = summarizeWeek({ slots: week.slots, weekPeople: week.people, ...shared });
   const dayCosts = summary.days.map((day) => day.totalCop);
+  // Nutrición por persona y día: es de los planes pagos.
+  const dayNutrition =
+    props.aiQuota.plan === "free"
+      ? null
+      : dailyNutritionPerPerson(toPlannedMeals(week.slots, recipes, week.people), catalog);
   const todayIndex = dayIndex(weekStart, today);
 
   const openDay = panel && "day" in panel ? days[panel.day] : undefined;
@@ -94,12 +100,14 @@ export function WeekPlanner(props: WeekPlannerProps) {
       <WeekGrid
         days={days}
         dayCosts={dayCosts}
+        dayNutrition={dayNutrition}
         onOpenCell={(day, meal) => setPanel({ kind: "meal", day, meal })}
         onOpenDayNotes={(day) => setPanel({ kind: "day", day })}
       />
       <WeekDaysMobile
         days={days}
         dayCosts={dayCosts}
+        dayNutrition={dayNutrition}
         initialDay={todayIndex ?? 0}
         onOpenCell={(day, meal) => setPanel({ kind: "meal", day, meal })}
         onOpenDayNotes={(day) => setPanel({ kind: "day", day })}

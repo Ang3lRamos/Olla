@@ -16,6 +16,18 @@ const ingredientRowSchema = z
     base_unit: z.enum(["g", "ml", "unit"]),
     grams_per_unit: z.number().nullable(),
     household_id: z.string().nullable(),
+    nutrients: z
+      .object({
+        basis: z.enum(["100g", "100ml", "unit"]),
+        kcal: z.number(),
+        protein: z.number(),
+        carbs: z.number(),
+        sugar: z.number(),
+        fat: z.number(),
+        fiber: z.number(),
+      })
+      .nullable()
+      .catch(null),
   })
   .transform((row): Ingredient => ({
     id: row.id,
@@ -24,6 +36,7 @@ const ingredientRowSchema = z
     baseUnit: row.base_unit,
     gramsPerUnit: row.grams_per_unit,
     own: row.household_id !== null,
+    nutrients: row.nutrients,
   }));
 
 const priceRowSchema = z
@@ -60,7 +73,7 @@ export const getCatalog = cache(async (): Promise<CatalogData> => {
   const [ingredientsResult, pricesResult] = await Promise.all([
     supabase
       .from("ingredients")
-      .select("id, name, category, base_unit, grams_per_unit, household_id")
+      .select("id, name, category, base_unit, grams_per_unit, household_id, nutrients")
       .order("name"),
     supabase
       .from("ingredient_prices")

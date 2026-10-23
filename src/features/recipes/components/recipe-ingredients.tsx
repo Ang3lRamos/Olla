@@ -5,6 +5,7 @@ import { buildCatalog, getIngredient } from "@/domain/catalog";
 import { quantityCost, recipeCost } from "@/domain/costs";
 import { exactBaseQuantity, isSeasoning, toKitchenQuantity, type DetailLevel } from "@/domain/detail-level";
 import { formatRecipeQuantity } from "@/domain/kitchen-format";
+import { recipeNutrition } from "@/domain/nutrition";
 import { formatCop } from "@/domain/money";
 import { scaleRecipe } from "@/domain/scaling";
 import type { Ingredient, IngredientPrice } from "@/domain/types";
@@ -12,6 +13,7 @@ import { formatQuantity, toIngredientBase } from "@/domain/units";
 import { NumberStepper } from "@/ui/number-stepper";
 import type { RecipeDetail } from "../types";
 import { MAX_RECIPE_SERVINGS } from "../schemas";
+import { RecipeNutrition, RecipeNutritionTeaser } from "./recipe-nutrition";
 
 interface RecipeIngredientsProps {
   recipe: RecipeDetail;
@@ -19,6 +21,8 @@ interface RecipeIngredientsProps {
   prices: IngredientPrice[];
   defaultServings: number;
   detail: DetailLevel;
+  /** Nutrición por porción: es de los planes pagos. */
+  showNutrition: boolean;
 }
 
 /** Ingredientes escalados en vivo con su costo; la cuenta la hace el dominio, no la UI. */
@@ -28,6 +32,7 @@ export function RecipeIngredients({
   prices,
   defaultServings,
   detail,
+  showNutrition,
 }: RecipeIngredientsProps) {
   const [servings, setServings] = useState(defaultServings);
   const catalog = useMemo(() => buildCatalog(ingredients), [ingredients]);
@@ -112,6 +117,11 @@ export function RecipeIngredients({
           <dd className="letrero text-3xl tabular-nums">{formatCop(total.totalCop / servings)}</dd>
         </div>
       </dl>
+      {showNutrition ? (
+        <RecipeNutrition {...recipeNutrition(recipe, servings, catalog)} />
+      ) : (
+        <RecipeNutritionTeaser />
+      )}
       {total.unpricedIngredientIds.length > 0 && (
         <p className="text-sm text-muted">
           Faltan precios de {total.unpricedIngredientIds.length} ingrediente(s); el costo real será mayor.

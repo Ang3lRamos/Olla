@@ -107,14 +107,14 @@ isOneToOne: false
                   ]
                 },"ingredients": {
                   Row: {
-                    "base_unit": string,"category": string,"grams_per_unit": number | null,"household_id": string | null,"id": string,"name": string
+                    "base_unit": string,"category": string,"grams_per_unit": number | null,"household_id": string | null,"id": string,"name": string,"nutrients": Json | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "base_unit": string,"category": string,"grams_per_unit"?: number | null,"household_id"?: string | null,"id"?: string,"name": string
+                    "base_unit": string,"category": string,"grams_per_unit"?: number | null,"household_id"?: string | null,"id"?: string,"name": string,"nutrients"?: Json | null
                   }
                   Update: {
-                    "base_unit"?: string,"category"?: string,"grams_per_unit"?: number | null,"household_id"?: string | null,"id"?: string,"name"?: string
+                    "base_unit"?: string,"category"?: string,"grams_per_unit"?: number | null,"household_id"?: string | null,"id"?: string,"name"?: string,"nutrients"?: Json | null
                   }
                   Relationships: [
                     {
