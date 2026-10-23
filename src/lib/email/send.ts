@@ -11,15 +11,17 @@ export interface Email {
   text: string;
 }
 
+export type SendResult = { ok: true } | { ok: false; error: string };
+
 /**
- * Envía un correo con Resend. Devuelve false (y lo deja en los logs) si no está configurado o
- * falla: quien llama decide si eso importa, pero nunca rompe la acción de la persona.
+ * Envía un correo con Resend. Si no está configurado o falla, lo deja en los logs y devuelve el
+ * motivo: quien llama decide si mostrarlo, pero nunca rompe la acción de la persona.
  */
-export async function sendEmail({ to, subject, text }: Email): Promise<boolean> {
+export async function sendEmail({ to, subject, text }: Email): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("[correo] Falta RESEND_API_KEY; no se envió:", subject);
-    return false;
+    return { ok: false, error: "Falta RESEND_API_KEY en el servidor." };
   }
   try {
     const response = await fetch(RESEND_URL, {
@@ -28,10 +30,12 @@ export async function sendEmail({ to, subject, text }: Email): Promise<boolean> 
       body: JSON.stringify({ from: process.env.EMAIL_FROM || DEFAULT_FROM, to, subject, text }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (response.ok) return true;
-    console.error("[correo]", response.status, await response.text());
+    if (response.ok) return { ok: true };
+    const detail = await response.text();
+    console.error("[correo]", response.status, detail);
+    return { ok: false, error: `Resend respondió ${response.status}: ${detail}` };
   } catch (error) {
     console.error("[correo]", error);
+    return { ok: false, error: "No se pudo conectar con Resend." };
   }
-  return false;
 }

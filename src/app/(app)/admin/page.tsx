@@ -9,6 +9,7 @@ import {
   UsersTable,
 } from "@/features/admin/components/admin-tables";
 import { StatTile } from "@/features/admin/components/stat-tile";
+import { TestEmail } from "@/features/admin/components/test-email";
 import { TrendChart } from "@/features/admin/components/trend-chart";
 import { loadAdminSnapshot } from "@/features/admin/data";
 import { adminMetrics, type PlanStatus } from "@/features/admin/metrics";
@@ -153,6 +154,17 @@ async function Dashboard() {
           Últimos pagos
         </h2>
         <PaymentsTable payments={snapshot.payments.slice(0, RECENT_PAYMENTS)} emailOf={emailOf} />
+      </section>
+
+      <section aria-labelledby="email-title" className="flex flex-col gap-2 border-t border-hairline pt-6">
+        <h2 id="email-title" className="font-display text-xl font-semibold">
+          Correo de avisos
+        </h2>
+        <p className="text-sm text-muted">
+          Los avisos de reembolso llegan al correo de contacto legal. Sin dominio propio, Resend solo envía al
+          correo con el que creaste la cuenta de Resend.
+        </p>
+        <TestEmail />
       </section>
     </>
   );
