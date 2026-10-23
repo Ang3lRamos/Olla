@@ -58,9 +58,10 @@
   position: relative;
   --borde-luz-tramo: conic-gradient(
     from var(--borde-luz-angulo),
-    transparent 0deg 200deg,
-    color-mix(in oklab, var(--color-maiz) 45%, transparent) 280deg,
-    var(--color-maiz) 345deg,
+    transparent 0deg 150deg,
+    color-mix(in oklab, var(--color-maiz) 40%, transparent) 250deg,
+    var(--color-maiz) 330deg,
+    color-mix(in oklab, var(--color-maiz) 70%, white) 350deg,
     transparent 360deg
   );
 
@@ -73,15 +74,15 @@
     mask:
       linear-gradient(#000 0 0) content-box exclude,
       linear-gradient(#000 0 0);
-    animation: borde-luz-giro 6s linear infinite;
+    animation: borde-luz-giro 4s linear infinite;
     pointer-events: none;
   }
 
   /* La línea de luz, justo sobre el borde. */
   &::before {
-    inset: -1px;
-    padding: 2px;
-    border-radius: inherit;
+    inset: -2px;
+    padding: 3px;
+    border-radius: calc(var(--radius-md) + 2px);
   }
 
   /* El halo: el mismo tramo difuminado en un anillo por fuera del borde. */
@@ -89,8 +90,8 @@
     inset: -10px;
     padding: 10px;
     border-radius: calc(var(--radius-md) + 10px);
-    filter: blur(6px);
-    opacity: 0.55;
+    filter: blur(7px);
+    opacity: 0.85;
   }
 
   @media (prefers-reduced-motion: reduce) {
