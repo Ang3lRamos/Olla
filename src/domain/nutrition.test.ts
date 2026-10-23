@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCatalog } from "./catalog";
-import { dailyNutritionPerPerson, nutrientsOf, recipeNutrition } from "./nutrition";
+import { dailyNutritionPerPerson, nutrientsFromLabel, nutrientsOf, recipeNutrition } from "./nutrition";
 import type { Ingredient, Recipe } from "./types";
 
 const rice: Ingredient = {
@@ -90,5 +90,27 @@ describe("dailyNutritionPerPerson", () => {
     // Cada comida aporta lo mismo por persona: (720 + 288) / 2 kcal.
     expect(days[0]!.totals.kcal).toBeCloseTo(1008);
     expect(days[1]!.totals.kcal).toBe(0);
+  });
+});
+
+describe("nutrientsFromLabel", () => {
+  const empty = { kcal: null, protein: null, carbs: null, sugar: null, fat: null, fiber: null };
+
+  it("toma la base de la unidad del producto y cuenta lo vacío como 0", () => {
+    expect(nutrientsFromLabel({ ...empty, kcal: 380, protein: 13 }, "g")).toEqual({
+      basis: "100g",
+      kcal: 380,
+      protein: 13,
+      carbs: 0,
+      sugar: 0,
+      fat: 0,
+      fiber: 0,
+    });
+    expect(nutrientsFromLabel({ ...empty, kcal: 45 }, "ml")?.basis).toBe("100ml");
+    expect(nutrientsFromLabel({ ...empty, kcal: 90 }, "unit")?.basis).toBe("unit");
+  });
+
+  it("sin ningún valor no guarda datos", () => {
+    expect(nutrientsFromLabel(empty, "g")).toBeNull();
   });
 });

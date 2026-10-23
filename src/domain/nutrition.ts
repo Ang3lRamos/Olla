@@ -1,6 +1,6 @@
 import { getIngredient, type IngredientCatalog } from "./catalog";
 import { scaleRecipe } from "./scaling";
-import type { Ingredient, PlannedMeal, Quantity, Recipe } from "./types";
+import type { Ingredient, Nutrients, PlannedMeal, Quantity, Recipe } from "./types";
 import { toIngredientBase } from "./units";
 
 export interface NutritionTotals {
@@ -105,4 +105,24 @@ export function dailyNutritionPerPerson(
     }
     return { totals, missing: [...missing] };
   });
+}
+
+const BASIS_BY_UNIT: Record<Ingredient["baseUnit"], Nutrients["basis"]> = {
+  g: "100g",
+  ml: "100ml",
+  unit: "unit",
+};
+
+/** La base en que se leen los datos de un producto: como trae la tabla del empaque. */
+export const nutrientBasisFor = (baseUnit: Ingredient["baseUnit"]) => BASIS_BY_UNIT[baseUnit];
+
+/** Datos de un producto propio a partir de lo que escribió el hogar; todo vacío = sin datos. */
+export function nutrientsFromLabel(
+  values: Record<keyof NutritionTotals, number | null>,
+  baseUnit: Ingredient["baseUnit"],
+): Nutrients | null {
+  if (NUTRIENT_KEYS.every((key) => values[key] === null)) return null;
+  const totals = { ...ZERO };
+  for (const key of NUTRIENT_KEYS) totals[key] = values[key] ?? 0;
+  return { basis: nutrientBasisFor(baseUnit), ...totals };
 }

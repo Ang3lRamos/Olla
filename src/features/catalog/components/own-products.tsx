@@ -9,12 +9,21 @@ import { ConfirmDialog } from "@/ui/confirm-dialog";
 import { Select } from "@/ui/select";
 import { deleteIngredient, updateIngredient } from "../actions";
 import { categoryOptions } from "../select-options";
+import { ProductNutrients } from "./product-nutrients";
 
 const FIELD =
   "h-9 w-full rounded-md border border-transparent bg-transparent px-2 text-[15px] transition-colors duration-(--dur-fast) ease-out hover:border-hairline-strong focus:border-accent focus:bg-surface focus:ring-3 focus:ring-accent/15 focus:outline-none";
 
-function ProductRow({ product, onDelete }: { product: Ingredient; onDelete: () => void }) {
+interface ProductRowProps {
+  product: Ingredient;
+  /** Solo en los planes con nutrición: los datos se usan para los estimados por porción. */
+  showNutrition: boolean;
+  onDelete: () => void;
+}
+
+function ProductRow({ product, showNutrition, onDelete }: ProductRowProps) {
   const [name, setName] = useState(product.name);
+  const [editingNutrients, setEditingNutrients] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string }>();
   const [, startTransition] = useTransition();
 
@@ -60,6 +69,16 @@ function ProductRow({ product, onDelete }: { product: Ingredient; onDelete: () =
           <Trash2 className="size-4" />
         </Button>
       </div>
+      {showNutrition && !editingNutrients && (
+        <button
+          type="button"
+          onClick={() => setEditingNutrients(true)}
+          className="self-start rounded-sm px-2 text-xs text-muted underline decoration-hairline-strong underline-offset-4 transition-colors duration-(--dur-fast) ease-out hover:text-ink"
+        >
+          {product.nutrients ? "Nutrición: con datos · editar" : "Nutrición: sin datos · agregar"}
+        </button>
+      )}
+      {editingNutrients && <ProductNutrients product={product} onDone={() => setEditingNutrients(false)} />}
       {message && (
         <p
           aria-live="polite"
@@ -73,7 +92,7 @@ function ProductRow({ product, onDelete }: { product: Ingredient; onDelete: () =
 }
 
 /** Los productos que creó el hogar: se renombran, se cambian de categoría o se borran. */
-export function OwnProducts({ products }: { products: Ingredient[] }) {
+export function OwnProducts({ products, showNutrition }: { products: Ingredient[]; showNutrition: boolean }) {
   const [deleting, setDeleting] = useState<Ingredient | null>(null);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -105,7 +124,12 @@ export function OwnProducts({ products }: { products: Ingredient[] }) {
         {products
           .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
           .map((product) => (
-            <ProductRow key={product.id} product={product} onDelete={() => setDeleting(product)} />
+            <ProductRow
+              key={product.id}
+              product={product}
+              showNutrition={showNutrition}
+              onDelete={() => setDeleting(product)}
+            />
           ))}
       </ul>
       <ConfirmDialog

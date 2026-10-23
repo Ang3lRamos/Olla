@@ -1,14 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { nutrientsFromLabel } from "@/domain/nutrition";
 import type { Ingredient } from "@/domain/types";
 import { requireHousehold } from "@/features/household/data";
 import { normalizeForSearch } from "@/features/recipes/search";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCatalog } from "./data";
 import {
+  ingredientNutrientsSchema,
   ingredientUpdateSchema,
   newIngredientSchema,
+  type IngredientNutrientsInput,
   type IngredientUpdateInput,
   type NewIngredientInput,
 } from "./schemas";
@@ -101,6 +104,26 @@ export async function deleteIngredient(ingredientId: string): Promise<DeleteResu
           : "No pudimos borrarlo. Vuelve a intentarlo.",
     };
   }
+  revalidateCatalog();
+  return { ok: true };
+}
+
+/** Guarda (o quita) los datos de nutrición de un producto propio, copiados del empaque. */
+export async function saveIngredientNutrients(input: IngredientNutrientsInput): Promise<DeleteResult> {
+  const household = await requireHousehold();
+  const parsed = ingredientNutrientsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? SAVE_ERROR };
+  const product = (await getCatalog()).catalog.get(parsed.data.id);
+  if (!product?.own) return { ok: false, error: SAVE_ERROR };
+
+  const supabase = await createSupabaseServerClient();
+  const nutrients = nutrientsFromLabel(parsed.data.values, product.baseUnit);
+  const { error } = await supabase
+    .from("ingredients")
+    .update({ nutrients: nutrients ? { ...nutrients } : null })
+    .eq("id", product.id)
+    .eq("household_id", household.id);
+  if (error) return { ok: false, error: SAVE_ERROR };
   revalidateCatalog();
   return { ok: true };
 }
