@@ -9,7 +9,7 @@ const AUTH_PAGES = ["/ingresar", "/registro", "/recuperar"];
 // Los textos legales se leen antes de registrarse. Los avisos de pago llegan de Wompi, sin
 // sesión; la ruta verifica su firma.
 const LEGAL_PAGES = ["/terminos", "/privacidad", "/reembolsos"];
-const PUBLIC_PAGES = [...AUTH_PAGES, ...LEGAL_PAGES, CONFIRMATION_PATH, "/api/wompi/eventos"];
+const PUBLIC_PAGES = ["/", ...AUTH_PAGES, ...LEGAL_PAGES, CONFIRMATION_PATH, "/api/wompi/eventos"];
 
 function redirectKeepingCookies(request: NextRequest, response: NextResponse, pathname: string) {
   const url = request.nextUrl.clone();
@@ -43,7 +43,8 @@ export async function proxy(request: NextRequest) {
   if (isSignedIn && pathname.startsWith("/admin") && !isAdminEmail(email)) {
     return NextResponse.rewrite(new URL("/no-encontrado", request.url), { status: 404 });
   }
-  if (isSignedIn && AUTH_PAGES.includes(pathname)) {
+  // La página de inicio es para quien aún no tiene cuenta; con sesión se va directo a la semana.
+  if (isSignedIn && (pathname === "/" || AUTH_PAGES.includes(pathname))) {
     return redirectKeepingCookies(request, response, HOME_PATH);
   }
   return response;

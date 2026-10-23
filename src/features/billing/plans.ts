@@ -14,6 +14,12 @@ export interface PlanPrice {
 
 export const PLAN_NAMES: Record<Plan, string> = { free: "Gratis", basic: "Básico", pro: "Pro" };
 
+export const PLAN_PITCH: Record<Plan, string> = {
+  free: "Para planear a mano, sin asistente.",
+  basic: "Para planear la semana con ayuda.",
+  pro: "Para ajustar el menú cuantas veces quieras.",
+};
+
 export const PERIOD_LABELS: Record<Period, { name: string; per: string }> = {
   month: { name: "Mensual", per: "al mes" },
   quarter: { name: "Trimestral", per: "cada 3 meses" },

@@ -14,6 +14,7 @@ import {
   PERIOD_LABELS,
   PERIODS,
   PLAN_NAMES,
+  PLAN_PITCH,
   quarterlySavingsPercent,
   type PaidPlan,
   type Period,
@@ -26,12 +27,6 @@ interface PlanPickerProps {
   canStartTrial: boolean;
   paymentsEnabled: boolean;
 }
-
-const PLAN_PITCH: Record<Plan, string> = {
-  free: "Para planear a mano, sin asistente.",
-  basic: "Para planear la semana con ayuda.",
-  pro: "Para ajustar el menú cuantas veces quieras.",
-};
 
 export function PlanPicker({ prices, currentPlan, canStartTrial, paymentsEnabled }: PlanPickerProps) {
   const [period, setPeriod] = useState<Period>("month");

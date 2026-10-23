@@ -1,5 +1,7 @@
 import "server-only";
+import { cacheLife } from "next/cache";
 import { z } from "zod";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PLANS } from "@/features/entitlements/quota";
 import type { Entitlement } from "./plan-notice";
@@ -25,6 +27,23 @@ const priceRowSchema = z
 export async function listPlanPrices(): Promise<PlanPrice[]> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
+    .from("plan_prices")
+    .select("plan, period, amount_in_cents, days, ai_daily_limit")
+    .order("amount_in_cents");
+  if (error) throw new Error(`No se pudieron leer los precios de los planes: ${error.message}`);
+  return z.array(priceRowSchema).parse(data);
+}
+
+/**
+ * Los mismos precios para la página de inicio, que se ve sin sesión: los lee el servidor y
+ * quedan en caché unas horas. Sin la llave del servidor (desarrollo local) no hay precios.
+ */
+export async function listPublicPlanPrices(): Promise<PlanPrice[]> {
+  "use cache";
+  cacheLife("hours");
+  const admin = createSupabaseAdminClient();
+  if (!admin) return [];
+  const { data, error } = await admin
     .from("plan_prices")
     .select("plan, period, amount_in_cents, days, ai_daily_limit")
     .order("amount_in_cents");
