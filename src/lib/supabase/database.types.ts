@@ -45,6 +45,26 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"household_invites": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"expires_at": string,"household_id": string,"token": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"expires_at"?: string,"household_id": string,"token"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"expires_at"?: string,"household_id"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "household_invites_household_id_fkey"
+      columns: ["household_id"]
+isOneToOne: false
+      referencedRelation: "households"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"household_members": {
                   Row: {
                     "created_at": string,"household_id": string,"role": string,"user_id": string
@@ -397,7 +417,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "ai_today":
+            "accept_household_invite":
+{ Args: { "target_token": string }; Returns: string
+                           },
+"ai_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "apply_payment":
@@ -415,6 +438,9 @@ isOneToOne: false
                            },
 "create_household":
 { Args: { "budget_cop"?: number,"household_name": string,"household_preferences"?: Json,"people": number }; Returns: string
+                           },
+"create_household_invite":
+{ Args: { "target_household_id": string }; Returns: string
                            },
 "create_payment":
 { Args: { "target_household_id": string,"target_period": string,"target_plan": string }; Returns: {
@@ -434,11 +460,33 @@ isOneToOne: false
 "hit_rate_limit":
 { Args: { "max_hits": number,"target_bucket": string,"window_seconds": number }; Returns: boolean
                            },
+"household_member_limit":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "is_household_member":
 { Args: { "target_household_id": string }; Returns: boolean
                            },
+"leave_household":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"list_household_members":
+{ Args: { "target_household_id": string }; Returns: {
+              "email": string,"joined_at": string,"role": string,"user_id": string
+            }[]
+                           },
+"preview_household_invite":
+{ Args: { "target_token": string }; Returns: {
+              "expires_at": string,"household_name": string,"members": number
+            }[]
+                           },
 "refund_ai_request":
 { Args: { "target_household_id": string }; Returns: undefined
+                           },
+"remove_household_member":
+{ Args: { "target_household_id": string,"target_user_id": string }; Returns: undefined
+                           },
+"revoke_household_invite":
+{ Args: { "target_token": string }; Returns: undefined
                            },
 "save_household_recipe":
 { Args: { "ingredients": Json,"minutes": number,"recipe_category": string,"recipe_name": string,"recipe_steps": (string)[],"servings": number,"target_household_id": string,"target_recipe_id": string }; Returns: string

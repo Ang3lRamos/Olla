@@ -16,7 +16,8 @@ function redirectKeepingCookies(request: NextRequest, response: NextResponse, pa
   url.pathname = pathname;
   url.search = "";
   if (pathname === "/ingresar" && request.nextUrl.pathname !== "/") {
-    url.searchParams.set("siguiente", request.nextUrl.pathname);
+    // Con la consulta: una invitación (/unirme?codigo=…) tiene que sobrevivir al ingreso.
+    url.searchParams.set("siguiente", request.nextUrl.pathname + request.nextUrl.search);
   }
   const redirect = NextResponse.redirect(url);
   response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));

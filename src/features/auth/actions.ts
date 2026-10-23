@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { authAttemptAllowed } from "./attempts";
+import { inviteTokenFrom } from "@/features/members/invite-link";
 import { CONFIRMATION_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, safeRedirectPath, type CredentialsField } from "./schemas";
@@ -61,6 +62,8 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
   // que lo redirigiría después de empezar a cargar.
   const { data: household } = await supabase.from("households").select("id").limit(1).maybeSingle();
   const next = safeRedirectPath(formData.get("siguiente"));
+  // Una invitación se acepta aunque la persona todavía no tenga hogar.
+  if (inviteTokenFrom(next)) redirect(next);
   redirect(household ? (next === "/" ? HOME_PATH : next) : "/empezar");
 }
 
@@ -84,14 +87,20 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
     ...parsed.credentials,
     options: {
       ...(await confirmationLinkOptions()),
-      // Prueba de la autorización (Ley 1581): qué versión aceptó y cuándo.
-      data: { legal_version: LEGAL_VERSION, legal_accepted_at: new Date().toISOString() },
+      // Prueba de la autorización (Ley 1581): qué versión aceptó y cuándo. La invitación queda
+      // guardada para retomarla después de confirmar el correo, venga de donde venga el enlace.
+      data: {
+        legal_version: LEGAL_VERSION,
+        legal_accepted_at: new Date().toISOString(),
+        invite: inviteTokenFrom(safeRedirectPath(formData.get("siguiente"))),
+      },
     },
   });
   if (error) return { email: parsed.credentials.email, error: authErrorMessage(error) };
   if (!data.session) return { email: parsed.credentials.email, needsConfirmation: true };
 
-  redirect("/empezar");
+  const next = safeRedirectPath(formData.get("siguiente"));
+  redirect(inviteTokenFrom(next) ? next : "/empezar");
 }
 
 export async function resendConfirmation(_: ResendState, formData: FormData): Promise<ResendState> {

@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { createHousehold } from "@/features/household/actions";
 import { HouseholdForm } from "@/features/household/components/household-form";
 import { HouseholdFormSkeleton } from "@/features/household/components/household-form-skeleton";
-import { getCurrentHousehold, requireUser } from "@/features/household/data";
+import { getCurrentHousehold, getPendingInvite, requireUser } from "@/features/household/data";
+import { previewInvite } from "@/features/members/data";
+import { invitePath } from "@/features/members/invite-link";
 import { HOME_PATH } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Empezar" };
@@ -20,6 +22,10 @@ const NEW_HOUSEHOLD = {
 async function OnboardingForm() {
   await requireUser();
   if (await getCurrentHousehold()) redirect(HOME_PATH);
+  // Quien se registró desde una invitación llega aquí al confirmar el correo: se le lleva a
+  // aceptarla. Si ya venció o se usó, arma su propio hogar como cualquiera.
+  const invite = await getPendingInvite();
+  if (invite && (await previewInvite(invite))) redirect(invitePath(invite));
   return <HouseholdForm action={createHousehold} defaults={NEW_HOUSEHOLD} submitLabel="Empezar a planear" />;
 }
 

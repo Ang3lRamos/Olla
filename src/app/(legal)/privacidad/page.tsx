@@ -76,6 +76,10 @@ export default function PrivacyPage() {
           No vendemos tus datos, no los usamos para publicidad y no los compartimos con nadie distinto de los
           proveedores de la sección 4.
         </p>
+        <p>
+          Si tu hogar tiene varias personas, todas ven los datos del hogar y el correo de las demás. Tus metas
+          de nutrición siguen siendo solo tuyas.
+        </p>
       </LegalSection>
 
       <LegalSection title="4. Con quién los compartimos">

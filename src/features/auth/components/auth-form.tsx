@@ -126,7 +126,11 @@ function AuthFormAttempt({
         <p className="mt-4 border-t border-hairline pt-6 text-sm text-muted">
           {config.switchText}{" "}
           <Link
-            href={config.switchLink.href}
+            href={
+              redirectTo
+                ? `${config.switchLink.href}?siguiente=${encodeURIComponent(redirectTo)}`
+                : config.switchLink.href
+            }
             className="font-medium text-ink underline decoration-hairline-strong underline-offset-4 transition-colors duration-(--dur-fast) hover:decoration-ink"
           >
             {config.switchLink.label}

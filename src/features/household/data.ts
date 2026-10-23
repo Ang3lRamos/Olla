@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { inviteTokenSchema } from "@/features/members/invite-link";
 import { householdPreferencesSchema, type HouseholdPreferences } from "./schemas";
 
 export interface CurrentUser {
@@ -24,6 +25,17 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!data) return null;
   return { id: data.claims.sub, email: data.claims.email ?? null };
 });
+
+/**
+ * La invitación con la que se registró la persona, si la hubo. Se lee del servidor de
+ * autenticación (no del JWT) porque es justo después de confirmar el correo.
+ */
+export async function getPendingInvite(): Promise<string | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+  const invite = data.user?.user_metadata?.invite;
+  return typeof invite === "string" && inviteTokenSchema.safeParse(invite).success ? invite : null;
+}
 
 /** En la v1 cada usuario pertenece a un hogar; la RLS solo devuelve los suyos. */
 export const getCurrentHousehold = cache(async (): Promise<Household | null> => {

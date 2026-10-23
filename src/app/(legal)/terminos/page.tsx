@@ -51,7 +51,11 @@ export default function TermsPage() {
             Registras un correo real y una contraseña que solo tú conozcas. Lo que pase con tu cuenta es tu
             responsabilidad, así que no la compartas.
           </li>
-          <li>Cada cuenta tiene un hogar, y los planes se pagan por hogar.</li>
+          <li>
+            Cada cuenta pertenece a un hogar, y los planes se pagan por hogar. En Básico y Pro puedes invitar
+            hasta 5 personas más: todas ven y editan la semana, el mercado, la despensa, las recetas y las
+            notas del hogar, y comparten su plan.
+          </li>
         </ul>
       </LegalSection>
 
