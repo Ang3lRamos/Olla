@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireHousehold, requireUser } from "./data";
 import { householdFormSchema, type HouseholdFormField, type HouseholdFormValues } from "./schemas";
+import { HOME_PATH } from "@/lib/routes";
 
 type RawHouseholdForm = Record<HouseholdFormField, string>;
 
@@ -62,7 +63,7 @@ export async function createHousehold(
   });
   if (error) return { error: SAVE_ERROR, values: raw };
 
-  redirect("/");
+  redirect(HOME_PATH);
 }
 
 export async function updateHousehold(

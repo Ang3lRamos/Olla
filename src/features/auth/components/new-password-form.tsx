@@ -9,6 +9,7 @@ import { TextField } from "@/ui/text-field";
 import { updatePassword, type NewPasswordState } from "../password-actions";
 import { MIN_PASSWORD_LENGTH } from "../schemas";
 import { AuthHeading } from "./auth-heading";
+import { HOME_PATH } from "@/lib/routes";
 
 export function NewPasswordForm() {
   const [state, formAction, pending] = useActionState<NewPasswordState, FormData>(updatePassword, {});
@@ -19,7 +20,7 @@ export function NewPasswordForm() {
         <CircleCheck className="size-8 text-cilantro" aria-hidden />
         <h1 className="font-display text-title font-semibold">Listo, ya cambiaste tu contraseña</h1>
         <p className="text-muted">La próxima vez ingresa con la nueva.</p>
-        <Link href="/" className={buttonClasses({ className: "w-full" })}>
+        <Link href={HOME_PATH} className={buttonClasses({ className: "w-full" })}>
           Ir a mi semana
         </Link>
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { CONFIRMATION_PATH } from "@/features/auth/confirmation";
+import { HOME_PATH } from "@/lib/routes";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
 const AUTH_PAGES = ["/ingresar", "/registro", "/recuperar"];
@@ -27,7 +28,7 @@ export async function proxy(request: NextRequest) {
     return redirectKeepingCookies(request, response, "/ingresar");
   }
   if (isSignedIn && AUTH_PAGES.includes(pathname)) {
-    return redirectKeepingCookies(request, response, "/");
+    return redirectKeepingCookies(request, response, HOME_PATH);
   }
   return response;
 }

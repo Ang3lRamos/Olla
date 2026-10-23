@@ -5,6 +5,7 @@ import { createHousehold } from "@/features/household/actions";
 import { HouseholdForm } from "@/features/household/components/household-form";
 import { HouseholdFormSkeleton } from "@/features/household/components/household-form-skeleton";
 import { getCurrentHousehold, requireUser } from "@/features/household/data";
+import { HOME_PATH } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Empezar" };
 
@@ -18,7 +19,7 @@ const NEW_HOUSEHOLD = {
 
 async function OnboardingForm() {
   await requireUser();
-  if (await getCurrentHousehold()) redirect("/");
+  if (await getCurrentHousehold()) redirect(HOME_PATH);
   return <HouseholdForm action={createHousehold} defaults={NEW_HOUSEHOLD} submitLabel="Empezar a planear" />;
 }
 

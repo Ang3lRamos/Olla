@@ -11,6 +11,7 @@ import { HelpButton, HelpButtonFallback } from "@/features/help/components/help-
 import { UserMenu } from "@/features/navigation/components/user-menu";
 import { Logo } from "@/ui/brand/logo";
 import { Skeleton } from "@/ui/skeleton";
+import { HOME_PATH } from "@/lib/routes";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
@@ -23,7 +24,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </a>
       <header className="sticky top-0 z-10 border-b border-hairline bg-canvas/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-6 px-4 md:px-8">
-          <Link href="/" aria-label="Olla, inicio" className="rounded-md">
+          <Link href={HOME_PATH} aria-label="Olla, inicio" className="rounded-md">
             <Logo />
           </Link>
           <Suspense fallback={<AppNavFallback />}>

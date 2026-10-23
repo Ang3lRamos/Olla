@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CONFIRMATION_PATH } from "./confirmation";
 import { authErrorMessage } from "./errors";
 import { credentialsSchema, safeRedirectPath, type CredentialsField } from "./schemas";
+import { HOME_PATH } from "@/lib/routes";
 
 export interface AuthFormState {
   error?: string;
@@ -55,7 +56,8 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
   // Quien aún no configuró su hogar va directo al onboarding, sin pasar por una página
   // que lo redirigiría después de empezar a cargar.
   const { data: household } = await supabase.from("households").select("id").limit(1).maybeSingle();
-  redirect(household ? safeRedirectPath(formData.get("siguiente")) : "/empezar");
+  const next = safeRedirectPath(formData.get("siguiente"));
+  redirect(household ? (next === "/" ? HOME_PATH : next) : "/empezar");
 }
 
 export async function signUp(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
