@@ -101,6 +101,21 @@ describe("buildAssistantMessages", () => {
   });
 });
 
+describe("buildAssistantMessages con estilo", () => {
+  it("manda el estilo con su nombre y el encaje de cada receta", () => {
+    const [system, user] = buildAssistantMessages(
+      makeContext({
+        style: "budget",
+        recipes: [{ ...makeContext().recipes[0]!, styleFit: 4 }],
+      }),
+    );
+    expect(system!.content).toMatch(/no una dieta/);
+    const data = JSON.parse(user!.content.split("Datos del hogar:\n")[1]!);
+    expect(data.estilo).toBe("Rinde más");
+    expect(data.catalogo[0].encaje_estilo).toBe(4);
+  });
+});
+
 describe("cliente simulado", () => {
   const run = (overrides: Parameters<typeof makeContext>[0]) => {
     const context = makeContext(overrides);
@@ -117,6 +132,17 @@ describe("cliente simulado", () => {
           .every((change) => ["pericos", "calentado", "changua"].includes(change.recipeId!)),
     ).toBe(true);
     expect(outcome.ok && outcome.changes.some((change) => change.recipeId === "frijoles")).toBe(false);
+  });
+
+  it("con estilo, entre lo igual de usado prefiere lo que más encaja", async () => {
+    const recipes = makeContext().recipes.map((recipe) => ({
+      ...recipe,
+      styleFit: recipe.id === "changua" ? 5 : 1,
+    }));
+    const outcome = await run({ recipes, style: "protein" });
+    expect(outcome.ok && outcome.changes.find((change) => change.meal === "breakfast")?.recipeId).toBe(
+      "changua",
+    );
   });
 
   it("ajusta por plata cambiando lo más caro por algo más barato", async () => {

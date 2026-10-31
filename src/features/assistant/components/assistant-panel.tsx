@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MENU_STYLE_LABELS, type MenuStyle } from "@/domain/menu-styles";
 import type { PlannedSlot } from "@/domain/week-plan";
 import { Button } from "@/ui/button";
 import { FormMessage } from "@/ui/form-message";
@@ -30,6 +31,8 @@ interface AssistantPanelProps {
   quota: AiQuota;
   /** Lo que la persona tiene o va a mercar, si viene de "Armar el menú": se prioriza al proponer. */
   focus: string[];
+  /** Estilo elegido al armar el menú; orienta la propuesta. */
+  style: MenuStyle | null;
   /** Lo que se iba a mercar y no usa ninguna receta con esos cambios. */
   leftoverFor: (changes: ProposedChange[]) => string[];
 }
@@ -46,6 +49,7 @@ export function AssistantPanel({
   onApply,
   quota: initialQuota,
   focus,
+  style,
   leftoverFor,
 }: AssistantPanelProps) {
   const [state, setState] = useState<PanelState>({ kind: "form" });
@@ -76,6 +80,7 @@ export function AssistantPanel({
       // Solo el modo Ajustar usa la instrucción; no se arrastra a los otros modos.
       instruction: request.mode === "adjust" ? request.instruction : "",
       focus: request.mode === "propose" ? focus : [],
+      style: request.mode === "propose" ? style : null,
     }).catch((): AskAssistantResult => ({
       ok: false,
       error: { kind: "unavailable", detail: "Fallo de red" },
@@ -89,11 +94,20 @@ export function AssistantPanel({
     setState({ kind: "done", result });
   };
 
-  const focusNote = focus.length > 0 && (
-    <p className="rounded-md bg-sunken px-3 py-2.5 text-sm">
-      <span className="font-medium">Con tu lista:</span> {focus.join(", ")}. Al proponer, el asistente
-      prioriza recetas que lo usen.
-    </p>
+  const focusNote = (focus.length > 0 || style) && (
+    <div className="flex flex-col gap-1 rounded-md bg-sunken px-3 py-2.5 text-sm">
+      {focus.length > 0 && (
+        <p>
+          <span className="font-medium">Con tu lista:</span> {focus.join(", ")}. Al proponer, el asistente
+          prioriza recetas que lo usen.
+        </p>
+      )}
+      {style && (
+        <p>
+          <span className="font-medium">Estilo:</span> {MENU_STYLE_LABELS[style].toLocaleLowerCase("es")}.
+        </p>
+      )}
+    </div>
   );
 
   if (state.kind === "form") {

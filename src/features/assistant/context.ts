@@ -1,3 +1,4 @@
+import type { MenuStyle } from "@/domain/menu-styles";
 import type { RecipeCategory } from "@/domain/recipe-categories";
 import type { Meal } from "@/domain/week";
 import type { PlannedSlot } from "@/domain/week-plan";
@@ -10,6 +11,8 @@ export interface CatalogRecipe {
   prepMinutes: number | null;
   costPerServingCop: number;
   ingredientNames: string[];
+  /** Del 1 al 5, cuánto encaja en el estilo pedido; sin estilo no viene. */
+  styleFit?: number;
 }
 
 export interface AssistantNote {
@@ -36,5 +39,6 @@ export interface AssistantContext {
   marketExtras: string[];
   /** Lo que la persona compró o tiene y pidió aprovechar ("armar con lo que tengo"). */
   focus: string[];
+  style: MenuStyle | null;
   notes: AssistantNote[];
 }

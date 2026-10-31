@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MENU_STYLES } from "@/domain/menu-styles";
 import { MEALS, type Meal } from "@/domain/week";
 
 export const ASSISTANT_MODES = ["propose", "adjust", "review-notes"] as const;
@@ -45,6 +46,8 @@ export const assistantRequestSchema = z.object({
   onlyEmpty: z.boolean().default(true),
   /** Lo que la persona compró o tiene y quiere usar esta semana (nombres del catálogo). */
   focus: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
+  /** Hacia dónde orientar la propuesta (más proteína, rinde más…); solo ordena, no es una meta. */
+  style: z.enum(MENU_STYLES).nullable().default(null),
 });
 
 export type AssistantRequest = z.input<typeof assistantRequestSchema>;

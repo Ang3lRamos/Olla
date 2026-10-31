@@ -1,5 +1,6 @@
 "use server";
 
+import { NUTRITION_STYLES } from "@/domain/menu-styles";
 import {
   consumeAiRequest,
   consumeFreeWeeklyMenu,
@@ -39,7 +40,7 @@ export async function askAssistant(request: AssistantRequest): Promise<AskAssist
     };
   }
 
-  const { weekStart, mode, instruction, onlyEmpty, focus } = parsed.data;
+  const { weekStart, mode, instruction, onlyEmpty, focus, style } = parsed.data;
   const { allowed, quota } = await consumeAiRequest(household.id);
   // En Gratis, "Proponer" puede usar el menú de la semana; lo demás sigue siendo de los planes pagos.
   const usesFreeMenu = !allowed && quota.plan === "free" && mode === "propose";
@@ -63,6 +64,8 @@ export async function askAssistant(request: AssistantRequest): Promise<AskAssist
     instruction,
     onlyEmpty,
     focus,
+    // Los estilos que se estiman con nutrición son de los planes pagos.
+    style: style && NUTRITION_STYLES.has(style) && quota.plan === "free" ? null : style,
   });
   const { client, simulated } = getAssistantClient(context);
   const outcome = await runAssistant(client, context);
