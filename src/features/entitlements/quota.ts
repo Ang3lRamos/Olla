@@ -30,3 +30,7 @@ export const hasAssistant = (quota: AiQuota) => quota.plan !== "free" && quota.d
 
 /** En Gratis, una propuesta de menú por semana para conocer el asistente. */
 export const canUseFreeMenu = (quota: AiQuota) => quota.plan === "free" && quota.freeMenuAvailable;
+
+/** Si puede pedir una propuesta de menú ahora: con consultas del día o con el menú gratis. */
+export const canPropose = (quota: AiQuota) =>
+  hasAssistant(quota) ? remainingRequests(quota) !== 0 : canUseFreeMenu(quota);

@@ -224,6 +224,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
             key={`${panel.focus.join("|")}-${panel.style}`}
             focus={panel.focus}
             style={panel.style}
+            autoPropose={panel.propose}
             weekStart={weekStart}
             slots={week.slots}
             notesCount={notes.length}

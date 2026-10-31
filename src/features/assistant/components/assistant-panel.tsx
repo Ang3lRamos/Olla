@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { MENU_STYLE_LABELS, type MenuStyle } from "@/domain/menu-styles";
 import type { PlannedSlot } from "@/domain/week-plan";
 import { Button } from "@/ui/button";
@@ -9,7 +9,13 @@ import { FormMessage } from "@/ui/form-message";
 import { Spinner } from "@/ui/spinner";
 import { askAssistant, type AskAssistantResult } from "../actions";
 import type { ProposedChange } from "../sanitize";
-import { canUseFreeMenu, hasAssistant, remainingRequests, type AiQuota } from "@/features/entitlements/quota";
+import {
+  canPropose,
+  canUseFreeMenu,
+  hasAssistant,
+  remainingRequests,
+  type AiQuota,
+} from "@/features/entitlements/quota";
 import { PLAN_NAMES } from "@/features/billing/plans";
 import { withChanges } from "../with-changes";
 import { AssistantError } from "./assistant-error";
@@ -34,6 +40,8 @@ interface AssistantPanelProps {
   focus: string[];
   /** Estilo elegido al armar el menú; orienta la propuesta. */
   style: MenuStyle | null;
+  /** Proponer apenas se abre, sin pasar por el formulario (viene de «Mixto»). */
+  autoPropose: boolean;
   /** Vuelve a elegir cómo armar el menú, sin perder la lista. */
   onBack: () => void;
   /** Lo que se iba a mercar y no usa ninguna receta con esos cambios. */
@@ -53,10 +61,14 @@ export function AssistantPanel({
   quota: initialQuota,
   focus,
   style,
+  autoPropose,
   onBack,
   leftoverFor,
 }: AssistantPanelProps) {
-  const [state, setState] = useState<PanelState>({ kind: "form" });
+  const proposesOnOpen = autoPropose && canPropose(initialQuota);
+  const [state, setState] = useState<PanelState>(
+    proposesOnOpen ? { kind: "loading", slow: false } : { kind: "form" },
+  );
   const [values, setValues] = useState<AssistantFormValues>({
     mode: "propose",
     instruction: "",
@@ -66,16 +78,23 @@ export function AssistantPanel({
   const [quota, setQuota] = useState(initialQuota);
   const [addLeftover, setAddLeftover] = useState(true);
   const requestId = useRef(0);
+  const mounted = useRef(true);
+  const proposed = useRef(false);
 
   // Si el panel se cierra mientras espera, la respuesta que llegue después se ignora.
-  useEffect(() => () => void requestId.current++, []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const ask = async (request: AssistantFormValues) => {
     setValues(request);
     const id = ++requestId.current;
     setState({ kind: "loading", slow: false });
     const slowTimer = setTimeout(
-      () => id === requestId.current && setState({ kind: "loading", slow: true }),
+      () => mounted.current && id === requestId.current && setState({ kind: "loading", slow: true }),
       SLOW_NOTICE_MS,
     );
     const result = await askAssistant({
@@ -92,11 +111,21 @@ export function AssistantPanel({
       quota: null,
     }));
     clearTimeout(slowTimer);
-    if (id !== requestId.current) return;
+    if (!mounted.current || id !== requestId.current) return;
     if (result.quota) setQuota((current) => ({ ...current, ...result.quota }));
     if (result.ok) setSelected(new Set(result.changes.map((_, index) => index)));
     setState({ kind: "done", result });
   };
+
+  // Una sola consulta aunque el efecto corra dos veces (modo estricto de desarrollo).
+  const proposeNow = useEffectEvent(() => {
+    if (proposed.current) return;
+    proposed.current = true;
+    void ask(values);
+  });
+  useEffect(() => {
+    if (proposesOnOpen) proposeNow();
+  }, [proposesOnOpen]);
 
   const focusNote = (focus.length > 0 || style) && (
     <div className="flex flex-col gap-1 rounded-md bg-sunken px-3 py-2.5 text-sm">

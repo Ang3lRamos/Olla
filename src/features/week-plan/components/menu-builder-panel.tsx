@@ -32,6 +32,8 @@ export interface AssistantHandoff {
   focus: string[];
   buy: Ingredient[];
   style: MenuStyle | null;
+  /** En «Mixto» ya se sabe que quiere una propuesta: el asistente la pide sin más pasos. */
+  propose: boolean;
 }
 
 interface MenuBuilderPanelProps {
@@ -86,6 +88,7 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
         focus: mode === "mixed" ? chosen.map((id) => getIngredient(catalog, id).name) : [],
         buy: mode === "mixed" ? buyIngredients : [],
         style,
+        propose: mode === "mixed",
       });
     }
     setNotice(undefined);
@@ -170,7 +173,7 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
         {step.kind === "list" ? (
           <>
             <Button disabled={needsList} onClick={next}>
-              {mode === "mine" ? "Ver recetas" : "Pedir al asistente"}
+              {{ mine: "Ver recetas", mixed: "Proponer menú", suggest: "Pedir al asistente" }[mode]}
             </Button>
             {needsList && (
               <p className="self-center text-xs text-muted">Agrega algo que tengas o vayas a mercar.</p>
