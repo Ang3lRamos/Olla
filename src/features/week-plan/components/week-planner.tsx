@@ -199,22 +199,25 @@ export function WeekPlanner(props: WeekPlannerProps) {
             }}
           />
         )}
-        {panel?.kind === "menu" && (
-          <MenuBuilderPanel
-            recipes={props.recipes}
-            ingredients={props.ingredients}
-            prices={prices}
-            pantry={props.pantry}
-            exclude={props.exclude}
-            slots={week.slots}
-            weekPeople={week.people}
-            assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
-            nutritionLocked={props.aiQuota.plan === "free"}
-            recipeName={recipeName}
-            marketFor={marketFor}
-            onApply={apply}
-            onAskAssistant={(handoff) => setPanel({ kind: "assistant", ...handoff })}
-          />
+        {/* Sigue montado mientras el asistente responde: al volver, la lista sigue ahí. */}
+        {(panel?.kind === "menu" || panel?.kind === "assistant") && (
+          <div hidden={panel.kind === "assistant"}>
+            <MenuBuilderPanel
+              recipes={props.recipes}
+              ingredients={props.ingredients}
+              prices={prices}
+              pantry={props.pantry}
+              exclude={props.exclude}
+              slots={week.slots}
+              weekPeople={week.people}
+              assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
+              nutritionLocked={props.aiQuota.plan === "free"}
+              recipeName={recipeName}
+              marketFor={marketFor}
+              onApply={apply}
+              onAskAssistant={(handoff) => setPanel({ kind: "assistant", ...handoff })}
+            />
+          </div>
         )}
         {panel?.kind === "assistant" && (
           <AssistantPanel
@@ -227,6 +230,7 @@ export function WeekPlanner(props: WeekPlannerProps) {
             recipeName={recipeName}
             marketFor={marketFor}
             quota={props.aiQuota}
+            onBack={() => setPanel({ kind: "menu" })}
             leftoverFor={(changes) => leftoverOf(panel.buy, changes).map((ingredient) => ingredient.name)}
             onApply={(changes, addLeftover) =>
               apply(changes, addLeftover ? leftoverOf(panel.buy, changes) : [])
