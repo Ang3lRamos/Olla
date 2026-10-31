@@ -36,7 +36,8 @@ export async function savePantryItem(input: PantryItemInput): Promise<PantryActi
   );
   if (error) return { ok: false, error: SAVE_ERROR };
 
-  revalidatePath("/despensa");
+  // También se agrega desde la semana, y lo que hay en casa cambia el menú y el mercado.
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

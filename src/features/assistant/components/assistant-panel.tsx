@@ -13,6 +13,7 @@ import { withChanges } from "../with-changes";
 import { AssistantError } from "./assistant-error";
 import { AssistantRequestForm, type AssistantFormValues } from "./assistant-request-form";
 import { ChangePreview } from "./change-preview";
+import { LeftoverPurchases } from "./leftover-purchases";
 
 /** Tras este tiempo se avisa que el modelo puede demorarse, para que nadie crea que se colgó. */
 const SLOW_NOTICE_MS = 4000;
@@ -24,10 +25,13 @@ interface AssistantPanelProps {
   recipeName: (recipeId: string | null) => string;
   /** Mercado de la semana con esas casillas; lo calcula el dominio, no la IA. */
   marketFor: (slots: PlannedSlot[]) => number;
-  onApply: (changes: ProposedChange[]) => void;
+  /** `addLeftover`: agregar al mercado lo que se iba a mercar y ninguna receta usa. */
+  onApply: (changes: ProposedChange[], addLeftover: boolean) => void;
   quota: AiQuota;
-  /** Lo que la persona compró o tiene, si viene de "Armar con lo que tengo": se prioriza al proponer. */
+  /** Lo que la persona tiene o va a mercar, si viene de "Armar el menú": se prioriza al proponer. */
   focus: string[];
+  /** Lo que se iba a mercar y no usa ninguna receta con esos cambios. */
+  leftoverFor: (changes: ProposedChange[]) => string[];
 }
 
 type PanelState =
@@ -42,6 +46,7 @@ export function AssistantPanel({
   onApply,
   quota: initialQuota,
   focus,
+  leftoverFor,
 }: AssistantPanelProps) {
   const [state, setState] = useState<PanelState>({ kind: "form" });
   const [values, setValues] = useState<AssistantFormValues>({
@@ -51,6 +56,7 @@ export function AssistantPanel({
   });
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [quota, setQuota] = useState(initialQuota);
+  const [addLeftover, setAddLeftover] = useState(true);
   const requestId = useRef(0);
 
   // Si el panel se cierra mientras espera, la respuesta que llegue después se ignora.
@@ -85,7 +91,7 @@ export function AssistantPanel({
 
   const focusNote = focus.length > 0 && (
     <p className="rounded-md bg-sunken px-3 py-2.5 text-sm">
-      <span className="font-medium">Con lo que tienes:</span> {focus.join(", ")}. Al proponer, el asistente
+      <span className="font-medium">Con tu lista:</span> {focus.join(", ")}. Al proponer, el asistente
       prioriza recetas que lo usen.
     </p>
   );
@@ -205,10 +211,14 @@ export function AssistantPanel({
         />
       )}
 
+      {chosen.length > 0 && (
+        <LeftoverPurchases names={leftoverFor(chosen)} checked={addLeftover} onChange={setAddLeftover} />
+      )}
+
       {/* Fijo abajo: con muchas sugerencias, aplicar no debe exigir bajar hasta el final. */}
       <div className="sticky -bottom-5 -mx-5 -mb-5 flex flex-wrap gap-2 border-t border-hairline bg-surface px-5 py-3">
         {chosen.length > 0 && (
-          <Button onClick={() => onApply(chosen)}>
+          <Button onClick={() => onApply(chosen, addLeftover)}>
             Aplicar {chosen.length} {chosen.length === 1 ? "cambio" : "cambios"}
           </Button>
         )}

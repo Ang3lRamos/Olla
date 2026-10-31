@@ -1,4 +1,4 @@
-import { MessageSquareText, ShoppingBasket } from "lucide-react";
+import { ChefHat } from "lucide-react";
 import type { IsoDate } from "@/domain/week";
 import { MAX_PEOPLE } from "@/features/household/schemas";
 import { Button } from "@/ui/button";
@@ -10,10 +10,7 @@ interface WeekHeaderProps {
   isCurrentWeek: boolean;
   people: number;
   onPeopleChange: (people: number) => void;
-  onOpenAssistant: () => void;
-  onOpenCookWith: () => void;
-  /** El asistente es de los planes pagos; para el resto el botón lo indica. */
-  assistantLocked: boolean;
+  onOpenMenuBuilder: () => void;
 }
 
 export function WeekHeader({
@@ -21,9 +18,7 @@ export function WeekHeader({
   isCurrentWeek,
   people,
   onPeopleChange,
-  onOpenAssistant,
-  onOpenCookWith,
-  assistantLocked,
+  onOpenMenuBuilder,
 }: WeekHeaderProps) {
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -42,22 +37,9 @@ export function WeekHeader({
           unit={["persona", "personas"]}
           onValueChange={onPeopleChange}
         />
-        <Button variant="secondary" onClick={onOpenCookWith}>
-          <ShoppingBasket className="size-4" aria-hidden />
-          Armar con lo que tengo
-        </Button>
-        <Button
-          variant={assistantLocked ? "secondary" : "primary"}
-          onClick={onOpenAssistant}
-          data-tour="assistant"
-        >
-          <MessageSquareText className="size-4" aria-hidden />
-          Pedir al asistente
-          {assistantLocked && (
-            <span className="rounded-full border border-hairline-strong px-1.5 text-[11px] font-semibold">
-              Planes
-            </span>
-          )}
+        <Button onClick={onOpenMenuBuilder} data-tour="menu-builder">
+          <ChefHat className="size-4" aria-hidden />
+          Armar el menú
         </Button>
       </div>
     </header>

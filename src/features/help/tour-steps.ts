@@ -13,9 +13,9 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Toca una casilla para elegir qué se come ese día. Puedes cambiar las personas de cada comida y dejar notas.",
   },
   {
-    target: "assistant",
-    title: "El asistente",
-    body: "Pídele que proponga la semana o que la ajuste con tus palabras: «estoy corto de plata», «más sopas». Tú decides qué se aplica.",
+    target: "menu-builder",
+    title: "Armar el menú",
+    body: "Con lo que tienes en casa y lo que vas a mercar, con el asistente o mezclando los dos. Tú decides qué se aplica.",
   },
   {
     target: "nav-mercado",

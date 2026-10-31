@@ -12,14 +12,18 @@ import type { RecipeDetail, RecipeSummary } from "@/features/recipes/types";
 import { Button } from "@/ui/button";
 import { Sheet } from "@/ui/sheet";
 import { AssistantPanel } from "@/features/assistant/components/assistant-panel";
+import type { ProposedChange } from "@/features/assistant/sanitize";
+import { withChanges } from "@/features/assistant/with-changes";
 import { canUseFreeMenu, hasAssistant, type AiQuota } from "@/features/entitlements/quota";
+import { addExtras } from "@/features/shopping/actions";
+import { unusedPurchases } from "../cook-with";
 import { buildWeekView, recipeUsage, type NoteView } from "../week-view";
 import { NotesPanel } from "./notes-panel";
 import { SlotSheetContent } from "./slot-sheet";
 import { useWeekPlan } from "./use-week-plan";
 import { WeekDaysMobile } from "./week-days-mobile";
 import { WeekGrid } from "./week-grid";
-import { CookWithPanel } from "./cook-with-panel";
+import { MenuBuilderPanel, type AssistantHandoff } from "./menu-builder-panel";
 import { WeekHeader } from "./week-header";
 import { WeekSummaryBar } from "./week-summary-bar";
 
@@ -45,14 +49,17 @@ export interface WeekPlannerProps {
 type OpenPanel =
   | { kind: "meal"; day: number; meal: Meal }
   | { kind: "day"; day: number }
-  | { kind: "assistant"; focus?: string[] }
-  | { kind: "cook-with" }
+  | ({ kind: "assistant" } & AssistantHandoff)
+  | { kind: "menu" }
   | null;
+
+const EXTRAS_ERROR = "El menú quedó guardado, pero no pudimos agregar al mercado lo que ibas a comprar.";
 
 export function WeekPlanner(props: WeekPlannerProps) {
   const { weekStart, today, weeklyBudgetCop, recipeSummaries, notes } = props;
   const week = useWeekPlan(weekStart, { slots: props.slots, people: props.people });
   const [panel, setPanel] = useState<OpenPanel>(null);
+  const [extrasError, setExtrasError] = useState<string>();
 
   const catalog = useMemo(() => buildCatalog(props.ingredients), [props.ingredients]);
   const prices = useMemo(
@@ -74,6 +81,27 @@ export function WeekPlanner(props: WeekPlannerProps) {
           goals: props.goals,
         };
   const todayIndex = dayIndex(weekStart, today);
+  const error = week.error ?? extrasError;
+  const recipeName = (recipeId: string | null) => (recipeId && recipes.get(recipeId)?.name) || "Receta";
+  const marketFor = (slots: PlannedSlot[]) =>
+    summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop;
+
+  const apply = (changes: ProposedChange[], extras: Ingredient[]) => {
+    week.applyChanges(changes);
+    setPanel(null);
+    if (extras.length === 0) return;
+    addExtras({ weekStart, items: extras.map(({ name, category }) => ({ name, category })) })
+      .then((result) => setExtrasError(result.ok ? undefined : EXTRAS_ERROR))
+      .catch(() => setExtrasError(EXTRAS_ERROR));
+  };
+  const leftoverOf = (buy: Ingredient[], changes: ProposedChange[]) => {
+    const unused = unusedPurchases(
+      buy.map((ingredient) => ingredient.id),
+      withChanges(week.slots, changes),
+      recipes,
+    );
+    return buy.filter((ingredient) => unused.includes(ingredient.id));
+  };
 
   const openDay = panel && "day" in panel ? days[panel.day] : undefined;
   const openCell =
@@ -86,23 +114,24 @@ export function WeekPlanner(props: WeekPlannerProps) {
         isCurrentWeek={todayIndex !== null}
         people={week.people}
         onPeopleChange={week.setPeople}
-        onOpenAssistant={() => setPanel({ kind: "assistant" })}
-        onOpenCookWith={() => setPanel({ kind: "cook-with" })}
-        assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
+        onOpenMenuBuilder={() => setPanel({ kind: "menu" })}
       />
 
-      {week.error && (
+      {error && (
         <div
           role="alert"
           className="flex animate-rise items-center justify-between gap-3 rounded-md border border-danger/30 px-3 py-2 text-sm"
         >
-          <span>{week.error}</span>
+          <span>{error}</span>
           <Button
             variant="ghost"
             size="sm"
             className="px-2"
             aria-label="Cerrar aviso"
-            onClick={week.dismissError}
+            onClick={() => {
+              week.dismissError();
+              setExtrasError(undefined);
+            }}
           >
             <X className="size-4" />
           </Button>
@@ -133,8 +162,8 @@ export function WeekPlanner(props: WeekPlannerProps) {
         title={
           panel?.kind === "assistant"
             ? "Asistente"
-            : panel?.kind === "cook-with"
-              ? "Armar con lo que tengo"
+            : panel?.kind === "menu"
+              ? "Armar el menú"
               : openDay
                 ? openCell
                   ? `${openDay.long} ${openDay.dayOfMonth}`
@@ -144,8 +173,8 @@ export function WeekPlanner(props: WeekPlannerProps) {
         description={
           panel?.kind === "assistant"
             ? "Propone recetas; las cantidades y los costos los calcula Olla."
-            : panel?.kind === "cook-with"
-              ? "Elige lo que compraste y Olla busca las recetas que lo aprovechan."
+            : panel?.kind === "menu"
+              ? "Con lo que tienes, con el asistente o mezclando los dos."
               : openCell
                 ? MEAL_LABELS[openCell.meal]
                 : openDay
@@ -170,45 +199,35 @@ export function WeekPlanner(props: WeekPlannerProps) {
             }}
           />
         )}
-        {panel?.kind === "cook-with" && (
-          <CookWithPanel
+        {panel?.kind === "menu" && (
+          <MenuBuilderPanel
             recipes={props.recipes}
             ingredients={props.ingredients}
-            catalog={catalog}
             pantry={props.pantry}
             exclude={props.exclude}
             slots={week.slots}
-            recipeName={(recipeId) => (recipeId && recipes.get(recipeId)?.name) || "Receta"}
-            marketFor={(slots) =>
-              summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop
-            }
-            onApply={(changes) => {
-              week.applyChanges(changes);
-              setPanel(null);
-            }}
-            onAskAssistant={
-              hasAssistant(props.aiQuota) || canUseFreeMenu(props.aiQuota)
-                ? (focus) => setPanel({ kind: "assistant", focus })
-                : null
-            }
+            weekPeople={week.people}
+            assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
+            recipeName={recipeName}
+            marketFor={marketFor}
+            onApply={apply}
+            onAskAssistant={(handoff) => setPanel({ kind: "assistant", ...handoff })}
           />
         )}
         {panel?.kind === "assistant" && (
           <AssistantPanel
-            key={panel.focus?.join("|") ?? "libre"}
-            focus={panel.focus ?? []}
+            key={panel.focus.join("|") || "libre"}
+            focus={panel.focus}
             weekStart={weekStart}
             slots={week.slots}
             notesCount={notes.length}
-            recipeName={(recipeId) => (recipeId && recipes.get(recipeId)?.name) || "Receta"}
-            marketFor={(slots) =>
-              summarizeWeek({ slots, weekPeople: week.people, ...shared }).market.totalCop
-            }
+            recipeName={recipeName}
+            marketFor={marketFor}
             quota={props.aiQuota}
-            onApply={(changes) => {
-              week.applyChanges(changes);
-              setPanel(null);
-            }}
+            leftoverFor={(changes) => leftoverOf(panel.buy, changes).map((ingredient) => ingredient.name)}
+            onApply={(changes, addLeftover) =>
+              apply(changes, addLeftover ? leftoverOf(panel.buy, changes) : [])
+            }
           />
         )}
         {panel?.kind === "day" && openDay && (
