@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MENU_STYLE_LABELS, type MenuStyle } from "@/domain/menu-styles";
 import type { PlannedSlot } from "@/domain/week-plan";
@@ -33,6 +34,8 @@ interface AssistantPanelProps {
   focus: string[];
   /** Estilo elegido al armar el menú; orienta la propuesta. */
   style: MenuStyle | null;
+  /** Vuelve a elegir cómo armar el menú, sin perder la lista. */
+  onBack: () => void;
   /** Lo que se iba a mercar y no usa ninguna receta con esos cambios. */
   leftoverFor: (changes: ProposedChange[]) => string[];
 }
@@ -50,6 +53,7 @@ export function AssistantPanel({
   quota: initialQuota,
   focus,
   style,
+  onBack,
   leftoverFor,
 }: AssistantPanelProps) {
   const [state, setState] = useState<PanelState>({ kind: "form" });
@@ -110,13 +114,27 @@ export function AssistantPanel({
     </div>
   );
 
+  const backLink = (
+    <button
+      type="button"
+      onClick={onBack}
+      className="flex w-fit items-center gap-1 text-sm text-muted transition-colors duration-(--dur-fast) ease-out hover:text-ink"
+    >
+      <ArrowLeft className="size-4" aria-hidden />
+      Cambiar cómo armar el menú
+    </button>
+  );
+
   if (state.kind === "form") {
     if (!hasAssistant(quota)) {
       if (!canUseFreeMenu(quota)) {
-        return <AssistantError kind={quota.plan === "free" ? "free_menu_used" : "not_entitled"} />;
+        return (
+          <AssistantError kind={quota.plan === "free" ? "free_menu_used" : "not_entitled"} onBack={onBack} />
+        );
       }
       return (
         <div className="flex flex-col gap-5">
+          {backLink}
           <p className="text-xs text-muted" aria-live="polite">
             Plan Gratis · te queda <span className="font-medium text-ink">1 menú gratis</span> esta semana.
             Ajustar y revisar notas son de los planes Básico y Pro.
@@ -135,6 +153,7 @@ export function AssistantPanel({
     const remaining = remainingRequests(quota);
     return (
       <div className="flex flex-col gap-5">
+        {backLink}
         <p className="text-xs text-muted" aria-live="polite">
           {remaining === null ? (
             `Plan ${PLAN_NAMES[quota.plan]} · consultas sin límite.`
@@ -148,7 +167,7 @@ export function AssistantPanel({
         </p>
         {focusNote}
         {remaining === 0 ? (
-          <AssistantError kind="limit_reached" />
+          <AssistantError kind="limit_reached" onBack={onBack} />
         ) : (
           <AssistantRequestForm
             initial={values}

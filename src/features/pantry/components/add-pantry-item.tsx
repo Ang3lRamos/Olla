@@ -19,6 +19,8 @@ interface AddPantryItemProps {
   onAdd: (item: PantryItemInput) => Promise<boolean>;
   /** Un producto nuevo del hogar; la despensa lo conoce antes de que el servidor lo traiga. */
   onIngredientCreated: (ingredient: Ingredient) => void;
+  /** En un panel angosto: el ingrediente arriba y cantidad, unidad y botón debajo. */
+  compact?: boolean;
 }
 
 export function AddPantryItem({
@@ -27,6 +29,7 @@ export function AddPantryItem({
   error,
   onAdd,
   onIngredientCreated,
+  compact = false,
 }: AddPantryItemProps) {
   const [ingredientId, setIngredientId] = useState("");
   const [creating, setCreating] = useState<string | null>(null);
@@ -58,10 +61,18 @@ export function AddPantryItem({
         className="flex flex-col gap-2 rounded-md border border-hairline bg-surface p-4"
       >
         <p className="text-sm font-medium">Agregar a la despensa</p>
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_6.5rem_9rem_auto]">
+        <div
+          className={cn(
+            "grid gap-2",
+            compact
+              ? "grid-cols-[5.5rem_minmax(0,1fr)_auto]"
+              : "sm:grid-cols-[minmax(0,1fr)_6.5rem_9rem_auto]",
+          )}
+        >
           <Select
             ref={selectRef}
             aria-label="Ingrediente"
+            className={compact ? "col-span-full" : undefined}
             value={ingredientId}
             options={ingredientOptions(ingredients)}
             onValueChange={choose}
@@ -69,7 +80,7 @@ export function AddPantryItem({
             searchable
             onCreate={setCreating}
           />
-          <div className="grid grid-cols-2 gap-2 sm:contents">
+          <div className={compact ? "contents" : "grid grid-cols-2 gap-2 sm:contents"}>
             <input
               aria-label="Cantidad aproximada"
               inputMode="decimal"

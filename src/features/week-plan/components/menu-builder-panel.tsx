@@ -72,6 +72,7 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
     exclude: props.exclude,
     score: style ? (recipe) => styleScore(style, recipe, catalog, props.prices) : undefined,
   });
+  const needsList = mode !== "suggest" && chosen.length === 0;
   const pickedIds = picked ?? new Set(preselectMatches(matches, PRESELECTED).map((match) => match.recipeId));
   const buyIngredients = buy.map((id) => getIngredient(catalog, id));
   const leftoverOf = (changes: ProposedChange[]) => {
@@ -131,7 +132,6 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
       {step.kind === "list" ? (
         <>
           <MenuModePicker value={mode} onChange={setMode} assistantLocked={props.assistantLocked} />
-          <MenuStylePicker value={style} onChange={setStyle} nutritionLocked={props.nutritionLocked} />
           {mode !== "suggest" && (
             <MenuIngredients
               ingredients={list.ingredients}
@@ -148,6 +148,7 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
               onIngredientCreated={list.addCreated}
             />
           )}
+          <MenuStylePicker value={style} onChange={setStyle} nutritionLocked={props.nutritionLocked} />
         </>
       ) : (
         <StockRecipes
@@ -167,9 +168,14 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
 
       <div className="sticky -bottom-5 -mx-5 -mb-5 flex flex-wrap gap-2 border-t border-hairline bg-surface px-5 py-3">
         {step.kind === "list" ? (
-          <Button disabled={mode !== "suggest" && chosen.length === 0} onClick={next}>
-            {mode === "mine" ? "Ver recetas" : "Pedir al asistente"}
-          </Button>
+          <>
+            <Button disabled={needsList} onClick={next}>
+              {mode === "mine" ? "Ver recetas" : "Pedir al asistente"}
+            </Button>
+            {needsList && (
+              <p className="self-center text-xs text-muted">Agrega algo que tengas o vayas a mercar.</p>
+            )}
+          </>
         ) : (
           <>
             <Button disabled={pickedIds.size === 0} onClick={fill}>

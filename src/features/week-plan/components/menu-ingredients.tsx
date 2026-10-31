@@ -73,6 +73,7 @@ export function MenuIngredients(props: MenuIngredientsProps) {
           error={props.saveError}
           onAdd={props.onSaveHome}
           onIngredientCreated={props.onIngredientCreated}
+          compact
         />
       ) : (
         <Select
