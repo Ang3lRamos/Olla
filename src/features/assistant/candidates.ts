@@ -36,6 +36,7 @@ export function selectCandidates({
       (a, b) =>
         Number(inWeek.has(b.id)) - Number(inWeek.has(a.id)) ||
         pantryHits(b) - pantryHits(a) ||
+        (b.styleFit ?? 0) - (a.styleFit ?? 0) ||
         a.costPerServingCop - b.costPerServingCop,
     )
     .slice(0, limit);

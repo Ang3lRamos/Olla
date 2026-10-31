@@ -28,14 +28,17 @@ interface MatchInput {
   chosen: Set<string>;
   /** "No incluir" del hogar: esas recetas no se ofrecen. */
   exclude: string[];
+  /** Cuánto encaja cada receta en el estilo elegido; desempata entre las que aprovechan igual. */
+  score?: (recipe: RecipeDetail) => number;
 }
 
 /**
  * Las recetas que usan algo de lo elegido, primero las que más aprovechan y menos piden aparte.
  * Los condimentos (sal, ajo, aceite…) no cuentan ni a favor ni en contra: casi siempre hay.
  */
-export function matchRecipes({ recipes, catalog, chosen, exclude }: MatchInput): RecipeMatch[] {
+export function matchRecipes({ recipes, catalog, chosen, exclude, score }: MatchInput): RecipeMatch[] {
   const banned = exclude.map(normalizeForSearch).filter(Boolean);
+  const scores = new Map(recipes.map((recipe) => [recipe.id, score?.(recipe) ?? 0]));
   return recipes
     .flatMap((recipe) => {
       const ingredients = recipe.ingredients.map((line) => ({
@@ -56,6 +59,7 @@ export function matchRecipes({ recipes, catalog, chosen, exclude }: MatchInput):
       (a, b) =>
         b.uses.length - a.uses.length ||
         a.missing.length - b.missing.length ||
+        scores.get(b.recipeId)! - scores.get(a.recipeId)! ||
         a.name.localeCompare(b.name, "es"),
     );
 }

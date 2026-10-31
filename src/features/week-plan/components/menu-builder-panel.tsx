@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { buildCatalog, getIngredient } from "@/domain/catalog";
+import { useMemo, useState } from "react";
+import { getIngredient } from "@/domain/catalog";
+import type { PriceList } from "@/domain/costs";
+import { styleScore, type MenuStyle } from "@/domain/menu-styles";
 import type { Ingredient, PantryItem } from "@/domain/types";
 import type { PlannedSlot } from "@/domain/week-plan";
 import type { ProposedChange } from "@/features/assistant/sanitize";
 import { withChanges } from "@/features/assistant/with-changes";
-import { savePantryItem } from "@/features/pantry/actions";
-import type { PantryItemInput } from "@/features/pantry/schemas";
 import type { RecipeDetail } from "@/features/recipes/types";
-import { parseDecimal } from "@/lib/decimal-input";
 import { Button } from "@/ui/button";
 import { FormMessage } from "@/ui/form-message";
 import {
@@ -21,25 +20,30 @@ import {
 } from "../cook-with";
 import { MenuIngredients } from "./menu-ingredients";
 import { MenuModePicker, type MenuMode } from "./menu-mode-picker";
+import { MenuStylePicker } from "./menu-style-picker";
 import { StockPreview } from "./stock-preview";
 import { StockRecipes } from "./stock-recipes";
+import { useMenuList } from "./use-menu-list";
 
 const PRESELECTED = 8;
 
-/** Lo que el asistente recibe: lo que hay que priorizar y lo que se piensa mercar. */
+/** Lo que el asistente recibe: lo que hay que priorizar, lo que se piensa mercar y el estilo. */
 export interface AssistantHandoff {
   focus: string[];
   buy: Ingredient[];
+  style: MenuStyle | null;
 }
 
 interface MenuBuilderPanelProps {
   recipes: RecipeDetail[];
   ingredients: Ingredient[];
+  prices: PriceList;
   pantry: PantryItem[];
   exclude: string[];
   slots: PlannedSlot[];
   weekPeople: number;
   assistantLocked: boolean;
+  nutritionLocked: boolean;
   recipeName: (recipeId: string | null) => string;
   marketFor: (slots: PlannedSlot[]) => number;
   /** `extras`: lo que se iba a mercar sin receta que lo use y la persona quiere en el mercado. */
@@ -52,37 +56,21 @@ type Step = { kind: "list" } | { kind: "recipes" } | { kind: "preview"; plan: St
 /** Armar el menú: solo con lo que hay, mezclando con el asistente o que el asistente proponga. */
 export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
   const { slots, weekPeople } = props;
+  const list = useMenuList(props.ingredients, props.pantry);
+  const { catalog, chosen, buy } = list;
   const [mode, setMode] = useState<MenuMode>("mine");
+  const [style, setStyle] = useState<MenuStyle | null>(null);
   const [step, setStep] = useState<Step>({ kind: "list" });
-  const [created, setCreated] = useState<Ingredient[]>([]);
-  const [saved, setSaved] = useState<PantryItem[]>([]);
-  const [skipped, setSkipped] = useState<Set<string>>(new Set());
-  const [buy, setBuy] = useState<string[]>([]);
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [notice, setNotice] = useState<string>();
-  const [saveError, setSaveError] = useState<string>();
-  const [saving, startSaving] = useTransition();
 
-  const ingredients = useMemo(
-    () => [
-      ...props.ingredients,
-      ...created.filter((item) => !props.ingredients.some((other) => other.id === item.id)),
-    ],
-    [props.ingredients, created],
-  );
-  const catalog = useMemo(() => buildCatalog(ingredients), [ingredients]);
   const recipes = useMemo(() => new Map(props.recipes.map((recipe) => [recipe.id, recipe])), [props.recipes]);
-  const pantry = [
-    ...saved.filter((item) => !props.pantry.some((other) => other.ingredientId === item.ingredientId)),
-    ...props.pantry,
-  ];
-  const home = pantry.filter((item) => !skipped.has(item.ingredientId));
-  const chosen = [...home.map((item) => item.ingredientId), ...buy];
   const matches = matchRecipes({
     recipes: props.recipes,
     catalog,
     chosen: new Set(chosen),
     exclude: props.exclude,
+    score: style ? (recipe) => styleScore(style, recipe, catalog, props.prices) : undefined,
   });
   const pickedIds = picked ?? new Set(preselectMatches(matches, PRESELECTED).map((match) => match.recipeId));
   const buyIngredients = buy.map((id) => getIngredient(catalog, id));
@@ -91,31 +79,12 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
     return buyIngredients.filter((ingredient) => unused.includes(ingredient.id));
   };
 
-  const saveHome = (input: PantryItemInput) =>
-    new Promise<boolean>((resolve) =>
-      startSaving(async () => {
-        const result = await savePantryItem(input);
-        setSaveError(result.ok ? undefined : result.error);
-        if (result.ok) {
-          const item = {
-            ingredientId: input.ingredientId,
-            quantity: { amount: parseDecimal(input.quantity), unit: input.unit },
-          };
-          setSaved((current) => [
-            ...current.filter((other) => other.ingredientId !== item.ingredientId),
-            item,
-          ]);
-        }
-        resolve(result.ok);
-      }),
-    );
-
   const next = () => {
-    if (mode === "suggest") return props.onAskAssistant({ focus: [], buy: [] });
-    if (mode === "mixed") {
+    if (mode !== "mine") {
       return props.onAskAssistant({
-        focus: chosen.map((id) => getIngredient(catalog, id).name),
-        buy: buyIngredients,
+        focus: mode === "mixed" ? chosen.map((id) => getIngredient(catalog, id).name) : [],
+        buy: mode === "mixed" ? buyIngredients : [],
+        style,
       });
     }
     setNotice(undefined);
@@ -130,7 +99,7 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
       recipes,
       catalog,
       weekPeople,
-      pantry: home,
+      pantry: list.home,
     });
     if (plan.changes.length > 0) {
       setNotice(undefined);
@@ -162,27 +131,21 @@ export function MenuBuilderPanel(props: MenuBuilderPanelProps) {
       {step.kind === "list" ? (
         <>
           <MenuModePicker value={mode} onChange={setMode} assistantLocked={props.assistantLocked} />
+          <MenuStylePicker value={style} onChange={setStyle} nutritionLocked={props.nutritionLocked} />
           {mode !== "suggest" && (
             <MenuIngredients
-              ingredients={ingredients}
+              ingredients={list.ingredients}
               catalog={catalog}
-              pantry={pantry}
-              skipped={skipped}
-              onToggleHome={(id) =>
-                setSkipped((current) => {
-                  const nextSkipped = new Set(current);
-                  if (nextSkipped.has(id)) nextSkipped.delete(id);
-                  else nextSkipped.add(id);
-                  return nextSkipped;
-                })
-              }
+              pantry={list.pantry}
+              skipped={list.skipped}
+              onToggleHome={list.toggleHome}
               buy={buy}
-              onAddBuy={(id) => setBuy((current) => [...current, id])}
-              onRemoveBuy={(id) => setBuy((current) => current.filter((other) => other !== id))}
-              onSaveHome={saveHome}
-              saving={saving}
-              saveError={saveError}
-              onIngredientCreated={(ingredient) => setCreated((current) => [...current, ingredient])}
+              onAddBuy={list.addBuy}
+              onRemoveBuy={list.removeBuy}
+              onSaveHome={list.saveHome}
+              saving={list.saving}
+              saveError={list.saveError}
+              onIngredientCreated={list.addCreated}
             />
           )}
         </>

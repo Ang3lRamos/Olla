@@ -35,6 +35,7 @@ export function makeContext(overrides: Partial<AssistantContext> = {}): Assistan
     pantry: ["Arroz"],
     marketExtras: [],
     focus: [],
+    style: null,
     notes: [],
     ...overrides,
   };

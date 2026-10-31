@@ -35,7 +35,9 @@ export function pickRecipeFor(
       !isExcluded(recipe, context.exclude),
   );
   const leastUsedFirst = (a: CatalogRecipe, b: CatalogRecipe) =>
-    (usage.get(a.id) ?? 0) - (usage.get(b.id) ?? 0) || a.costPerServingCop - b.costPerServingCop;
+    (usage.get(a.id) ?? 0) - (usage.get(b.id) ?? 0) ||
+    (b.styleFit ?? 0) - (a.styleFit ?? 0) ||
+    a.costPerServingCop - b.costPerServingCop;
   // Si no alcanza el catálogo para respetar el máximo de repeticiones, se repite antes que dejar vacío.
   const varied = fitting.filter((recipe) => (usage.get(recipe.id) ?? 0) < MAX_REPEATS);
   const choice = (varied.length ? varied : fitting).sort(leastUsedFirst)[0];

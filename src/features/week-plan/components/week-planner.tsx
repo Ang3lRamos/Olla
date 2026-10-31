@@ -203,11 +203,13 @@ export function WeekPlanner(props: WeekPlannerProps) {
           <MenuBuilderPanel
             recipes={props.recipes}
             ingredients={props.ingredients}
+            prices={prices}
             pantry={props.pantry}
             exclude={props.exclude}
             slots={week.slots}
             weekPeople={week.people}
             assistantLocked={!hasAssistant(props.aiQuota) && !canUseFreeMenu(props.aiQuota)}
+            nutritionLocked={props.aiQuota.plan === "free"}
             recipeName={recipeName}
             marketFor={marketFor}
             onApply={apply}
@@ -216,8 +218,9 @@ export function WeekPlanner(props: WeekPlannerProps) {
         )}
         {panel?.kind === "assistant" && (
           <AssistantPanel
-            key={panel.focus.join("|") || "libre"}
+            key={`${panel.focus.join("|")}-${panel.style}`}
             focus={panel.focus}
+            style={panel.style}
             weekStart={weekStart}
             slots={week.slots}
             notesCount={notes.length}

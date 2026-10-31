@@ -83,6 +83,17 @@ describe("matchRecipes", () => {
     expect(matches.map((item) => item.name)).not.toContain("Costillas");
   });
 
+  it("entre las que aprovechan igual, primero las que encajan en el estilo", () => {
+    const matches = matchRecipes({
+      recipes,
+      catalog,
+      chosen: new Set(["papa"]),
+      exclude: [],
+      score: (item) => (item.id === "Sudado" ? 1 : 0),
+    });
+    expect(matches.slice(0, 2).map((item) => item.name)).toEqual(["Sudado", "Costillas"]);
+  });
+
   it("marca de entrada solo las que piden una cosa aparte como mucho", () => {
     expect(preselectMatches(match(["papa"]), 8).map((item) => item.name)).toEqual(["Costillas", "Sudado"]);
   });

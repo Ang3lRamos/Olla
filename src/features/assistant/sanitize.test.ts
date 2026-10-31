@@ -109,4 +109,10 @@ describe("selectCandidates", () => {
     });
     expect(top.map((recipe) => recipe.id)).toEqual(["ajiaco", "lentejas", "pericos"]);
   });
+
+  it("con estilo, el encaje desempata antes que el precio", () => {
+    const recipes = RECIPES.map((recipe) => ({ ...recipe, styleFit: recipe.id === "mojarra" ? 5 : 1 }));
+    const top = selectCandidates({ ...base, recipes, limit: 1 });
+    expect(top.map((recipe) => recipe.id)).toEqual(["mojarra"]);
+  });
 });

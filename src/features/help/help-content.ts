@@ -12,6 +12,7 @@ export const HELP_BY_SECTION: Record<string, HelpSection> = {
     tips: [
       "Toca una casilla para elegir una receta. Si vienen visitas, cambia las personas de esa comida.",
       "«Armar el menú» llena la semana con lo que tienes, con el asistente o mezclando los dos; tú decides qué se aplica.",
+      "Puedes elegir un estilo para la semana (más proteína, más verduras, porciones ligeras, rinde más): solo ordena las recetas.",
       "Lo que dices tener en casa queda en la despensa; lo que ibas a mercar y ninguna receta usa puede ir al mercado.",
       "Cuando cocines, abre la comida y toca «Ya la cocinamos»: lo usado se descuenta de la despensa.",
       "Las notas («sobró arroz», «no les gustó») ayudan al asistente a proponer mejor.",

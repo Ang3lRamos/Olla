@@ -1,5 +1,6 @@
 import "server-only";
 import { getIngredient } from "@/domain/catalog";
+import { styleLevels, styleScore, type MenuStyle } from "@/domain/menu-styles";
 import { formatQuantity, toIngredientBase } from "@/domain/units";
 import { addDays, dayIndex } from "@/domain/week";
 import { summarizeWeek } from "@/domain/week-plan";
@@ -24,6 +25,7 @@ interface BuildContextInput {
   instruction: string;
   onlyEmpty: boolean;
   focus?: string[];
+  style?: MenuStyle | null;
 }
 
 /** Reúne lo que el asistente necesita, con todos los números ya calculados por el dominio. */
@@ -33,6 +35,7 @@ export async function buildAssistantContext({
   instruction,
   onlyEmpty,
   focus = [],
+  style = null,
 }: BuildContextInput): Promise<AssistantContext> {
   const { catalog, prices, household, plan, pantry } = week;
   // Las notas de la semana anterior ayudan a no repetir lo que no gustó.
@@ -41,7 +44,10 @@ export async function buildAssistantContext({
     getShoppingState(plan.id),
   ]);
 
-  const recipes: CatalogRecipe[] = week.recipes.map((recipe) => {
+  const levels = style
+    ? styleLevels(week.recipes.map((recipe) => styleScore(style, recipe, catalog, prices)))
+    : [];
+  const recipes: CatalogRecipe[] = week.recipes.map((recipe, index) => {
     const summary = summarizeRecipe(recipe, catalog, prices);
     return {
       id: recipe.id,
@@ -50,6 +56,7 @@ export async function buildAssistantContext({
       prepMinutes: recipe.prepMinutes,
       costPerServingCop: summary.costPerServingCop,
       ingredientNames: recipe.ingredients.map((line) => getIngredient(catalog, line.ingredientId).name),
+      styleFit: levels[index],
     };
   });
   const pantryNames = pantry.map((item) => getIngredient(catalog, item.ingredientId).name);
@@ -80,6 +87,7 @@ export async function buildAssistantContext({
     }),
     marketExtras: extras.slice(0, MAX_MARKET_EXTRAS).map((extra) => extra.name),
     focus,
+    style,
     pantry: pantry.slice(0, MAX_PANTRY_ITEMS).map((item) => {
       const ingredient = getIngredient(catalog, item.ingredientId);
       return `${ingredient.name}: ${formatQuantity(toIngredientBase(item.quantity, ingredient))}`;
