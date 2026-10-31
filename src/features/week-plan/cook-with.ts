@@ -1,8 +1,10 @@
 import { getIngredient, type IngredientCatalog } from "@/domain/catalog";
 import { isSeasoning } from "@/domain/detail-level";
 import type { RecipeCategory } from "@/domain/recipe-categories";
+import { shortages, stockAfter, withdraw } from "@/domain/stock";
+import type { PantryItem, Recipe } from "@/domain/types";
 import { MEALS, type Meal } from "@/domain/week";
-import type { PlannedSlot } from "@/domain/week-plan";
+import { toPlannedMeals, type PlannedSlot } from "@/domain/week-plan";
 import { PREFERRED_CATEGORIES } from "@/features/assistant/pick-recipe";
 import type { ProposedChange } from "@/features/assistant/sanitize";
 import { normalizeForSearch } from "@/features/recipes/search";
@@ -22,7 +24,7 @@ const MAX_REPEATS = 2;
 interface MatchInput {
   recipes: RecipeDetail[];
   catalog: IngredientCatalog;
-  /** Ingredientes que la persona compró o tiene. */
+  /** Ingredientes que la persona tiene o va a mercar. */
   chosen: Set<string>;
   /** "No incluir" del hogar: esas recetas no se ofrecen. */
   exclude: string[];
@@ -58,30 +60,93 @@ export function matchRecipes({ recipes, catalog, chosen, exclude }: MatchInput):
     );
 }
 
-const usesText = (uses: string[]) =>
-  uses.length === 1 ? `Usa ${uses[0]}` : `Usa ${uses.slice(0, -1).join(", ")} y ${uses.at(-1)}`;
+/** Las que vienen marcadas: las que no piden nada aparte o casi nada. */
+export const preselectMatches = (matches: RecipeMatch[], limit: number) =>
+  matches.filter((match) => match.missing.length <= 1).slice(0, limit);
+
+const listText = (names: string[]) =>
+  names.length === 1 ? names[0]! : `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`;
+
+const reasonFor = (match: RecipeMatch) =>
+  match.missing.length === 0
+    ? `Usa ${listText(match.uses)}`
+    : `Usa ${listText(match.uses)} · compra ${listText(match.missing)}`;
+
+interface PlanInput {
+  picked: RecipeMatch[];
+  slots: PlannedSlot[];
+  recipes: ReadonlyMap<string, Recipe>;
+  catalog: IngredientCatalog;
+  weekPeople: number;
+  /** Lo que la persona tiene en casa y eligió usar; lo que va a mercar no tiene tope. */
+  pantry: PantryItem[];
+}
+
+export interface StockPlan {
+  changes: ProposedChange[];
+  /** Lo de casa que se acabó y dejó alguna receta por fuera. */
+  ranOut: string[];
+}
 
 /**
  * Llena las casillas vacías con las recetas elegidas: cada una en la comida que le va (desayuno,
- * almuerzo, comida), sin repetir más de dos veces y alternando para que no salga lo mismo seguido.
+ * almuerzo, comida), sin repetir más de dos veces, alternando y sin gastar más de lo que hay en
+ * casa, contando lo que ya piden las comidas planeadas sin cocinar.
  */
-export function planWithMatches(picked: RecipeMatch[], slots: PlannedSlot[]): ProposedChange[] {
+export function planWithMatches({
+  picked,
+  slots,
+  recipes,
+  catalog,
+  weekPeople,
+  pantry,
+}: PlanInput): StockPlan {
   const taken = new Set(slots.map((slot) => `${slot.day}-${slot.meal}`));
   const usage = new Map<string, number>();
   for (const slot of slots) usage.set(slot.recipeId, (usage.get(slot.recipeId) ?? 0) + 1);
+  const pending = toPlannedMeals(
+    slots.filter((slot) => !slot.cooked),
+    recipes,
+    weekPeople,
+  );
+  let stock = stockAfter(pantry, pending, catalog);
+  const counts = (id: string) => !isSeasoning(getIngredient(catalog, id));
+  const ranOut = new Set<string>();
 
   const fitsMeal = (meal: Meal, match: RecipeMatch) => PREFERRED_CATEGORIES[meal].includes(match.category);
   const changes: ProposedChange[] = [];
   for (let day = 0; day < 7; day++) {
     for (const meal of MEALS) {
       if (taken.has(`${day}-${meal}`)) continue;
-      const choice = picked
+      const candidates = picked
         .filter((match) => fitsMeal(meal, match) && (usage.get(match.recipeId) ?? 0) < MAX_REPEATS)
-        .sort((a, b) => (usage.get(a.recipeId) ?? 0) - (usage.get(b.recipeId) ?? 0))[0];
-      if (!choice) continue;
-      usage.set(choice.recipeId, (usage.get(choice.recipeId) ?? 0) + 1);
-      changes.push({ day, meal, recipeId: choice.recipeId, reason: usesText(choice.uses) });
+        .sort((a, b) => (usage.get(a.recipeId) ?? 0) - (usage.get(b.recipeId) ?? 0));
+      for (const match of candidates) {
+        const recipe = recipes.get(match.recipeId);
+        if (!recipe) continue;
+        const short = shortages(stock, recipe, weekPeople, catalog, counts);
+        if (short.length > 0) {
+          for (const id of short) ranOut.add(getIngredient(catalog, id).name);
+          continue;
+        }
+        stock = withdraw(stock, recipe, weekPeople, catalog);
+        usage.set(match.recipeId, (usage.get(match.recipeId) ?? 0) + 1);
+        changes.push({ day, meal, recipeId: match.recipeId, reason: reasonFor(match) });
+        break;
+      }
     }
   }
-  return changes;
+  return { changes, ranOut: [...ranOut] };
+}
+
+/** Lo que se pensaba mercar y ninguna receta del menú usa: se agrega aparte al mercado. */
+export function unusedPurchases(
+  ingredientIds: string[],
+  slots: PlannedSlot[],
+  recipes: ReadonlyMap<string, Recipe>,
+): string[] {
+  const used = new Set(
+    slots.flatMap((slot) => recipes.get(slot.recipeId)?.ingredients.map((line) => line.ingredientId) ?? []),
+  );
+  return ingredientIds.filter((id) => !used.has(id));
 }

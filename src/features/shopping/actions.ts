@@ -140,6 +140,39 @@ export async function addExtra(input: z.input<typeof extraSchema>): Promise<Shop
   return error ? { ok: false, error: SAVE_ERROR } : done();
 }
 
+const extrasSchema = z.object({
+  weekStart: weekStartSchema,
+  items: z
+    .array(extraSchema.omit({ weekStart: true }))
+    .min(1)
+    .max(30),
+});
+
+/** Agrega varios extras de una vez; los que ya están en la lista de la semana no se repiten. */
+export async function addExtras(input: z.input<typeof extrasSchema>): Promise<ShoppingActionResult> {
+  const household = await requireHousehold();
+  const parsed = extrasSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? INVALID };
+
+  const supabase = await createSupabaseServerClient();
+  const weekPlanId = await ensureWeekPlan(supabase, household, parsed.data.weekStart);
+  if (!weekPlanId) return { ok: false, error: SAVE_ERROR };
+
+  const { data: existing, error: readError } = await supabase
+    .from("shopping_extras")
+    .select("name")
+    .eq("week_plan_id", weekPlanId);
+  if (readError) return { ok: false, error: SAVE_ERROR };
+  const known = new Set(existing.map((extra) => extra.name.toLocaleLowerCase("es")));
+  const fresh = parsed.data.items.filter((item) => !known.has(item.name.toLocaleLowerCase("es")));
+  if (fresh.length === 0) return done();
+
+  const { error } = await supabase
+    .from("shopping_extras")
+    .insert(fresh.map((item) => ({ week_plan_id: weekPlanId, name: item.name, category: item.category })));
+  return error ? { ok: false, error: SAVE_ERROR } : done();
+}
+
 export async function setExtraChecked(extraId: string, checked: boolean): Promise<ShoppingActionResult> {
   await requireHousehold();
   const supabase = await createSupabaseServerClient();

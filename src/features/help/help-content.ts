@@ -11,7 +11,8 @@ export const HELP_BY_SECTION: Record<string, HelpSection> = {
     intro: "Aquí decides qué se come cada día: desayuno, almuerzo y comida.",
     tips: [
       "Toca una casilla para elegir una receta. Si vienen visitas, cambia las personas de esa comida.",
-      "«Pedir al asistente» propone la semana o la ajusta con tus palabras; tú decides qué se aplica.",
+      "«Armar el menú» llena la semana con lo que tienes, con el asistente o mezclando los dos; tú decides qué se aplica.",
+      "Lo que dices tener en casa queda en la despensa; lo que ibas a mercar y ninguna receta usa puede ir al mercado.",
       "Cuando cocines, abre la comida y toca «Ya la cocinamos»: lo usado se descuenta de la despensa.",
       "Las notas («sobró arroz», «no les gustó») ayudan al asistente a proponer mejor.",
     ],
